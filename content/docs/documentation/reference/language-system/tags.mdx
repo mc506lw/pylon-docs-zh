@@ -1,0 +1,31 @@
+---
+title: MiniMessage 标签
+description: 了解 Rebar 新增的 MiniMessage 标签及其使用方法
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Rebar 的语言文件使用 [MiniMessage](https://docs.advntr.dev/minimessage/index.html) 格式。MiniMessage 本身已内置许多标签，而 Rebar 在此基础上添加了新的标签。
+
+<Callout type="info">
+  关于标签及其用法的更深入说明，请参见[教程 3](../../../creating-addons/tutorial-3.md)。
+</Callout>
+
+## Rebar 添加的标签列表
+
+| 标签 | 说明 | 示例 | 示例效果 |
+| :-- | :---------- | :------ | :----- |
+| <span style={{whiteSpace: 'nowrap'}}>`<arrow>`<br />`<arrow:[COLOR]>`</span> | 插入一个右箭头 (→)，可指定颜色（默认：0x666666） | <span style={{whiteSpace: 'nowrap'}}>`<arrow> Watermelon`</span> | ![arrow](img/arrow.png) |
+| <span style={{whiteSpace: 'nowrap'}}>`<guidearrow>`</span> | `<arrow:0x3a293>` 的简写；用于 Rebar 指南 | <span style={{whiteSpace: 'nowrap'}}>`<guidearrow> Watermelon`</span> | ![guidearrow](img/guidearrow.png) |
+| <span style={{whiteSpace: 'nowrap'}}>`<diamond>`<br />`<diamond:[COLOR]>`</span> | 插入一个菱形 (◆)，可指定颜色（默认：0x666666） | <span style={{whiteSpace: 'nowrap'}}>`<diamond> Watermelon`</span> | ![diamond](img/diamond.png) |
+| <span style={{whiteSpace: 'nowrap'}}>`<star>`<br />`<star:[COLOR]>`</span> | 插入一个星形 (★)，可指定颜色（默认：NamedTextColor.BLUE） | <span style={{whiteSpace: 'nowrap'}}>`<star> Watermelon`</span> | ![star](img/star.png) |
+| <span style={{whiteSpace: 'nowrap'}}>`<insn></insn>`</span> | 应用黄色样式 (0xf9d104)，用于指令 | <span style={{whiteSpace: 'nowrap'}}>`<insn>Right click</insn>`</span> | ![insn](img/insn.png) |
+| <span style={{whiteSpace: 'nowrap'}}>`<guideinsn></guideinsn>`</span> | 应用紫色样式 (0xc907f4)，用于指南中的指令 | <span style={{whiteSpace: 'nowrap'}}>`<guideinsn>Right click</guideinsn>`</span> | ![guideinsn](img/guideinsn.png) |
+| <span style={{whiteSpace: 'nowrap'}}>`<attr></attr>`</span> | 应用青色样式 (0xa9d9e8)，用于属性 | <span style={{whiteSpace: 'nowrap'}}>`<attr>Watermelons:</attr> 5`</span> | ![attr](img/attr.png) |
+| <span style={{whiteSpace: 'nowrap'}}>`<unit:[unit]></unit>`<br />`<unit:[prefix]:[unit]></unit>`</span> | 将常量数字格式化为单位，可带可选公制前缀 | <span style={{whiteSpace: 'nowrap'}}>`<unit:seconds>1000</unit>`</span> | ![unit](img/unit.png) |
+| <span style={{whiteSpace: 'nowrap'}}>`<nbsp></nbsp>`</span> | 将空格替换为不间断空格，防止换行 | <span style={{whiteSpace: 'nowrap'}}>`<nbsp>Watermelon</nbsp>`</span> | ![nbsp](img/nbsp.png) |
+| <span style={{whiteSpace: 'nowrap'}}>`<item:[item_name]>`</span> | 渲染原版或 Rebar 物品的翻译名称 | <span style={{whiteSpace: 'nowrap'}}>`<item:pylon:bandage>`</span> | ![item](img/item.png) |
+| <span style={{whiteSpace: 'nowrap'}}>`<entity:[entity_type]>`</span> | 渲染实体类型的翻译名称 | <span style={{whiteSpace: 'nowrap'}}>`<entity:creeper>`</span> | ![entity](img/entity.png) |
+| <span style={{whiteSpace: 'nowrap'}}>`<effect:[effect_type]>`</span> | 渲染药水效果的翻译名称 | <span style={{whiteSpace: 'nowrap'}}>`<effect:speed>`</span> | ![effect](img/effect.png) |
+| <span style={{whiteSpace: 'nowrap'}}>`<enchant:[enchant_name]>`</span> | 渲染附魔的翻译名称 | <span style={{whiteSpace: 'nowrap'}}>`<enchant:sharpness>`</span> | ![enchant](img/enchant.png) |
+| <span style={{whiteSpace: 'nowrap'}}>`<biome:[biome_name]>`</span> | 渲染生物群系的翻译名称 | <span style={{whiteSpace: 'nowrap'}}>`<biome:plains>`</span> | ![biome](img/biome.png) |

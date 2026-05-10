@@ -1,0 +1,35 @@
+---
+title: 国际化 (i18n)
+description: 了解 Rebar 的国际化系统和翻译机制
+---
+
+!!! abstract "作者：Seggan"
+
+关于这一点...我从哪里开始...
+
+## Paper 中的翻译
+
+Paper 服务器已经为我们翻译了大部分内容，因为它们在发送到客户端之前已在服务器上翻译。这包括聊天消息、bossbars 和 action bars。然而，出于某种奇怪的原因，这并不延伸到物品名称和 lore。这给我们留下了两个选择：要么在服务器端翻译物品（这是我们现在所做的），要么向客户端发送包含翻译的资源包。Rebar 的一个隐含目标是不需要资源包，所以我们选择了服务器端翻译。
+
+## 数据包注入
+
+现在很明显我们不能直接翻译物品堆栈本身，因为不同的人可能使用不同的语言，这会造成混淆。相反，我们向玩家的 Netty 通道注入一个处理程序来拦截传入和传出的数据包。
+
+以下传出的数据包被拦截：
+
+- `ClientboundContainerSetContentPacket`：打开库存时发送，包含库存中的物品
+- `ClientboundContainerSetSlotPacket`：当库存中的物品发生变化时发送，包含新物品
+- `ClientboundSetCursorItemPacket`：当光标上的物品发生变化时发送，包含新物品
+- `ClientboundRecipeBookAddPacket`：当配方添加到配方书中时发送，包含配方的物品
+- `ClientboundMerchantOffersPacket`：当打开村民交易 GUI 时发送，包含交易中的物品
+- `ClientboundPlaceGhostRecipePacket`：在制作网格中放置虚影配方时发送，包含配方中的物品
+
+当数据包被拦截时，我们使用 Paper 翻译 API 翻译数据包中的物品堆栈，翻译物品堆栈的名称和 lore。由于这些物品是副本，我们可以随意就地进行修改而不会影响实际的物品堆栈。
+
+与传出数据包不同，只拦截两个传入数据包：`ServerboundSetCreativeModeSlotPacket` 和 `ServerboundContainerClickPacket`。拦截这些数据包是为了将物品堆栈**反向翻译**回其原始名称和 lore，以便当服务器接收到它们时，可以正确处理它们。这是通过在 Rebar 物品注册表中查找原始物品堆栈来完成的
+
+## 自动换行
+
+!!! abstract "作者：Idra"
+
+除此之外，我们还有一个系统来自动换行以防止插件开发者和翻译者集体崩溃。自动换行系统位于 `LineWrapping.kt` 中；它有合理的解释和文档。如上所述，自动换行系统与翻译同时运行。

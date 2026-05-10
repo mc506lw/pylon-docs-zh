@@ -1,0 +1,35 @@
+---
+title: 并行开发仓库项目
+description: 了解 parallel-dev-repo 仓库的结构和使用方法
+---
+
+# 并行开发仓库项目
+
+PylonMC 有一个名为 `parallel-dev-repo` 的仓库。这允许您使用自己亲手打造的核心版本来运行基础版，从而更轻松地测试新功能。这就是"如何开始"部分使用的方法。我们建议您使用该仓库同时对 Pylon 和 Rebar 进行更改，本指南的其余部分将假设您正在使用它。
+
+## 项目结构
+项目结构如下：
+```
+pylon/
+  src/
+rebar/
+  dokka-plugin/
+  nms/
+  rebar/
+  test/
+```
+
+`pylon` 是 Rebar 的基础附加组件。`rebar` 有四个子项目：`dokka-plugin`、`nms`、`rebar` 和 `test`。`dokka-plugin` 包含我们用于帮助格式化 Javadocs 的自定义 Dokka 插件。`nms` 包含所有涉及服务器内部功能的 Rebar 代码。它位于单独的子项目中，以有效地将潜在不稳定的代码与项目的其余部分隔离开来。`rebar` 包含主要的 Rebar 代码，`test` 包含 Rebar 的集成测试。
+
+## 任务
+
+Pylon 主项目包含一些对开发有用的任务：
+
+| 任务 | 别名 | 描述 |
+|------|------|------|
+| `runServer` | `runSnapshotServer` | 使用当前版本的 Rebar 和 Pylon 运行 Minecraft 服务器 |
+| `:pylon:runServer` | `runStableServer` | 使用最新稳定版本的 Rebar 和当前版本的 Pylon 运行 Minecraft 服务器 |
+| `:rebar:test:runServer` | `runLiveTests` | 执行 Rebar 的集成测试 |
+
+!!! danger
+    如果您使用 IntelliJ 中的别名并附加调试器，您会注意到它无法工作。我不知道为什么会发生这种情况。为了成功附加调试器，您需要运行实际的任务，而不是别名。例如，不运行 `runSnapshotServer`，而是运行 `runServer`。

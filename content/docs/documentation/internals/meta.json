@@ -1,0 +1,11 @@
+{
+  "title": "内部",
+  "icon": "Puzzle",
+  "pages": [
+    "cargo",
+    "data-oriented-interfaces",
+    "fluids",
+    "i18n",
+    "recipe-autocompletion"
+  ]
+}

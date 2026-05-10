@@ -1,0 +1,96 @@
+---
+title: 简单多方块
+description: 了解如何使用 RebarSimpleMultiblock 创建和管理多方块
+---
+
+# 简单多方块
+
+在 Rebar 中，有两个类处理多方块：[RebarMultiblock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarMultiblock.html) 和 [RebarSimpleMultiblock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarSimpleMultiblock.html)。
+
+本页面只涵盖 `RebarSimpleMultiblock`，因为它是两者中较简单的一个，并为使用多方块提供了很好的抽象，而 `RebarMultiblock` 要灵活得多但也很 barebones - 它不提供虚影方块，不考虑旋转等。
+
+## 多方块基础
+
+为了使用 `RebarSimpleMultiblock`，在方块上实现该接口。然后，指定一个组件列表。例如：
+
+```java
+public class ExampleMultiblock extends RebarBlock implements RebarSimpleMultiblock {
+
+    public ExampleMultiblock(@NotNull Block block, @NotNull BlockCreateContext context) {
+        super(block, context);
+    }
+
+    public ExampleMultiblock(@NotNull Block block, @NotNull PersistentDataContainer pdc) {
+        super(block, pdc);
+    }
+
+    @Override
+    public @NotNull Map<@NotNull Vector3i, @NotNull MultiblockComponent> getComponents() {
+        return Map.of(
+                new Vector3i(0, 0, 1), MultiblockComponent.of(Material.SEA_LANTERN),
+                new Vector3i(0, 2, 0), MultiblockComponent.of(PylonKeys.BRONZE_BLOCK)
+        );
+    }
+}
+```
+
+这是实现简单多方块所需的最低限度。`RebarSimpleMultiblock` 将自动创建和管理虚影方块，向玩家展示如何构建多方块。一旦玩家建造了您的多方块，`RebarSimpleMultiblock` 实现的所有组件将自动分配实现 `RebarSimpleMultiblock` 的方块的 WAILA，如果多方块的任何部分被破坏，它将恢复。
+
+## 多方块组件
+
+[MultiblockComponent](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarSimpleMultiblock.MultiblockComponent.html) 类是灵活的，可用于检测各种不同的方块。
+
+#### 原版方块
+```java
+MultiblockComponent.of(Material.SEA_LANTERN)
+```
+
+#### Rebar 方块
+```java
+MultiblockComponent.of(PylonKeys.BRONZE_BLOCK)
+```
+
+#### 具有特定方块数据的原版方块
+```java
+MultiblockComponent.of(Material.REDSTONE_LAMP.createBlockData("[lit=false]"))
+```
+
+#### 原版方块或 Rebar 方块
+```java
+MultiblockComponent.of(
+        List.of(Material.CAMPFIRE.createBlockData()),
+        List.of(PylonKeys.BRONZE_BLOCK)
+)
+```
+
+#### 具有特定方块数据的原版方块或 Rebar 方块
+```java
+MultiblockComponent.of(
+        List.of(
+                Material.CAMPFIRE.createBlockData(),
+                Material.REDSTONE_LAMP.createBlockData("[lit=false]")
+        ),
+        List.of(
+                PylonKeys.BRONZE_BLOCK,
+                PylonKeys.CHARCOAL_BLOCK
+        )
+)
+```
+
+
+## 多方块方向
+
+多方块本质上是定向的（除非所有组件都在 Y 轴上）。为了设置多方块的方向，在您的 place 构造函数中调用 `setMultiblockDirection`。例如：
+
+```java
+public ExampleMultiblock(@NotNull Block block, @NotNull BlockCreateContext context) {
+    super(block, context);
+    setMultiblockDirection(context.getFacing());
+}
+```
+
+按照惯例，您还应该实现 [RebarDirectionalBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarDirectionalBlock.html) 并调用 `setFacing` 与 `setMultiblockDirection` 一起。这将（除其他外）允许您的方块根据其面向的方向进行纹理化。
+
+## 性能
+
+这值得一提，因为它不是显而易见的：在 Rebar 中，**多方块没有任何显著的性能开销，性能开销随着大小的增长非常缓慢。** 换句话说：多方块不会比常规方块明显更卡顿，大方块与小多方块的性能相当。

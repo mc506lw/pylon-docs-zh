@@ -1,0 +1,12 @@
+{
+  "title": "文档",
+  "icon": "BookText",
+  "pages": [
+    "overview",
+    "contributing",
+    "internals",
+    "reference"
+  ],
+  "defaultOpen": true,
+  "root": true
+}

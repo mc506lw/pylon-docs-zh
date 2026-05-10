@@ -1,0 +1,59 @@
+---
+title: 面向数据的接口
+description: 了解如何使用数据导向方法为接口提供字段功能
+---
+
+!!! abstract "作者：Idra"
+
+"面向数据的接口"听起来真的很吓人，但实际上没那么糟糕。基本上，我们更喜欢使用接口而不是类，因为我们可以从多个接口继承（嗯，还有其他原因但不管那个）。问题当然在于接口不能有字段。
+
+所以传统上，我们可能会这样解决。想象一下，我们想要存储方块的方向，就像在 `RebarDirectionalBlock` 中一样。我们可能会这样做：
+
+```kotlin
+interface RebarDirectionalBlock {
+    val facing
+}
+```
+
+现在我们已经强制方块为我们处理这个问题。但想一想。这真的很烦人，因为方块现在必须自己处理所有的加载/卸载逻辑（它必须在 `write` 中写入方向并在加载构造函数中再次加载它）。如果我们开始为很多接口做这件事，这将是大量的额外代码。
+
+## 那么我们如何解决这个问题呢？
+
+我们要做的是只有一个映射来存储每个 `RebarDirectionalBlock` 的面，像这样：
+
+```kotlin
+interface RebarDirectionalBlock {
+    var facing: BlockFace
+        get() = directionalBlocks[this] ?: error("No direction was set for block $key")
+        set(value) {
+            directionalBlocks[this] = value
+        }
+
+    companion object {
+        private val directionalBlocks = IdentityHashMap<RebarDirectionalBlock, BlockFace>()
+    }
+}
+```
+
+还有一件事，我们需要确保在方块的存储和加载时存储和加载方向：
+
+```kotlin
+@EventHandler
+private fun onDeserialize(event: RebarBlockDeserializeEvent) {
+    val block = event.rebarBlock
+    if (block is RebarDirectionalBlock) {
+        directionalBlocks[block] = event.pdc.get(directionalBlockKey, RebarSerializers.BLOCK_FACE)
+            ?: error("Direction not found for ${block.key}")
+    }
+}
+
+@EventHandler
+private fun onSerialize(event: RebarBlockSerializeEvent) {
+    val block = event.rebarBlock
+    if (block is RebarDirectionalBlock) {
+        event.pdc.set(directionalBlockKey, RebarSerializers.BLOCK_FACE, directionalBlocks[block]!!)
+    }
+}
+```
+
+基本上就是这样。

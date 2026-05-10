@@ -1,0 +1,150 @@
+---
+title: 与多方块组件交互
+description: 了解如何在多方块中与特定组件进行交互
+---
+
+您经常需要与多方块中的特定组件进行交互。例如，您可能希望在多方块燃烧燃料时将多方块中的熔炉点燃。为此，您可以使用 `getMultiblockComponent`、`getMultiblockComponentOrThrow` 和 `getMultiblockBlock` 方法。
+
+所有这些方法都会自动考虑多方块的旋转，因此您提供给这些方法的位置应该与您在 `getComponents` 中提供的位置相同。
+
+例如：
+
+```java
+@Override
+public void tick() {
+    if (!isFormedAndFullyLoaded()) {
+        return;
+    }
+
+    Block furnace = getMultiblockBlock(new Vector3i(0, 2, 0));
+    Furnace furnaceData = (Furnace) furnace;
+    furnaceData.setLit(true);
+    furnace.setBlockData(furnaceData);
+
+    getMultiblockComponentOrThrow(FluidInputHatch.class, new Vector3i(0, 0, 1))
+            .addFluid(PylonFluids.HYDRAULIC_FLUID, 100.0);
+}
+```
+
+将重要组件的位置存储在变量中是很有用的，以避免重复它们，并且如果您想要更改组件的位置，只需要更改一个变量。例如：
+
+```java
+public static final Vector3i FURNACE_POSITION = new Vector3i(0, 2, 0);
+
+// ...
+
+@Override
+public @NotNull Map<@NotNull Vector3i, @NotNull MultiblockComponent> getComponents() {
+    return Map.of(
+            FURNACE_POSITION, MultiblockComponent.of(Material.FURNACE),
+            // ...
+    );
+}
+
+@Override
+public void tick() {
+    if (!isFormedAndFullyLoaded()) {
+        return;
+    }
+
+    Block furnace = getMultiblockBlock(FURNACE_POSITION);
+    Furnace furnaceData = (Furnace) furnace;
+    furnaceData.setLit(true);
+    furnace.setBlockData(furnaceData);
+
+    // ...
+}
+```
+
+
+## 物品和流体舱口
+
+!!! info "本节仅与为 Pylon 创建附加组件相关"
+
+Pylon 添加了物品和流体舱口，它们对于多方块非常有用。
+
+### 物品舱口
+
+物品舱口使用起来很简单。
+
+1. 在您的多方块中添加物品舱口/舱口。
+2. 在需要的地方，使用 `getMultiblockComponentOrThrow` 获取舱口。
+3. 访问舱口的库存并实现您的 ticking 逻辑。
+
+例如：
+
+```java
+public static final Vector3i ITEM_INPUT_HATCH_POSITION = new Vector3i(0, 2, 0);
+
+// ...
+
+@Override
+public @NotNull Map<@NotNull Vector3i, @NotNull MultiblockComponent> getComponents() {
+    return Map.of(
+            ITEM_INPUT_HATCH_POSITION, MultiblockComponent.of(PylonKeys.ITEM_INPUT_HATCH)
+            // ...
+    );
+}
+
+@Override
+public void tick() {
+    if (!isFormedAndFullyLoaded()) {
+        return;
+    }
+
+    VirtualInventory inventory = getMultiblockComponentOrThrow(ItemInputHatch.class, ITEM_INPUT_HATCH_POSITION).inventory;
+    ItemStack stack = inventory.getItem(0);
+    if (new ItemStack(Material.BLAZE_POWDER).isSimilar(stack)) {
+        inventory.setItem(new MachineUpdateReason(), 0, stack.subtract());
+        // ...
+    }
+
+    // ...
+}
+```
+
+
+### 流体舱口
+
+流体舱口与物品舱口类似但稍微复杂一些，因为流体舱口中必须设置的流体类型必须由多方块设置。
+
+1. 在您的多方块中添加流体舱口/舱口。
+2. 当多方块形成时，设置每个舱口中的流体类型。
+3. 在需要的地方，使用 `getMultiblockComponentOrThrow` 获取舱口。
+4. 在哪里需要实现逻辑，从舱口添加/移除流体。
+
+例如：
+
+```java
+public static final Vector3i FLUID_INPUT_HATCH_POSITION = new Vector3i(0, 2, 0);
+
+// ...
+
+@Override
+public @NotNull Map<@NotNull Vector3i, @NotNull MultiblockComponent> getComponents() {
+    return Map.of(
+            FLUID_INPUT_HATCH_POSITION, MultiblockComponent.of(PylonKeys.FLUID_INPUT_HATCH)
+    );
+}
+
+@Override
+public void onMultiblockFormed() {
+    getMultiblockComponentOrThrow(FluidInputHatch.class, FLUID_INPUT_HATCH_POSITION)
+            .setFluidType(PylonFluids.WATER);
+}
+
+@Override
+public void tick() {
+    if (!isFormedAndFullyLoaded()) {
+        return;
+    }
+
+    FluidInputHatch inputHatch = getMultiblockComponentOrThrow(FluidInputHatch.class, FLUID_INPUT_HATCH_POSITION);
+    if (inputHatch.fluidAmount(PylonFluids.WATER) < 1000.0) {
+        return;
+    }
+    inputHatch.removeFluid(PylonFluids.WATER, 1000.0);
+
+    // ...
+}
+```

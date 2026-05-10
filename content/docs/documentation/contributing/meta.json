@@ -1,0 +1,9 @@
+{
+  "title": "贡献",
+  "icon": "HeartHandshake",
+  "pages": [
+    "getting-started",
+    "master-project",
+    "contributing-to-docs"
+  ]
+}

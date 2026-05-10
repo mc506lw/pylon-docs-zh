@@ -1,0 +1,189 @@
+---
+title: 方块接口
+description: 了解 Rebar 提供的各种方块接口及其用法
+---
+
+# 方块接口
+
+Rebar 有许多内置接口，可以为方块添加自定义行为。例如，有一些接口允许您：
+
+- 添加流体缓冲区（[RebarFluidBufferBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarFluidBufferBlock.html)）
+- 在点击方块时运行代码（[RebarInteractBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarInteractBlock.html)）
+- 当玩家跳到方块顶部时运行代码（[RebarJumpBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarJumpBlock.html)）
+- ...还有很多很多
+
+!!! question "如何使用接口 X？"
+    1. 检查此站点上是否有任何文档（向下滚动）。
+    2. 阅读接口的 JavaDocs 和相关方法的文档。
+    3. 在 Pylon 或其他附加组件中查找使用该接口的示例。
+    4. 在 Pylon Discord 上寻求帮助。
+
+例如，假设您想在右键点击方块时生成粒子。您可以使用 [RebarInteractBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarInteractBlock.html) 实现：
+```java title="ExampleBlock.java"
+public class ExampleBlock extends RebarBlock implements RebarInteractBlock {
+
+    // ...
+
+    @Override
+    public void onInteract(@NotNull PlayerInteractEvent event, @NotNull EventPriority priority) {
+        if (!event.getAction().isRightClick()
+                || event.getPlayer().isSneaking()
+                || event.getHand() != EquipmentSlot.HAND
+        ) {
+            return;
+        }
+
+        new ParticleBuilder(Particle.CAMPFIRE_COSY_SMOKE)
+                .location(getBlock().getLocation().toCenterLocation().add(0, 0.7, 0))
+                .count(smokeCount)
+                .extra(0.1) // speed
+                .spawn();
+    }
+}
+```
+
+## `postLoad` 方法
+
+许多方块接口存储持久数据。而不是强迫您在自己的 `write` 方法和加载构造函数中自行加载和保存数据，Rebar 的所有方块接口都有一个单独的机制，用于将数据保存到方块的 PDC。这样做的一个副作用是，在加载构造函数被调用时，Rebar 的方块接口都还没有加载它们的数据。因此，作为经验法则，您不应该在加载构造函数中调用与方块接口相关的任何方法。相反，覆盖 `postLoad` 方法并在那里执行您需要的操作。`postLoad` 方法将在与块关联的所有方块接口加载它们的数据后被调用。
+
+!!! info "postInitialise"
+    还要注意 `postInitialise` 方法，它与 `postLoad` 相同，只是它也在 place 构造函数之后被调用。
+
+## 接口快速参考
+
+<div class="grid cards" markdown>
+- !!! abstract "交互接口"
+
+        以某种方式与玩家交互时执行某些操作的接口
+
+        | 接口 | Javadocs |
+        | :-------: | :------- |
+        | RebarGuiBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarGuiBlock.html)|
+        | RebarInteractBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/Rebar(InteractBlock).html)|
+        | RebarJumpBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/Rebar(RebarJumpBlock).html)|
+        | RebarSneakBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/Rebar(RebarSneakBlock).html)|
+
+
+- !!! abstract "杂项接口"
+
+        不属于任何特定类别的接口。
+
+        | 接口 | Javadocs |
+        | :-------: | :------- |
+        | RebarBreakHandler | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarBreakHandler.html)|
+        | RebarDirectionalBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarDirectionalBlock.html)|
+        | RebarFacadeBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarFacadeBlock.html)|
+        | RebarFallingBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarFallingBlock.html)|
+        | RebarTickingBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarSneakBlock.html)|
+        | RebarUnloadBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarSneakBlock.html)|
+        | RebarVirtualInventoryBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarVirtualInventoryBlock.html)|
+
+
+- !!! abstract "物流接口"
+
+        允许您的方块与物流系统（包括 cargo）交互的接口。
+
+        如果您希望您的机器与 cargo 插入器/提取器兼容，您需要实现 [RebarLogisticBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarLogisticBlock.html)。
+
+        | 接口 | Javadocs |
+        | :-------: | :------- |
+        | RebarCargoBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarCargoBlock.html)|
+        | RebarLogisticBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarLogisticBlock.html)|
+
+
+- !!! abstract "流体接口"
+
+        允许您的方块与流体系统交互的接口。
+
+        除非必要，您应该使用 `RebarFluidBufferBlock` 和 `RebarFluidTank`。`RebarFluidBlock` 接口相当抽象，旨在尽可能灵活，要求您的机器实现自己的流体存储逻辑。
+
+        | 接口 | Javadocs |
+        | :-------: | :------- |
+        | RebarFluidBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarFluidBlock.html)|
+        | RebarFluidBufferBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarFluidBufferBlock.html)|
+        | RebarFluidTank | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarFluidTank.html)|
+
+
+- !!! abstract "处理器接口"
+
+        跟踪进程的接口，例如燃料量或配方进度。
+
+        | 接口 | Javadocs |
+        | :-------: | :------- |
+        | RebarProcessor | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarProcessor.html)|
+        | RebarRecipeProcessor | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarRecipeProcessor.html)|
+
+
+- !!! abstract "多方块接口"
+
+        将您的方块变成多方块的接口。
+
+        您创建的大多数多方块可以使用 [RebarSimpleMultiblock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarSimpleMultiblock.html)。对于更复杂的多方块，您可以使用 [RebarMultiblock]，但这个类被设计为尽可能灵活，因此非常 barebones - 它不提供虚影方块，不考虑旋转等。
+
+        由于多方块在底层的工作方式，它们几乎没有性能成本（与您可能预期的相反）。即使是非常大的多方块也是性能友好的。
+
+        | 接口 | Javadocs |
+        | :-------: | :------- |
+        | RebarMultiblock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarMultiblock.html)|
+        | RebarSimpleMultiblock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarSimpleMultiblock.html)|
+
+
+- !!! abstract "实体接口"
+
+        以某种方式与实体交互的接口。
+
+        | 接口 | Javadocs |
+        | :-------: | :------- |
+        | RebarEntityChangedBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarEntityChangedBlock.html)|
+        | RebarEntityHolderBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarEntityHolderBlock.html)|
+
+
+- !!! abstract "剔除接口"
+
+        允许您的方块与 Rebar 的剔除系统交互的接口。
+
+        | 接口 | Javadocs |
+        | :-------: | :------- |
+        | RebarCulledBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarCulledBlock.html)|
+        | RebarGroupCulledBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarGroupCulledBlock.html)|
+        | RebarEntityCulledBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarEntityCulledBlock.html)|
+        | RebarEntityGroupCulledBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarEntityGroupCulledBlock.html)|
+
+
+- !!! abstract "原版接口"
+
+        暴露原版方块功能的接口。例如，如果您添加一个信标方块并想在信标停用时运行一些代码，您可以使用 RebarBeacon。
+
+        | 接口 | Javadocs |
+        | :-------: | :------- |
+        | RebarBeacon | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarBeacon.html)|
+        | RebarBell | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarBell.html)|
+        | RebarBrewingStand | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarBrewingStand.html)|
+        | RebarCampfire | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarCampfire.html)|
+        | RebarCauldron | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarCauldron.html)|
+        | RebarComposter | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarComposter.html)|
+        | RebarCopperBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarCopperBlock.html)|
+        | RebarCrafter | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarCrafter.html)|
+        | RebarDispenser | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarDispenser.html)|
+        | RebarEnchantingTable | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarEnchantingTable.html)|
+        | RebarFlowerPot | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarFlowerPot.html)|
+        | RebarFurnace | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarFurnace.html)|
+        | RebarGrowable | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarGrowable.html)|
+        | RebarHopper | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarHopper.html)|
+        | RebarJobBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarJobBlock.html)|
+        | RebarLeaf | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarLeaf.html)|
+        | RebarLectern | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarLectern.html)|
+        | RebarNoJobBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarNoJobBlock.html)|
+        | RebarNoteBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarNoteBlock.html)|
+        | RebarNoVanillaContainerBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarNoVanillaContainerBlock.html)|
+        | RebarPiston | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarPiston.html)|
+        | RebarRedstoneBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarRedstoneBlock.html)|
+        | RebarShearable | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarShearable.html)|
+        | RebarSign | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarSign.html)|
+        | RebarSponge | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarSponge.html)|
+        | RebarTargetBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarTargetBlock.html)|
+        | RebarTNT | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarTNT.html)|
+        | RebarVault | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarVault.html)|
+        | RebarVanillaContainerBlock | [Javadocs :material-arrow-right:](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarVanillaContainerBlock.html)|
+
+</div>

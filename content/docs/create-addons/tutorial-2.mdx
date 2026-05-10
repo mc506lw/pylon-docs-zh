@@ -1,0 +1,255 @@
+---
+title: 物品与配置
+description: 介绍 Rebar 物品与配置系统的基础知识。
+---
+## 概览
+
+本节将介绍如何向物品添加自定义行为。我们将通过创建一个法棍喷火器来演示这一点，当右键点击时，它会点燃实体。
+
+---
+
+## 法棍喷火器
+
+### 创建一个“普通”物品
+
+让我们像上一章一样，先制作一个“普通”物品。
+
+```java title="MyAddonKeys.java"
+public final class ExampleAddonKeys {
+    public static final NamespacedKey baguetteFlamethrowerKey = new NamespacedKey(this, "baguette_flamethrower");
+}
+```
+
+```java title="MyAddonitems.java"
+public final class ExampleAddonItems {
+
+    // ...
+
+    public static final ItemStack baguetteFlamethrower = ItemStackBuilder.rebar(Material.BREAD, baguetteFlamethrowerKey)
+            .build();
+
+    // ...
+
+    public static void initialize() {
+
+        // ...
+
+        RebarItem.register(RebarItem.class, baguette);
+        PylonPages.FOOD.addItem(baguetteKey);
+    }
+}
+```
+
+<span></span>
+
+```yaml title='resources/en.yml'
+item:
+  baguette:
+    name: Baguette Flamethrower
+    lore: |-
+      <arrow> Use the power of baguettes to vanquish your enemies
+      <arrow> <insn>Right click</insn> an entity to ignite it
+```
+
+### 创建一个自定义物品类
+
+接下来，我们将添加点燃实体的代码。
+
+为此，我们必须创建一个自定义的 `BaguetteFlamethrower` 类。所有 Rebar 物品类都必须继承 [RebarItem]。
+
+创建一个新文件 `BaguetteFlamethrower.java` 并添加以下内容：
+
+```java title="BaguetteFlamethrower.java"
+public class BaguetteFlamethrower extends RebarItem {
+    public BaguetteFlamethrower(@NotNull ItemStack stack) {
+        super(stack);
+    }
+}
+```
+
+我们现在想在玩家拿着法棍喷火器右键点击实体时运行一些代码。为此，我们需要实现一个 Rebar 物品接口。
+
+Rebar 物品接口只是允许你的物品能做更多事情的接口，比如在物品被使用时运行一些代码。
+
+在这里，我们需要实现 [RebarItemEntityInteractor] 接口。该接口有一个方法：`onUsedToRightClickEntity`。
+
+<Callout type="note">
+  你可以在[这里](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/item/base/package-summary.html)找到物品接口的完整列表。
+</Callout>
+
+```java title="BaguetteFlamethrower" hl_lines="6-9"
+public class BaguetteFlamethrower extends RebarItem implements RebarItemEntityInteractor {
+    public BaguetteFlamethrower(@NotNull ItemStack stack) {
+        super(stack);
+    }
+
+    @Override
+    public void onUsedToRightClickEntity(@NotNull PlayerInteractEntityEvent event, @NotNull EventPriority priority) {
+        event.getRightClicked().setFireTicks(40);
+    }
+}
+```
+
+### 使用自定义物品类
+
+为了使用这个类，我们现在需要指定法棍喷火器应使用它，而不是默认的 `RebarItem` 类。
+
+将你的 `RebarItem.register(...)` 行更改为以下内容：
+
+```java
+RebarItem.register(BaguetteFlamethrower.class, baguetteFlamethrower);
+```
+
+现在，尝试运行服务器。当你用法棍喷火器右键点击一个实体时，你应该能让它着火 40 ticks！
+
+---
+
+## 让物品可配置
+
+物品可以有与之关联的配置。如果你查看服务器 Pylon 设置目录（`run/plugins/Rebar/settings/pylon`），你会发现许多 Pylon 物品和方块都有自己的配置文件。
+
+例如，`bandage.yml` 包含：
+
+```yaml title="bandage.yml"
+consume-seconds: 1.25
+heal-amount: 4.0
+```
+
+### 创建配置文件
+
+假设我们想添加自己的配置文件，让你可以选择法棍喷火器点燃实体的时长。
+
+创建一个新文件 `resources/settings/baguette_flamethrower.yml` 并添加以下内容：
+
+```yaml title="baguette_flamethrower.yml"
+burn-time-ticks: 40
+```
+
+<Callout type="success" title="最佳实践">
+  当你的配置选项是一个数量时，在名称中包含单位。如果我们只把它叫做 `burn-time`，用户可能不知道它单位是 ticks，而会假设它是秒或其他单位。
+</Callout>
+
+Rebar 会在配置文件首次使用时，自动将所有设置文件复制到 `run/plugins/Rebar/settings/<你的附加组件名称>` 中，以便服务器所有者可以配置物品。
+
+### 读取配置文件
+
+要读取配置文件中的 `burn-time-ticks` 值，我们可以使用 `getSettings().getOrThrow(...)`。`getSettings()` 将返回与物品键同名的配置——在本例中是 `flamethrower_baguette`：
+
+```java title="BaguetteFlamethrower.java" hl_lines="2"
+public class BaguetteFlamethrower extends RebarItem implements RebarItemEntityInteractor {
+    private final int burnTimeTicks = getSettings().getOrThrow("burn-time-ticks", ConfigAdapter.INT);
+
+    public BaguetteFlamethrower(@NotNull ItemStack stack) {
+        super(stack);
+    }
+
+    @Override
+    public void onUsedToRightClickEntity(@NotNull PlayerInteractEntityEvent event, @NotNull EventPriority priority) {
+        event.getRightClicked().setFireTicks(40);
+    }
+}
+```
+
+<Callout type="question" title="Rebar 如何知道要使用哪个配置文件？">
+  配置文件实际上是按**键**分配的，而不是按物品。当访问 `settings` 时，它所做的就是获取物品的键并找到对应的设置文件！它只是 `Settings.get(key)` 的简写。如果你使用 `Settings.get(NamespacedKey(MyAddon.getInstance(), "buffoon"))`，那么将被读取的会是 `buffoon.yml` 设置文件。
+</Callout>
+
+设置也拥有 `get` 方法。如果找不到键，这个方法只会返回 null。如果你使用 `getOrThrow`，一个包含有关缺失哪个键及位置信息的异常将会被抛出。
+
+在调用 `get` 或 `getOrThrow` 时，我们必须提供一个 ConfigAdapter。这是一个包含如何准确从配置文件中读取值的指令的类。
+
+<Callout type="info">
+  你可以在[这里](https://github.com/pylonmc/rebar/blob/master/rebar/src/main/kotlin/io/github/pylonmc/rebar/config/adapter/ConfigAdapter.kt)找到配置适配器的列表。
+</Callout>
+
+### 使用我们从配置文件中读取的值
+
+现在我们可以使用那个值来点燃实体了！
+
+```java title="BaguetteFlamethrower.java" hl_lines="10"
+public class BaguetteFlamethrower extends RebarItem implements RebarItemEntityInteractor {
+    private final int burnTimeTicks = getSettings().getOrThrow("burn-time-ticks", ConfigAdapter.INT);
+
+    public BaguetteFlamethrower(@NotNull ItemStack stack) {
+        super(stack);
+    }
+
+    @Override
+    public void onUsedToRightClickEntity(@NotNull PlayerInteractEntityEvent event, @NotNull EventPriority priority) {
+        event.getRightClicked().setFireTicks(burnTimeTicks);
+    }
+}
+```
+
+如果你更改配置值，燃烧时间也应该随之改变。
+
+<Callout type="danger">
+  在测试配置时，请记住运行服务器任务每次运行时都会删除 `plugins` 文件夹里的所有内容，这意味着你在那里对配置文件所做的任何更改都将被覆盖。所以，可以尝试直接更改默认值——或者手动运行服务器，这样 `plugins` 文件夹就不会在服务器重启时被删除。
+</Callout>
+
+---
+
+## 完整代码
+
+```java title="MyAddonKeys.java"
+public final class ExampleAddonKeys {
+    public static final NamespacedKey baguetteFlamethrowerKey = new NamespacedKey(this, "baguette_flamethrower");
+}
+```
+
+```java title="BaguetteFlamethrower.java"
+public class BaguetteFlamethrower extends RebarItem implements RebarItemEntityInteractor {
+    private final int burnTimeTicks = getSettings().getOrThrow("burn-time-ticks", ConfigAdapter.INT);
+
+    public BaguetteFlamethrower(@NotNull ItemStack stack) {
+        super(stack);
+    }
+
+    @Override
+    public void onUsedToRightClickEntity(@NotNull PlayerInteractEntityEvent event, @NotNull EventPriority priority) {
+        event.getRightClicked().setFireTicks(burnTimeTicks);
+    }
+}
+```
+
+<span></span>
+
+```java title="MyAddonitems.java"
+public final class ExampleAddonItems {
+
+    // ...
+
+    public static final ItemStack baguetteFlamethrower = ItemStackBuilder.rebar(Material.BREAD, baguetteFlamethrowerKey)
+            .build();
+
+    // ...
+
+    public static void initialize() {
+
+        // ...
+
+        RebarItem.register(RebarItem.class, baguette);
+        PylonPages.FOOD.addItem(baguetteKey);
+    }
+}
+```
+
+<span></span>
+
+```yaml title='resources/en.yml'
+item:
+  baguette:
+    name: Baguette Flamethrower
+    lore: |-
+      <arrow> Use the power of baguettes to vanquish your enemies
+      <arrow> <insn>Right click</insn> an entity to ignite it
+```
+
+<span></span>
+
+```yaml title="baguette_flamethrower.yml"
+burn-time-ticks: 40
+```
+
+[RebarItem]: https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/item/RebarItem.html
+[RebarItemEntityInteractor]: https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/item/base/RebarItemEntityInteractor.html

@@ -1,0 +1,9 @@
+{
+  "title": "多方块",
+  "pages": [
+    "simple-multiblocks",
+    "custom-multiblocks",
+    "multiblock-state",
+    "interacting-with-components"
+  ]
+}

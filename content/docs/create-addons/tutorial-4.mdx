@@ -1,0 +1,167 @@
+---
+title: 函数
+description: 介绍 Rebar 函数系统的基础知识。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+## 物品构造函数
+
+你可能会认为每次创建物品时（例如，每次物品被合成时）都会调用自定义物品的构造函数。但事实**并非**如此。
+
+需要了解的重要一点是：**物品构造函数可以被任意调用，而不仅仅是在物品“被创建”时**。
+
+<details>
+<summary>等等……为什么构造函数可以被任意调用？</summary>
+
+*(sigh)* 这很复杂。长话短说……
+
+Rebar 无法时刻跟踪每一个物品。如果我们真的可以修改核心服务器代码，那么这将是可能的。但事实上，Rebar 只能*临时*跟踪 Rebar 物品。
+
+例如，当我们用一个实现了 [RebarItemEntityInteractor] 的物品右键点击一个实体时，Rebar 会监听 [PlayerInteractEntityEvent] 并看到有一个实体被某个物品右键点击了。为了弄清楚它是什么物品——以及它是否根本就是一个 Rebar 物品——Rebar 必须查看存储在物品内的键。但即使 Rebar 知道了键，它仍然不太了解这个物品。该物品是否实现了 [RebarItemEntityInteractor]？如果是，Rebar 就需要调用它的 `onUsedToRightClickEntity`。
+
+这就是构造函数发挥作用的地方。我们可以查找到该物品对应的类，并创建一个它的新实例。然后，我们就可以调用 `onUsedToRightClickEntity` 方法了。
+</details>
+
+所有这些意味着：**这个类可以在任何时候被创建或销毁**。我们在字段中存储的任何数据都是临时的。
+
+但是假设我们想要存储便携电池的电量。如果我们不能在字段中存储电量，那我们到底*能*在哪里存储它呢？
+
+---
+
+## 持久化数据容器 (PDCs)
+
+<Callout type="info">
+  PDC 由 Paper 添加，而非 Pylon。我们在这里介绍它们，是因为 Pylon 中基本上所有持久化数据存储（包括方块和实体）都使用它们。
+</Callout>
+
+[PersistentDataContainer] (PDC) 是一种简单直接的持久化存储数据的方式。在结构上，可以把它想象成类似于 JSON；一个嵌套的键值存储。每个值由一个 `NamespacedKey` 标识。PDC 可以嵌套在彼此之中。物品拥有一个 PDC，因此，要持久地保存一些数据，我们需要在数据修改时将其写入物品的 PDC 中。
+
+<Callout type="info">
+  有关 PDC 的更多信息，请参阅 [Paper 文档](https://docs.papermc.io/paper/dev/pdc/)。
+</Callout>
+
+举一个记录便携电池电量的例子。我们可以将电量存储在物品 PDC 中名为 `charge_level` 的键下。当物品被放入箱子，或者服务器重启时，它都会被保存。
+
+如果这听起来有点令人困惑——别担心，一个例子应该能让它更清楚。
+
+---
+
+## 计数法棍
+
+### 想法
+
+让我们创建一个能存储一个数字的“计数法棍”。当右键点击时，这个法棍会把你存储的数字发送到你的聊天框，并让它增加。
+
+### 创建物品
+
+我们先创建一个目前还不能计数的法棍。
+
+```java title="MyAddonKeys.java"
+public class MyAddonKeys {
+    public static final NamespacedKey countingBaguetteKey = new NamespacedKey(this, "counting_baguette");
+}
+```
+
+```java title="MyAddonItems.java"
+public final class ExampleAddonItems {
+
+    // ...
+
+    public static final ItemStack countingBaguette = ItemStackBuilder.rebar(Material.BREAD, countingBaguetteKey)
+            .build();
+
+    // ...
+
+    public static void initialize() {
+
+        // ...
+
+        RebarItem.register(CountingBaguette.class, countingBaguette);
+        PylonPages.FOOD.addItem(countingBaguette);
+    }
+}
+```
+
+<span></span>
+
+```java title="CountingBaguette.java"
+public class CountingBaguette extends RebarItem {
+    public CountingBaguette(@NotNull ItemStack stack) {
+        super(stack);
+    }
+}
+```
+
+```yaml title="en.yml"
+item:
+  counting_baguette:
+    name: "Counting Baguette"
+    lore: |-
+      <arrow> Mathematics is improved tenfold when combined with baguettes
+```
+
+### 添加计数机制
+
+首先，我们需要在玩家右键点击时进行检测：
+
+```java title="CountingBaguette.java" hl_lines="1 6-10"
+public class CountingBaguette extends RebarItem implements RebarInteractor {
+    public CountingBaguette(@NotNull ItemStack stack) {
+        super(stack);
+    }
+
+    @Override
+    public void onUsedToClick(@NotNull PlayerInteractEvent event, @NotNull EventPriority priority) {
+        // TODO 发送存储的值给玩家
+        // TODO 增加存储的值
+    }
+}
+```
+
+在函数内部，我们需要读取存储的值，将其发送给玩家，然后存储一个增加 1 的值。
+
+要将一条数据存储在持久化数据容器中，我们还需要另外两样东西：一个用于标识该条数据的 [NamespacedKey]，以及以 [PersistentDataType] 形式表示的该条数据的**类型**。
+
+<Callout type="info" title="PylonSerializers">
+  为方便起见，Pylon 在 [PylonSerializers] 文件中提供了一系列类型。这包括了 Paper 提供的所有默认类型，但也有一些额外的类型（如 UUID、Vector、BlockPosition、ItemStack 等）。
+</Callout>
+
+```java title="CountingBaguette.java" hl_lines="2 10-12"
+public class CountingBaguette extends RebarItem implements RebarInteractor {
+    public static final NamespacedKey COUNT_KEY = new NamespacedKey(MyAddon.getInstance(), "count");
+
+    public CountingBaguette(@NotNull ItemStack stack) {
+        super(stack);
+    }
+
+    @Override
+    public void onUsedToClick(@NotNull PlayerInteractEvent event, @NotNull EventPriority priority) {
+        int count = getStack().getPersistentDataContainer().get(COUNT_KEY, PylonSerializers.INTEGER);
+        event.getPlayer().sendMessage(String.valueOf(count));
+        getStack().editPersistentDataContainer(pdc -> pdc.set(COUNT_KEY, PylonSerializers.INTEGER, count + 1));
+    }
+}
+```
+
+### 设置默认值
+
+你可能已经注意到，我们还没有为计数设置初始值。为了做到这一点，我们需要编辑默认的物品栈：
+
+```java title="CountingBaguette.java" hl_lines="3"
+NamespacedKey countingBaguetteKey = new NamespacedKey(this, "counting_baguette");
+ItemStack countingBaguette = ItemStackBuilder.rebar(Material.BREAD, countingBaguetteKey)
+        .editPdc(pdc -> pdc.set(CountingBaguette.COUNT_KEY, PylonSerializers.INTEGER, 0))
+        .build();
+RebarItem.register(CountingBaguette.class, countingBaguette);
+PylonPages.FOOD.addItem(countingBaguette);
+```
+
+就是这样！只要物品存在，我们存储的数据就会一直保持。
+
+[NamespacedKey]: https://jd.papermc.io/paper/1.21.11/org/bukkit/NamespacedKey.html
+[PersistentDataContainer]: https://docs.papermc.io/paper/dev/pdc/
+[PersistentDataType]: https://docs.papermc.io/paper/dev/pdc/#data-types
+[PylonSerializers]: https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/datatypes/RebarSerializers.html
+[PlayerInteractEntityEvent]: https://jd.papermc.io/paper/1.21.11/org/bukkit/event/player/PlayerInteractEntityEvent.html
+[RebarItemEntityInteractor]: https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/item/base/RebarItemEntityInteractor.html

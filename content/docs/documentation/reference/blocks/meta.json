@@ -1,0 +1,10 @@
+{
+  "title": "方块",
+  "pages": [
+    "creating-new-blocks",
+    "interfaces",
+    "persistent-data",
+    "settings",
+    "waila"
+  ]
+}

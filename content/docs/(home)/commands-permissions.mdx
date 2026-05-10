@@ -1,0 +1,35 @@
+---
+title: 命令和权限管理
+description: 查看 Pylon 提供的命令和权限管理功能
+---
+
+## 默认命令
+| 命令                                | 权限节点                                   | 说明 |
+|-------------------------------------|-------------------------------------------|------|
+| `/rb`                               | `rebar.command.guide`                     | 打开 Rebar 指南 |
+| `/rb guide`                         | `rebar.command.guide`                     | 给予你 Rebar 指南 |
+
+## 管理员命令
+| 命令                                                | 权限节点                                   | 说明 |
+|-----------------------------------------------------|-------------------------------------------|------|
+| `/rb confetti <数量> [速度] [存活时间]`               | `rebar.command.confetti`                  | 生成彩色纸屑粒子 |
+| `/rb debug`                                          | `rebar.command.debug`                     | 给予你调试物品，可用于查看 Rebar 方块/实体数据并强制移除 Rebar 方块/实体 |
+| `/rb exposerecipeconfig <附加> <配方类型>`            | `rebar.command.exposerecipeconfig`        | 允许编辑特定类型的配方。这样做会阻止该类型配方自动更新，请谨慎使用！ |
+| `/rb give <玩家> <物品> [数量]`                       | `rebar.command.give`                      | 给予玩家一个 Rebar 物品 |
+| `/rb key`                                            | `rebar.command.key`                       | 显示你手持 Rebar 物品的键名 |
+| `/rb research add <玩家> <研究>`                      | `rebar.command.research.add`              | 为玩家添加指定研究 |
+| `/rb research addall <玩家>`                          | `rebar.command.research.addall`           | 为玩家添加全部研究 |
+| `/rb research remove <玩家> <研究>`                   | `rebar.command.research.remove`           | 从玩家移除指定研究 |
+| `/rb research points add <玩家> <数量>`               | `rebar.command.research.points.add`       | 为玩家添加研究点数 |
+| `/rb research points get <玩家>`                      | `rebar.command.research.points.get`       | 查看玩家的研究点数 |
+| `/rb research points set <玩家> <数量>`               | `rebar.command.research.points.set`       | 设置玩家的研究点数 |
+| `/rb research points subtract <玩家> <数量>`          | `rebar.command.research.points.subtract`  | 从玩家扣除研究点数 |
+| `/rb setblock <x> <y> <z> <方块>`                     | `rebar.command.setblock`                  | 在指定坐标放置 Rebar 方块 |
+| `/py fillfluid`                                      | `pylon.command.fillfluid`                 | 填满手持的便携流体储罐 |
+| `/py resetloupedata`                                 | `pylon.command.resetloupedata`            | 重置玩家使用放大镜时记录的物品/方块数据 |
+
+## 其他权限
+| 权限节点                          | 说明 |
+|----------------------------------|------|
+| `rebar.guide.cheat`              | 允许你通过拖拽、Ctrl+拖拽或鼠标中键从 Rebar 指南中作弊获取物品 |
+| `rebar.guide.view_admin_pages`   | 允许你查看管理员专用的指南页面 |

@@ -1,0 +1,45 @@
+---
+title: 多方块状态
+description: 了解如何检查和管理多方块的状态
+---
+
+您经常需要获取或监听关于多方块状态的信息。有两个由 Rebar 跟踪的重要信息需要了解：
+
+* 多方块是否形成？
+* 多方块的所有部分是否都已加载？
+
+第一个仅在多方块的所有组件都已放置时为真。第二个仅在多方块的每个组件都在已加载的区块中时为真。这是必要的，因为多方块可能跨越多个区块：与常规方块不同，在多方块中您可能需要确保在运行某些代码时整个多方块结构都被加载。
+
+为了安全起见，当执行任何与多方块其他组件交互的操作时，您应该检查多方块是否完整且完全加载。您可以通过调用 `isFormedAndFullyLoaded()` 来做到这一点。例如：
+
+```java
+@Override
+public void tick() {
+    if (!isFormedAndFullyLoaded()) {
+        return;
+    }
+
+    // Ticking logic here
+}
+```
+
+您还可以在多方块形成或未形成时执行代码，使用 `onMultiblockFormed` 和 `onMultiblockUnformed`。例如：
+
+```java
+@Override
+public void onMultiblockFormed() {
+    RebarSimpleMultiblock.super.onMultiblockFormed();
+    Bukkit.getServer().broadcast(Component.text("Stonks"));
+}
+
+@Override
+public void onMultiblockUnformed(boolean partUnloaded) {
+    RebarSimpleMultiblock.super.onMultiblockUnformed(partUnloaded);
+    Bukkit.getServer().broadcast(Component.text("Not stonks"));
+}
+```
+
+在 `onMultiblockUnformed` 中，如果多方块因为被卸载而变为未形成状态，`partUnloaded` 为 true。如果为 false，这表示多方块的一部分已被破坏。
+
+!!! danger "覆盖这些方法时，务必确保调用 `RebarMultiblock.super.onMultiblockFormed()` 和 `RebarMultiblock.super.onMultiblockUnformed(partUnloaded)`。"
+    这是因为 `RebarSimpleMultiblock` 使用这些方法来管理 WAILA 覆盖、虚影方块等。
