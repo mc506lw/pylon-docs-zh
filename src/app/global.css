@@ -10,3 +10,60 @@ html > body[data-scroll-locked] {
   margin-right: 0px !important;
   --removed-body-scroll-bar-size: 0px !important;
 }
+
+@keyframes hero-glow-1 {
+  0%, 100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1.04);
+  }
+}
+
+@keyframes hero-glow-2 {
+  0%, 100% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, calc(-50% - 2%)) scale(1.03);
+  }
+}
+
+@keyframes hero-drift {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(8px, 6px);
+  }
+  50% {
+    transform: translate(12px, -4px);
+  }
+  75% {
+    transform: translate(-4px, 8px);
+  }
+}
+
+.animate-hero-glow-1 {
+  animation: hero-glow-1 8s ease-in-out infinite;
+}
+
+.animate-hero-glow-2 {
+  animation: hero-glow-2 10s ease-in-out infinite;
+}
+
+.animate-hero-drift {
+  animation: hero-drift 15s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-glow-1,
+  .animate-hero-glow-2,
+  .animate-hero-drift {
+    animation: none;
+  }
+}
