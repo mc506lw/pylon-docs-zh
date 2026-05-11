@@ -89,38 +89,27 @@ const categories = [
     },
 ];
 
+function TagPill({ children }: { children: string }) {
+    return (
+        <span className="border-fd-border bg-fd-muted text-fd-muted-foreground whitespace-nowrap rounded-full border px-2 py-px text-[11px]">
+            {children}
+        </span>
+    );
+}
+
 function FeatureRow({ icon: Icon, title, desc, tags }: FeatureItem) {
     return (
-        <div className="group relative flex items-start gap-3.5 rounded-lg px-1 py-3 transition-colors hover:bg-fd-muted/40">
+        <div className="group relative flex items-start gap-3 rounded-lg px-1 py-2.5 transition-colors active:bg-fd-muted/40 sm:gap-3.5 sm:py-3">
             <div className="text-fd-primary mt-0.5 shrink-0">
                 <Icon className="h-4 w-4" />
             </div>
             <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-sm font-semibold">{title}</h3>
-                    {tags && (
-                        <div className="hidden shrink-0 flex-wrap gap-1.5 sm:flex">
-                            {tags.map((tag) => (
-                                <span
-                                    key={tag}
-                                    className="border-fd-border bg-fd-muted text-fd-muted-foreground whitespace-nowrap rounded-full border px-2 py-px text-[11px]"
-                                >
-                                    {tag}
-                                </span>
-                            ))}
-                        </div>
-                    )}
-                </div>
-                <p className="text-fd-muted-foreground mt-0.5 text-sm leading-relaxed">{desc}</p>
-                {tags && (
-                    <div className="mt-2 flex flex-wrap gap-1.5 sm:hidden">
+                <h3 className="text-[13px] font-semibold leading-snug sm:text-sm">{title}</h3>
+                <p className="text-fd-muted-foreground mt-0.5 text-xs leading-relaxed sm:text-sm">{desc}</p>
+                {tags && tags.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
                         {tags.map((tag) => (
-                            <span
-                                key={tag}
-                                className="border-fd-border bg-fd-muted text-fd-muted-foreground whitespace-nowrap rounded-full border px-2 py-px text-[11px]"
-                            >
-                                {tag}
-                            </span>
+                            <TagPill key={tag}>{tag}</TagPill>
                         ))}
                     </div>
                 )}
@@ -137,12 +126,12 @@ function CategoryAccordion({ category, defaultOpen }: { category: (typeof catego
             <button
                 type="button"
                 onClick={() => setOpen((v) => !v)}
-                className="active:bg-fd-muted/50 flex min-h-[48px] w-full cursor-pointer items-center justify-between gap-4 bg-fd-card px-5 py-4 text-left transition-colors lg:cursor-default lg:pointer-events-none"
+                className="active:bg-fd-muted/50 flex min-h-[48px] w-full cursor-pointer items-center justify-between gap-4 bg-fd-card px-4 py-3.5 text-left sm:px-5 sm:py-4 lg:cursor-default lg:pointer-events-none"
             >
                 <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2.5">
-                        <h3 className="text-base font-semibold">{category.label}</h3>
-                        <span className="text-fd-muted-foreground text-xs">({category.items.length})</span>
+                    <div className="flex items-center gap-2">
+                        <h3 className="text-[15px] font-semibold sm:text-base">{category.label}</h3>
+                        <span className="text-fd-muted-foreground text-xs tabular-nums">({category.items.length})</span>
                     </div>
                     <p className="text-fd-muted-foreground mt-0.5 hidden text-xs sm:block">{category.description}</p>
                 </div>
@@ -160,7 +149,7 @@ function CategoryAccordion({ category, defaultOpen }: { category: (typeof catego
                 )}
             >
                 <div className="overflow-hidden">
-                    <div className="divide-fd-border divide-y border-t px-2 py-2">
+                    <div className="divide-fd-border divide-y border-t px-1.5 py-1.5 sm:border-t sm:px-2 sm:py-2">
                         {category.items.map((item) => (
                             <FeatureRow key={item.title} {...item} />
                         ))}
@@ -173,25 +162,24 @@ function CategoryAccordion({ category, defaultOpen }: { category: (typeof catego
 
 function FeaturedCard() {
     return (
-        <div className="group relative overflow-hidden rounded-2xl border border-fd-border bg-gradient-to-br from-fd-card to-fd-muted/20 p-6 sm:p-8 lg:p-10">
-            <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-amber-500/10 blur-3xl transition-colors group-hover:bg-amber-500/15" />
+        <div className="group relative overflow-hidden rounded-2xl border border-fd-border bg-gradient-to-br from-fd-card to-fd-muted/20 p-5 sm:p-7 lg:p-10">
+            <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-amber-500/10 blur-3xl transition-colors group-hover:bg-amber-500/15 sm:-right-8 sm:-top-8 sm:h-32 sm:w-32" />
             <div className="relative">
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-amber-500/10 px-3.5 py-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
-                    <Blocks className="h-3.5 w-3.5" />
+                <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-[11px] font-medium text-amber-600 dark:text-amber-400 sm:mb-4 sm:gap-2 sm:px-3.5 sm:py-1.5 sm:text-xs">
+                    <Blocks className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     核心能力
                 </div>
-                <h3 className="text-xl font-bold tracking-tight sm:text-2xl lg:text-3xl">
+                <h3 className="text-lg font-bold tracking-tight sm:text-xl lg:text-2xl xl:text-3xl">
                     自定义方块与物品
                 </h3>
-                <p className="text-fd-muted-foreground mt-3 max-w-lg leading-relaxed sm:text-base">
-                    创建具有自定义行为、纹理和交互的方块与物品，完全集成原版配方与 WAILA
-                    显示系统。从简单的装饰方块到复杂的多状态机械组件，全部在服务端实现。
+                <p className="text-fd-muted-foreground mt-2 max-w-md text-sm leading-relaxed sm:mt-3 sm:max-w-lg sm:text-base">
+                    创建具有自定义行为、纹理和交互的方块与物品，完全集成原版配方与 WAILA 显示系统。从简单的装饰方块到复杂的多状态机械组件。
                 </p>
-                <div className="mt-5 flex flex-wrap gap-2">
+                <div className="mt-4 flex flex-wrap gap-1.5 sm:mt-5 sm:gap-2">
                     {["配方合成", "WAILA 信息", "持久化数据", "自定义交互"].map((tag) => (
                         <span
                             key={tag}
-                            className="border-fd-border bg-fd-muted/60 text-fd-muted-foreground rounded-full border px-3 py-1 text-xs font-medium"
+                            className="border-fd-border bg-fd-muted/60 text-fd-muted-foreground rounded-full border px-2.5 py-0.5 text-[11px] font-medium sm:px-3 sm:py-1 sm:text-xs"
                         >
                             {tag}
                         </span>
@@ -202,33 +190,39 @@ function FeaturedCard() {
     );
 }
 
+function DesktopPanel({ category }: { category: (typeof categories)[number] }) {
+    return (
+        <div className="border-fd-border rounded-xl border bg-fd-card p-4 sm:p-5">
+            <h3 className="text-sm font-semibold">{category.label}</h3>
+            <p className="text-fd-muted-foreground mb-3 mt-0.5 text-[11px] leading-relaxed sm:mb-4 sm:text-xs">{category.description}</p>
+            <div className="space-y-0.5">
+                {category.items.map((item) => (
+                    <FeatureRow key={item.title} {...item} />
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export const FeaturesSection = () => (
-    <section className="pb-16">
-        <div className="mb-8 text-center sm:mb-12">
-            <h2 className="mb-2 text-2xl font-bold tracking-tight sm:text-3xl">7 大能力模块</h2>
-            <p className="text-fd-muted-foreground mx-auto max-w-md text-sm sm:text-base">
+    <section className="pb-12 sm:pb-16">
+        <div className="mb-6 text-center sm:mb-10 lg:mb-12">
+            <h2 className="mb-1.5 text-xl font-bold tracking-tight sm:mb-2 sm:text-2xl lg:text-3xl">7 大能力模块</h2>
+            <p className="text-fd-muted-foreground mx-auto max-w-xs text-xs sm:max-w-md sm:text-sm">
                 从电力到物流，一站式掌握 Pylon 全部能力
             </p>
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 sm:gap-4">
             <FeaturedCard />
 
             <div className="hidden lg:grid lg:grid-cols-3 lg:gap-4">
                 {categories.map((cat) => (
-                    <div key={cat.key} className="border-fd-border rounded-xl border bg-fd-card p-5">
-                        <h3 className="mb-1 text-sm font-semibold">{cat.label}</h3>
-                        <p className="text-fd-muted-foreground mb-4 text-xs leading-relaxed">{cat.description}</p>
-                        <div className="space-y-0.5">
-                            {cat.items.map((item) => (
-                                <FeatureRow key={item.title} {...item} />
-                            ))}
-                        </div>
-                    </div>
+                    <DesktopPanel key={cat.key} category={cat} />
                 ))}
             </div>
 
-            <div className="lg:hidden flex flex-col gap-3">
+            <div className="lg:hidden flex flex-col gap-2.5 sm:gap-3">
                 {categories.map((cat, i) => (
                     <CategoryAccordion key={cat.key} category={cat} defaultOpen={i === 0} />
                 ))}
