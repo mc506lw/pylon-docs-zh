@@ -6,15 +6,15 @@ export const HeroSection = () => (
             <div className="pointer-events-none absolute inset-0">
                 <div
                     aria-hidden="true"
-                    className="animate-hero-glow-1 absolute left-1/2 top-1/2 h-[120%] w-[140%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_60%_50%_at_50%_50%,rgba(245,158,11,0.12)_0%,transparent_75%)] sm:h-[130%] sm:w-[150%]"
+                    className="animate-hero-glow-1 absolute left-1/2 top-1/2 h-[120%] w-[140%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_60%_50%_at_50%_50%,rgba(245,158,11,0.13)_0%,transparent_75%)] sm:h-[130%] sm:w-[150%]"
                 />
                 <div
                     aria-hidden="true"
-                    className="animate-hero-glow-2 absolute left-1/2 top-[45%] h-[80%] w-[100%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_50%_45%_at_50%_55%,rgba(251,146,60,0.10)_0%,transparent_70%)] blur-xl sm:h-[90%] sm:w-[110%]"
+                    className="animate-hero-glow-2 absolute left-1/2 top-1/2 h-[90%] w-[110%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_55%_48%_at_50%_50%,rgba(251,146,60,0.10)_0%,transparent_70%)] blur-xl sm:h-[100%] sm:w-[120%]"
                 />
                 <div
                     aria-hidden="true"
-                    className="animate-hero-drift absolute -left-20 -top-10 h-[40%] w-[60%] rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(245,158,11,0.06)_0%,transparent_60%)] blur-2xl sm:-left-24 sm:-top-12"
+                    className="animate-hero-glow-3 absolute left-1/2 top-1/2 h-[70%] w-[85%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_45%_40%_at_50%_50%,rgba(245,158,11,0.07)_0%,transparent_65%)] blur-2xl sm:h-[80%] sm:w-[95%]"
                 />
             </div>
 
