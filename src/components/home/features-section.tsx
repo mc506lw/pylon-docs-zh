@@ -137,7 +137,7 @@ function CategoryAccordion({ category, defaultOpen }: { category: (typeof catego
             <button
                 type="button"
                 onClick={() => setOpen((v) => !v)}
-                className="flex w-full items-center justify-between gap-4 bg-fd-card px-5 py-4 text-left transition-colors hover:bg-fd-muted/30 lg:cursor-default lg:pointer-events-none"
+                className="active:bg-fd-muted/50 flex min-h-[48px] w-full cursor-pointer items-center justify-between gap-4 bg-fd-card px-5 py-4 text-left transition-colors lg:cursor-default lg:pointer-events-none"
             >
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2.5">
