@@ -11,53 +11,74 @@ html > body[data-scroll-locked] {
   --removed-body-scroll-bar-size: 0px !important;
 }
 
-@keyframes hero-glow-1 {
+.hero-glow-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(ellipse 60% 50% at 50% 50%, rgba(245,158,11,0.13) 0%, transparent 75%),
+    radial-gradient(ellipse 55% 48% at 50% 50%, rgba(251,146,60,0.10) 0%, transparent 70%),
+    radial-gradient(ellipse 45% 40% at 50% 50%, rgba(245,158,11,0.07) 0%, transparent 65%);
+  background-size:
+    140% 120%,
+    110% 90%,
+    85% 70%;
+  background-position:
+    center center,
+    center center,
+    center center;
+  filter: blur(0);
+  animation: hero-breathe 6s ease-in-out infinite;
+}
+
+@media (min-width: 640px) {
+  .hero-glow-bg::before {
+    background-size:
+      150% 130%,
+      120% 100%,
+      95% 80%;
+  }
+}
+
+@keyframes hero-breathe {
   0%, 100% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    background-size:
+      140% 120%,
+      110% 90%,
+      85% 70%;
   }
   50% {
-    opacity: 0.6;
-    transform: translate(-50%, -50%) scale(1.06);
+    opacity: 0.65;
+    background-size:
+      150% 132%,
+      118% 96%,
+      92% 76%;
   }
 }
 
-@keyframes hero-glow-2 {
-  0%, 100% {
-    opacity: 0.8;
-    transform: translate(-50%, -50%) scale(1);
+@media (min-width: 640px) {
+  @keyframes hero-breathe {
+    0%, 100% {
+      opacity: 1;
+      background-size:
+        150% 130%,
+        120% 100%,
+        95% 80%;
+    }
+    50% {
+      opacity: 0.65;
+      background-size:
+        160% 142%,
+        128% 108%,
+        104% 88%;
+    }
   }
-  50% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.05);
-  }
-}
-
-@keyframes hero-glow-3 {
-  0%, 100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 0.85;
-  }
-}
-
-.animate-hero-glow-1 {
-  animation: hero-glow-1 6s ease-in-out infinite;
-}
-
-.animate-hero-glow-2 {
-  animation: hero-glow-2 8s ease-in-out infinite;
-}
-
-.animate-hero-glow-3 {
-  animation: hero-glow-3 10s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-hero-glow-1,
-  .animate-hero-glow-2,
-  .animate-hero-glow-3 {
+  .hero-glow-bg::before {
     animation: none;
   }
 }
