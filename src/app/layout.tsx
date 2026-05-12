@@ -1,14 +1,26 @@
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import './global.css';
 import { Inter } from 'next/font/google';
+import type { Metadata } from 'next';
 
 const inter = Inter({
   subsets: ['latin'],
 });
 
+export const metadata: Metadata = {
+  title: {
+    default: 'Pylon 文档',
+    template: '%s | Pylon 文档',
+  },
+  description: 'Pylon 非官方文档站 - 基于 Rebar 框架的 Minecraft 技术模组，覆盖电力、流体、物流、多方块等全部能力模块。',
+  icons: {
+    icon: '/icon.png',
+  },
+};
+
 export default function Layout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="en" className={inter.className} suppressHydrationWarning>
+    <html lang="zh-CN" className={inter.className} suppressHydrationWarning>
       <body className="flex flex-col min-h-screen">
         <RootProvider
           i18n={{
