@@ -5,14 +5,14 @@ description: 了解如何检查和管理多方块的状态
 
 import { Callout } from 'fumadocs-ui/components/callout';
 
-您经常需要获取或监听关于多方块状态的信息。有两个由 Rebar 跟踪的重要信息需要了解：
+开发多方块时，经常需要查询或监听其状态。Rebar 主要跟踪两个关键信息：
 
-* 多方块是否形成？
-* 多方块的所有部分是否都已加载？
+* 多方块是否已成型？
+* 多方块的各个部分是否都已加载？
 
-第一个仅在多方块的所有组件都已放置时为真。第二个仅在多方块的每个组件都在已加载的区块中时为真。这是必要的，因为多方块可能跨越多个区块：与常规方块不同，在多方块中您可能需要确保在运行某些代码时整个多方块结构都被加载。
+第一个条件在所有组件都放置到位时为 true；第二个条件则要求每个组件所在的区块都已加载。之所以要区分这两者，是因为多方块可能横跨多个区块——和普通方块不同，运行某些逻辑前你需要确保整个结构都已就绪。
 
-为了安全起见，当执行任何与多方块其他组件交互的操作时，您应该检查多方块是否完整且完全加载。您可以通过调用 `isFormedAndFullyLoaded()` 来做到这一点。例如：
+和多方块的其他组件交互之前，务必先检查多方块是否完整且完全加载。调用 `isFormedAndFullyLoaded()` 即可：
 
 ```java
 @Override
@@ -25,7 +25,7 @@ public void tick() {
 }
 ```
 
-您还可以在多方块形成或未形成时执行代码，使用 `onMultiblockFormed` 和 `onMultiblockUnformed`。例如：
+你还可以利用 `onMultiblockFormed` 和 `onMultiblockUnformed` 在多方块成型或解体时执行自定义逻辑：
 
 ```java
 @Override
@@ -41,9 +41,9 @@ public void onMultiblockUnformed(boolean partUnloaded) {
 }
 ```
 
-在 `onMultiblockUnformed` 中，如果多方块因为被卸载而变为未形成状态，`partUnloaded` 为 true。如果为 false，这表示多方块的一部分已被破坏。
+`onMultiblockUnformed` 的参数 `partUnloaded`：值为 `true` 表示因区块卸载导致解体，`false` 则表示有组件被破坏。
 
 <Callout type="error">
-  **覆盖这些方法时，务必确保调用 `RebarMultiblock.super.onMultiblockFormed()` 和 `RebarMultiblock.super.onMultiblockUnformed(partUnloaded)`。**
-  这是因为 `RebarSimpleMultiblock` 使用这些方法来管理 WAILA 覆盖、虚影方块等。
+  **覆盖这些方法时，必须调用 `RebarMultiblock.super.onMultiblockFormed()` 和 `RebarMultiblock.super.onMultiblockUnformed(partUnloaded)`。**
+  `RebarSimpleMultiblock` 依赖这两个方法来管理 WAILA 覆盖、虚影方块等功能。
 </Callout>

@@ -5,11 +5,11 @@ description: 了解如何在多方块中与特定组件进行交互
 
 import { Callout } from 'fumadocs-ui/components/callout';
 
-您经常需要与多方块中的特定组件进行交互。例如，您可能希望在多方块燃烧燃料时将多方块中的熔炉点燃。为此，您可以使用 `getMultiblockComponent`、`getMultiblockComponentOrThrow` 和 `getMultiblockBlock` 方法。
+开发时经常需要操作多方块中的特定组件——比如在多方块工作时点燃其中的熔炉。这时可以用 `getMultiblockComponent`、`getMultiblockComponentOrThrow` 和 `getMultiblockBlock` 这几个方法。
 
-所有这些方法都会自动考虑多方块的旋转，因此您提供给这些方法的位置应该与您在 `getComponents` 中提供的位置相同。
+这些方法已经自动处理了旋转问题，传入的坐标和你在 `getComponents` 中定义的一致即可。
 
-例如：
+示例：
 
 ```java
 @Override
@@ -28,7 +28,7 @@ public void tick() {
 }
 ```
 
-将重要组件的位置存储在变量中是很有用的，以避免重复它们，并且如果您想要更改组件的位置，只需要更改一个变量。例如：
+建议把常用组件的位置定义成常量，避免到处硬编码坐标。以后要调整位置也只需改一处：
 
 ```java
 public static final Vector3i FURNACE_POSITION = new Vector3i(0, 2, 0);
@@ -62,20 +62,20 @@ public void tick() {
 ## 物品和流体舱口
 
 <Callout type="info">
-  **本节仅与为 Pylon 创建附属组件相关**
+  **本节仅适用于为 Pylon 开发附属模组**
 </Callout>
 
-Pylon 添加了物品和流体舱口，它们对于多方块非常有用。
+Pylon 提供了物品舱口和流体舱口，在多方块开发中非常实用。
 
 ### 物品舱口
 
-物品舱口使用起来很简单。
+物品舱口的使用很简单：
 
-1. 在您的多方块中添加物品舱口/舱口。
-2. 在需要的地方，使用 `getMultiblockComponentOrThrow` 获取舱口。
-3. 访问舱口的库存并实现您的 ticking 逻辑。
+1. 在多方块中加入物品舱口组件
+2. 用 `getMultiblockComponentOrThrow` 获取舱口实例
+3. 操作舱口的库存，实现你的 ticking 逻辑
 
-例如：
+示例：
 
 ```java
 public static final Vector3i ITEM_INPUT_HATCH_POSITION = new Vector3i(0, 2, 0);
@@ -110,14 +110,14 @@ public void tick() {
 
 ### 流体舱口
 
-流体舱口与物品舱口类似但稍微复杂一些，因为流体舱口中必须设置的流体类型必须由多方块设置。
+流体舱口和物品舱口类似，但多一步：需要在多方块成型时指定舱口接受的流体类型。
 
-1. 在您的多方块中添加流体舱口/舱口。
-2. 当多方块形成时，设置每个舱口中的流体类型。
-3. 在需要的地方，使用 `getMultiblockComponentOrThrow` 获取舱口。
-4. 在哪里需要实现逻辑，从舱口添加/移除流体。
+1. 在多方块中加入流体舱口组件
+2. 在 `onMultiblockFormed` 中设置每个舱口的流体类型
+3. 用 `getMultiblockComponentOrThrow` 获取舱口实例
+4. 在逻辑中从舱口存取流体
 
-例如：
+示例：
 
 ```java
 public static final Vector3i FLUID_INPUT_HATCH_POSITION = new Vector3i(0, 2, 0);

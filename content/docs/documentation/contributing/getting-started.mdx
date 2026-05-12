@@ -5,43 +5,43 @@ description: 介绍 Rebar 附属组件开发的基础知识
 
 # 开始指南
 
-Rebar 使用 [Kotlin](https://kotlinlang.org/) 编写，这是一种与 Java 类似但具有更现代特性和简洁语法的语言。如果您了解 Java，您将能够很快掌握 Kotlin。
+Rebar 使用 [Kotlin](https://kotlinlang.org/) 编写。Kotlin 和 Java 很像，但语法更现代、更简洁。有 Java 基础的话，上手 Kotlin 会非常快。
 
-Pylon 使用 Java 编写。
+Pylon 本身则使用 Java 编写。
 
 ## 如何开始
 
-1. 克隆 `parallel-dev-repo` 仓库：`git clone https://github.com/pylonmc/parallel-dev-repo`（或使用 GitHub Desktop 等图形界面工具）
-2. 如果您使用 IntelliJ，它将自动设置所有内容。如果没有，请运行 `./gradlew`。这将克隆 `rebar` 和 `pylon` 仓库。
-3. 如果您想将更改提交到主项目，**删除 `rebar` 或 `pylon` 目录（取决于您想向哪个项目贡献），fork rebar 或 pylon 仓库，并将您的 fork 克隆到同一目录中。** 否则，您将无法为更改打开拉取请求（除非您是 Rebar/Pylon 开发人员并且有权访问 Rebar/Pylon 仓库）。
+1. 克隆 `parallel-dev-repo` 仓库：`git clone https://github.com/pylonmc/parallel-dev-repo`（也可以用 GitHub Desktop 等图形界面工具）
+2. 如果你用 IntelliJ，打开项目后会自动完成所有配置。否则请手动运行 `./gradlew`，它会自动克隆 `rebar` 和 `pylon` 仓库。
+3. 如果你想向主项目提交代码，**需要删掉 `rebar` 或 `pylon` 目录（取决于你要贡献哪个项目），然后 fork 对应的仓库，把你的 fork 克隆到同一目录下。** 不这样做的话你没法开 PR（除非你是 Rebar/Pylon 的核心开发者，有对应仓库的写权限）。
 
-有关主仓库的更多信息，请参阅[并行开发仓库项目](master-project.md)页面。
+关于主仓库的更多说明，请参阅[并行开发仓库项目](master-project.md)。
 
-## 提交您的贡献
+## 提交贡献
 
-我们通常欢迎对 Rebar 和 Pylon 的贡献，但在进行任何重大更改之前最好先与 Pylon 团队核实，因为我们已经计划了一些可能不适合您更改的内容。如果您有兴趣做任何重大工作，或对贡献有任何疑问，请加入我们的 Discord 服务器与我们聊聊天 :)
+我们欢迎任何对 Rebar 和 Pylon 的贡献。不过在大改动之前，建议先和 Pylon 团队沟通一下——有些功能可能已经在计划中了，提前确认可以避免重复劳动。如果你打算做比较大的改动，或者对贡献流程有任何疑问，欢迎来我们的 Discord 聊聊 :)
 
-完成更改后，打开一个拉取请求并提供有关您做了什么以及为什么这样做的信息。
+改好之后，开一个 PR 并说明你改了什么、为什么这样改。
 
 ## 测试
 
-Rebar 有一套集成测试。应该仅为关键功能（如方块存储和配方）添加测试。
+Rebar 有一套集成测试。一般来说只需要为关键功能（如方块存储和配方）添加测试即可。
 
 ## 自定义 Dokka
 
-Pylon 使用自定义版本的 Dokka 来生成 Javadocs。这是因为我默认的 Dokka 输出非常有问题且看起来不太好。Seggan 已向 Dokka 项目提交了修复这些问题的拉取请求，但尚未合并，因此在此期间我们使用自定义版本。如果您希望查看"修复后"的文档输出，请按以下步骤操作：
+Pylon 用了一个定制版的 Dokka 来生成 Javadocs，因为官方版本的输出有不少问题，效果也不太理想。Seggan 已经向 Dokka 上游提了修复 PR，但还没合并，所以暂时先用自定义版本。如果你想体验修复后的文档效果，按以下步骤操作：
 
 1. 克隆 `pylonmc/dokka` 仓库：`git clone https://github.com/pylonmc/dokka`
-2. 检出 `pylon` 分支：`git checkout pylon`
-3. 在根目录执行 `./gradlew publishToMavenLocal -Pversion=2.1.0-pylon-SNAPSHOT`。请注意，由于 Dokka 是一个非常庞大的项目，首次构建需要很长时间。在 Seggan 的相当不错的笔记本电脑上，首次运行大约需要 10 分钟。只要不删除构建缓存，后续构建将快得多。
-4. 现在，在 Pylon 主项目中，执行 `./gradlew :rebar:rebar:dokkaGenerate -PusePylonDokka=true`。生成的输出位于 `pylon/rebar/rebar/build/dokka`。
+2. 切换到 `pylon` 分支：`git checkout pylon`
+3. 在根目录执行 `./gradlew publishToMavenLocal -Pversion=2.1.0-pylon-SNAPSHOT`。注意 Dokka 项目很大，首次构建会比较慢，大概需要 10 分钟左右。之后只要不清理构建缓存，增量构建会快很多。
+4. 回到 Pylon 主项目，执行 `./gradlew :rebar:rebar:dokkaGenerate -PusePylonDokka=true`。生成的文档在 `pylon/rebar/rebar/build/dokka` 目录下。
 
-## 我卡住了，该怎么办？
+## 卡住了怎么办？
 
-1. 如果是 Pylon 特有的问题，检查是否在文档中。如果不是 Pylon 特有的，就用谷歌搜索。
-2. 在相关仓库中搜索问题，看看是否有人提到过
-3. 在我们的 Discord 服务器上搜索相关术语，看看之前是否讨论过
-4. 在我们的 Discord 服务器上提问
+1. 先判断是不是 Pylon 特有的问题——如果是就查文档，不是就用搜索引擎搜
+2. 去对应仓库的 Issues 里看看有没有人遇到过同样的问题
+3. 在我们的 Discord 服务器里搜索相关关键词，看看之前有没有讨论过
+4. 以上都找不到答案的话，直接在 Discord 上提问
 
 
 [comment]: <> (TODO 让这些说明更容易理解，也许添加截图等，没有经验的用户可能完全无法从这些说明中理解要做什么)

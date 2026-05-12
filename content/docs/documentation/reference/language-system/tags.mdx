@@ -5,10 +5,10 @@ description: 了解 Rebar 新增的 MiniMessage 标签及其使用方法
 
 import { Callout } from 'fumadocs-ui/components/callout';
 
-Rebar 的语言文件使用 [MiniMessage](https://docs.advntr.dev/minimessage/index.html) 格式。MiniMessage 本身已内置许多标签，而 Rebar 在此基础上添加了新的标签。
+Rebar 的语言文件使用 [MiniMessage](https://docs.advntr.dev/minimessage/index.html) 格式。MiniMessage 自带不少标签，Rebar 在此基础上又加了新的。
 
 <Callout type="info">
-  关于标签及其用法的更深入说明，请参见[教程 3](../../../creating-addons/tutorial-3.md)。
+  标签的详细用法见[教程 3](../../../creating-addons/tutorial-3.md)。
 </Callout>
 
 ## Rebar 添加的标签列表
@@ -22,7 +22,7 @@ Rebar 的语言文件使用 [MiniMessage](https://docs.advntr.dev/minimessage/in
 | <span style={{whiteSpace: 'nowrap'}}>`<insn></insn>`</span> | 应用黄色样式 (0xf9d104)，用于指令 | <span style={{whiteSpace: 'nowrap'}}>`<insn>Right click</insn>`</span> | ![insn](img/insn.png) |
 | <span style={{whiteSpace: 'nowrap'}}>`<guideinsn></guideinsn>`</span> | 应用紫色样式 (0xc907f4)，用于指南中的指令 | <span style={{whiteSpace: 'nowrap'}}>`<guideinsn>Right click</guideinsn>`</span> | ![guideinsn](img/guideinsn.png) |
 | <span style={{whiteSpace: 'nowrap'}}>`<attr></attr>`</span> | 应用青色样式 (0xa9d9e8)，用于属性 | <span style={{whiteSpace: 'nowrap'}}>`<attr>Watermelons:</attr> 5`</span> | ![attr](img/attr.png) |
-| <span style={{whiteSpace: 'nowrap'}}>`<unit:[unit]></unit>`<br />`<unit:[prefix]:[unit]></unit>`</span> | 将常量数字格式化为单位，可带可选公制前缀 | <span style={{whiteSpace: 'nowrap'}}>`<unit:seconds>1000</unit>`</span> | ![unit](img/unit.png) |
+| <span style={{whiteSpace: 'nowrap'}}>`<unit:[unit]></unit>`<br />`<unit:[prefix]:[unit]></unit>`</span> | 将数字格式化为单位，可带可选公制前缀 | <span style={{whiteSpace: 'nowrap'}}>`<unit:seconds>1000</unit>`</span> | ![unit](img/unit.png) |
 | <span style={{whiteSpace: 'nowrap'}}>`<nbsp></nbsp>`</span> | 将空格替换为不间断空格，防止换行 | <span style={{whiteSpace: 'nowrap'}}>`<nbsp>Watermelon</nbsp>`</span> | ![nbsp](img/nbsp.png) |
 | <span style={{whiteSpace: 'nowrap'}}>`<item:[item_name]>`</span> | 渲染原版或 Rebar 物品的翻译名称 | <span style={{whiteSpace: 'nowrap'}}>`<item:pylon:bandage>`</span> | ![item](img/item.png) |
 | <span style={{whiteSpace: 'nowrap'}}>`<entity:[entity_type]>`</span> | 渲染实体类型的翻译名称 | <span style={{whiteSpace: 'nowrap'}}>`<entity:creeper>`</span> | ![entity](img/entity.png) |

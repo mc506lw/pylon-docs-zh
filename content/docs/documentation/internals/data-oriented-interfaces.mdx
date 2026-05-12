@@ -9,9 +9,9 @@ import { Callout } from 'fumadocs-ui/components/callout';
   **作者：Idra**
 </Callout>
 
-"面向数据的接口"听起来真的很吓人，但实际上没那么糟糕。基本上，我们更喜欢使用接口而不是类，因为我们可以从多个接口继承（嗯，还有其他原因但不管那个）。问题当然在于接口不能有字段。
+"面向数据的接口"听起来挺唬人，其实没那么复杂。简单来说，我们更倾向于用接口而不是类，因为接口支持多继承（当然还有其他原因，这里不展开）。但问题来了——接口不能有字段。
 
-所以传统上，我们可能会这样解决。想象一下，我们想要存储方块的方向，就像在 `RebarDirectionalBlock` 中一样。我们可能会这样做：
+按传统思路，我们可能会这么写。假设要存方块朝向，像 `RebarDirectionalBlock` 那样：
 
 ```kotlin
 interface RebarDirectionalBlock {
@@ -19,11 +19,11 @@ interface RebarDirectionalBlock {
 }
 ```
 
-现在我们已经强制方块为我们处理这个问题。但想一想。这真的很烦人，因为方块现在必须自己处理所有的加载/卸载逻辑（它必须在 `write` 中写入方向并在加载构造函数中再次加载它）。如果我们开始为很多接口做这件事，这将是大量的额外代码。
+这样就把问题甩给了实现方。但仔细想想，这很烦人——每个方块都得自己处理加载/保存逻辑（在 `write` 里写入方向，在加载构造函数里再读出来）。如果接口多了起来，会产生大量重复代码。
 
-## 那么我们如何解决这个问题呢？
+## 解决方案
 
-我们要做的是只有一个映射来存储每个 `RebarDirectionalBlock` 的面，像这样：
+我们的做法是用一个映射表来存每个 `RebarDirectionalBlock` 的朝向：
 
 ```kotlin
 interface RebarDirectionalBlock {
@@ -39,7 +39,7 @@ interface RebarDirectionalBlock {
 }
 ```
 
-还有一件事，我们需要确保在方块的存储和加载时存储和加载方向：
+另外，还需要在方块序列化和反序列化时正确存取朝向：
 
 ```kotlin
 @EventHandler
@@ -60,4 +60,4 @@ private fun onSerialize(event: RebarBlockSerializeEvent) {
 }
 ```
 
-基本上就是这样。
+核心思路就是这样。
