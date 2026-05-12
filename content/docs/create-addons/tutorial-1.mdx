@@ -5,7 +5,7 @@ description: 介绍 Rebar 物品语言配方系统的基础知识。
 
 ## 概览
 
-模板附加组件只有一个类：`ExampleAddon`（或者你重命名后的名字）。该类继承了 [JavaPlugin] 并实现了 [RebarAddon]。类内部有一些注释解释了每个部分的作用——通读一遍并尝试理解它是如何工作的。现在让我们添加一个新物品！
+模板附属组件只有一个类：`ExampleAddon`（或者你重命名后的名字）。该类继承了 [JavaPlugin] 并实现了 [RebarAddon]。类内部有一些注释解释了每个部分的作用——通读一遍并尝试理解它是如何工作的。现在让我们添加一个新物品！
 
 我们先做一个法棍面包，它能补充 6 格饱食度。表面看起来可能很多内容，但不要担心！一旦你理解了，这个过程就非常简单，而且做这件事会让你接触到 Rebar 的许多核心系统。
 
@@ -20,7 +20,7 @@ description: 介绍 Rebar 物品语言配方系统的基础知识。
 [NamespacedKey] 是 Rebar 识别自定义物品、方块、研究、实体等的方式。
 
 <Callout type="question" title="为什么使用 NamespacedKeys？">
-  键只是一段简单的文本，比如 `pylon:copper_dust`，它让 Rebar 能够唯一标识你的物品。这和原版 Minecraft 物品有 ID 的方式非常相似。为什么我们不直接使用 `copper_dust` 作为键呢？好吧，如果两个附加组件都添加了一个叫做 `copper_dust` 的物品怎么办？我们就无法区分哪个是哪个了！为了解决这个问题，Rebar 使用 [NamespacedKey]，这意味着我们只需取一个字符串*和*你的附加组件名称，并将它们组合在一起——例如，`my_addon:copper_dust`。
+  键只是一段简单的文本，比如 `pylon:copper_dust`，它让 Rebar 能够唯一标识你的物品。这和原版 Minecraft 物品有 ID 的方式非常相似。为什么我们不直接使用 `copper_dust` 作为键呢？好吧，如果两个附属组件都添加了一个叫做 `copper_dust` 的物品怎么办？我们就无法区分哪个是哪个了！为了解决这个问题，Rebar 使用 [NamespacedKey]，这意味着我们只需取一个字符串*和*你的附属组件名称，并将它们组合在一起——例如，`my_addon:copper_dust`。
 </Callout>
 
 按照惯例，键放在 `ExampleAddonKeys` 类中。创建一个新的 [NamespacedKey] 叫做 “baguette”：
@@ -190,7 +190,7 @@ item.nuclear-bomb.name: "Bomba Nuclear"
 接下来，在文件里添加这些内容：
 
 ```yaml title="en.yml" hl_lines="3-7"
-addon: "<你的附加组件名称>"
+addon: "<你的附属组件名称>"
 
 item:
   baguette:
@@ -199,7 +199,7 @@ item:
       <arrow> The best food
 ```
 
-注意我们有一个 `addon` 键。这仅仅是你附加组件的名称。
+注意我们有一个 `addon` 键。这仅仅是你附属组件的名称。
 
 我们还为法棍面包添加了 `name` 和 `lore`。请注意我们在这里使用了 `baguette`，因为那是标识法棍面包的键，就像我们之前指定的那样。
 
@@ -213,7 +213,7 @@ item:
 
 ### 配方是如何工作的？
 
-配方作为 YAML 文件存储在你附加组件的 `resources/recipes` 文件夹中。例如，在 Pylon 中，锡粒的配方存储在 `resources/recipes/minecraft/crafting_shapeless.yml` 中，看起来像这样：
+配方作为 YAML 文件存储在你附属组件的 `resources/recipes` 文件夹中。例如，在 Pylon 中，锡粒的配方存储在 `resources/recipes/minecraft/crafting_shapeless.yml` 中，看起来像这样：
 
 ```yaml title="crafting_shapeless.yml"
 pylon:tin_nuggets_from_tin_ingot:
@@ -237,7 +237,7 @@ pylon:tin_nuggets_from_tin_ingot:
 
 Pylon 基础内容中已经[有一个如何编写烧制配方的示例](https://github.com/pylonmc/pylon/blob/master/src/main/resources/recipes/minecraft/blasting.yml)，所以我们去那里看看。
 
-基于那个例子，我们来创建我们的配方。首先，创建一个文件 `resources/recipes/minecraft/blasting.yml`。然后，插入以下内容（并将 `myaddon` 更改为你的附加组件键）：
+基于那个例子，我们来创建我们的配方。首先，创建一个文件 `resources/recipes/minecraft/blasting.yml`。然后，插入以下内容（并将 `myaddon` 更改为你的附属组件键）：
 
 ```yaml title="blasting.yml"
 pylon:baguette_blasting:
@@ -286,7 +286,7 @@ research:
 
 让我们创建一个名为“法棍至上”的研究来解锁法棍面包。
 
-首先，创建一个文件 `resources/researches.yml`。在文件中粘贴以下内容（并将 `myaddon` 更改为你附加组件的键）：
+首先，创建一个文件 `resources/researches.yml`。在文件中粘贴以下内容（并将 `myaddon` 更改为你附属组件的键）：
 
 ```yaml title="researches.yml"
 baguette_supremacy:
@@ -341,7 +341,7 @@ public final class ExampleAddonItems {
 <span></span>
 
 ```yaml title='resources/en.yml'
-addon: "<你的附加组件名称>"
+addon: "<你的附属组件名称>"
 
 item:
   baguette:

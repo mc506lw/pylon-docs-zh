@@ -1,17 +1,17 @@
 ---
 title: 前言与环境
-description: 介绍 Rebar 附加组件开发的基础知识。
+description: 介绍 Rebar 附属组件开发的基础知识。
 ---
 
 import { Callout } from 'fumadocs-ui/components/callout';
 
 <Callout type="danger">
-  目前不支持 Rebar 附加组件开发。Rebar 正在快速变化，下一个 Rebar 版本发布时，你的附加组件可能会以可怕的方式崩溃。你仍然可以制作附加组件，但要注意你可能需要做出重大更改才能保持更新。
+  目前不支持 Rebar 附属组件开发。Rebar 正在快速变化，下一个 Rebar 版本发布时，你的附属组件可能会以可怕的方式崩溃。你仍然可以制作附属组件，但要注意你可能需要做出重大更改才能保持更新。
 </Callout>
 
 ## 前言
 
-所以，你想写一个 Rebar 附加组件？好极了！我们编写这套教程是为了尽量让它简单。尽管如此，你仍需要一些基本的编程知识——如果你从未使用过 IDE 或编译器，或者从未写过 for 循环，跟随教程可能会比较困难。
+所以，你想写一个 Rebar 附属组件？好极了！我们编写这套教程是为了尽量让它简单。尽管如此，你仍需要一些基本的编程知识——如果你从未使用过 IDE 或编译器，或者从未写过 for 循环，跟随教程可能会比较困难。
 
 在我们开始之前，先交代一些事项...
 
@@ -27,13 +27,13 @@ import { Callout } from 'fumadocs-ui/components/callout';
 
 ### Rebar 与 Pylon 的区别
 
-开始前务必理解 Rebar 和 Pylon 之间的区别。Rebar 是一个提供一系列用于创建自定义方块、实体等实用函数的库。Pylon 是一个*附加组件*，提供了一堆“基础”内容。
+开始前务必理解 Rebar 和 Pylon 之间的区别。Rebar 是一个提供一系列用于创建自定义方块、实体等实用函数的库。Pylon 是一个*附属组件*，提供了一堆"基础"内容。
 
-你的附加组件是否需要 Pylon 完全由你决定。附加组件模板默认包含 Pylon 作为依赖，但这可以轻松更改。
+你的附属组件是否需要 Pylon 完全由你决定。附属组件模板默认包含 Pylon 作为依赖，但这可以轻松更改。
 
 ### 关于 Kotlin 的说明
 
-虽然你可以纯用 Java 编写附加组件，但更有经验的 Java 程序员可能会对 [Kotlin](https://kotlinlang.org/) 感兴趣。这是一种 Java 的替代方案，使用起来更友好（尤其是在语法方面！），并且拥有 Java 所缺少的一些酷功能。Rebar 本身就是用 Kotlin 编写的。
+虽然你可以纯用 Java 编写附属组件，但更有经验的 Java 程序员可能会对 [Kotlin](https://kotlinlang.org/) 感兴趣。这是一种 Java 的替代方案，使用起来更友好（尤其是在语法方面！），并且拥有 Java 所缺少的一些酷功能。Rebar 本身就是用 Kotlin 编写的。
 
 ### “我卡住了，救命！”
 
@@ -52,13 +52,13 @@ import { Callout } from 'fumadocs-ui/components/callout';
 
 ### 复刻模板
 
-Rebar 有一个[附加组件模板](https://github.com/pylonmc/rebar-addon-template)，你可以使用它，里面已经包含了编写 Rebar 附加组件所需的一切。[创建一个模板的复刻分支](https://www.geeksforgeeks.org/git/how-to-fork-a-github-repository/)。然后，[克隆你的复刻分支](https://www.geeksforgeeks.org/git/how-to-git-clone-a-remote-repository/)。
+Rebar 有一个[附属组件模板](https://github.com/pylonmc/rebar-addon-template)，你可以使用它，里面已经包含了编写 Rebar 附属组件所需的一切。[创建一个模板的复刻分支](https://www.geeksforgeeks.org/git/how-to-fork-a-github-repository/)。然后，[克隆你的复刻分支](https://www.geeksforgeeks.org/git/how-to-git-clone-a-remote-repository/)。
 
 接下来，在 IntelliJ 中打开你的复刻分支。
 
 IntelliJ 导入项目可能需要几分钟。
 
-![IntelliJ 正在导入附加组件模板](img/importing-addon-template.png)
+![IntelliJ 正在导入附属组件模板](img/importing-addon-template.png)
 
 ### 模板里有什么？
 
@@ -66,13 +66,13 @@ IntelliJ 导入项目可能需要几分钟。
 
 `build.gradle.kts` 和 `gradle.properties` 包含了关于你项目的顶级信息——名称、版本、Rebar 版本、主类和组名。请浏览这些文件，确保你相应地更改了它们。如果你对“主类”和“组名”感到困惑，[这个链接可能会有所帮助](https://www.baeldung.com/java-packages)。
 
-接下来是代码部分。模板中已经有一个示例方块和一个示例物品。我们还有主附加组件类 `ExampleAddon.java`。
+接下来是代码部分。模板中已经有一个示例方块和一个示例物品。我们还有主附属组件类 `ExampleAddon.java`。
 
 在本教程中，我们将从头添加一个新物品来展示具体做法。
 
 ### 运行测试服务器
 
-附加组件模板自带一个“run server”任务，你可以用它直接在 IntelliJ 中运行测试服务器。只需打开 Gradle 菜单，找到并双击 `runServer` 按钮。这将启动一个新服务器，并在你项目根目录下创建一个包含服务器的 `run` 文件夹。（如果你不在 IntelliJ 中，只需运行 `./gradlew runServer`）你可以随意修改这个服务器——添加插件、更改配置等等！
+附属组件模板自带一个"run server"任务，你可以用它直接在 IntelliJ 中运行测试服务器。只需打开 Gradle 菜单，找到并双击 `runServer` 按钮。这将启动一个新服务器，并在你项目根目录下创建一个包含服务器的 `run` 文件夹。（如果你不在 IntelliJ 中，只需运行 `./gradlew runServer`）你可以随意修改这个服务器——添加插件、更改配置等等！
 
 ![运行测试服务器](img/running-test-server.png)
 
@@ -86,4 +86,4 @@ IntelliJ 导入项目可能需要几分钟。
 
 服务器启动后，你可以通过 `localhost:25565` 连接。确保你在控制台中输入 `op <用户名>` 给自己授予管理权限。
 
-默认情况下，附加组件模板包含一个示例物品和一个示例方块。尝试使用 `/rb give <用户> exampleaddon:example_item` 来获得示例物品。
+默认情况下，附属组件模板包含一个示例物品和一个示例方块。尝试使用 `/rb give <用户> exampleaddon:example_item` 来获得示例物品。
