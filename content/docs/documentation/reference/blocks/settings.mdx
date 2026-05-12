@@ -3,6 +3,8 @@ title: 设置
 description: 了解如何为 Rebar 方块配置和使用的设置系统
 ---
 
+import { Callout } from 'fumadocs-ui/components/callout';
+
 # 设置
 
 与物品一样，您可以为方块分配设置。
@@ -225,8 +227,10 @@ public class ExampleBlockItem extends RebarItem {
 }
 ```
 
-!!! question "我真的需要在物品和方块中都获取 incrementBy 的值两次吗 - 一次在物品中，一次在方块中？"
-    不幸的是，是的。过去曾热烈讨论过绕过这个问题的其他方法，但这是最不糟糕的折衷方案。其他选项涉及更复杂的代码和更少的灵活性。
+<Callout type="warn">
+  **我真的需要在物品和方块中都获取 incrementBy 的值两次吗 - 一次在物品中，一次在方块中？**
+  不幸的是，是的。过去曾热烈讨论过绕过这个问题的其他方法，但这是最不糟糕的折衷方案。其他选项涉及更复杂的代码和更少的灵活性。
+</Callout>
 
 我们现在可以使用此类注册物品：
 ```java title="ExampleAddonItems.java"

@@ -3,9 +3,13 @@ title: 创建自定义方块
 description: 了解如何在 Rebar 中创建自定义方块
 ---
 
+import { Callout } from 'fumadocs-ui/components/callout';
+
 # 自定义方块
 
-!!! warning "本文档假设您了解 Rebar 物品的基础知识。"
+<Callout type="warn">
+  **本文档假设您了解 Rebar 物品的基础知识。**
+</Callout>
 
 添加自定义方块需要 3 样东西：
 
@@ -51,8 +55,10 @@ public class ExampleAddonKeys {
 RebarBlock.register(ExampleAddonKeys.EXAMPLE_BLOCK, Material.IRON_BLOCK, ExampleBlock.class);
 ```
 
-!!! note "应该从您的附属组件的 `onEnable` 方法中注册方块。"
-    我们建议创建一个单独的文件来处理注册所有您的方块，以避免您的 `onEnable` 函数变得太大。
+<Callout type="info">
+  **应该从您的附属组件的 `onEnable` 方法中注册方块。**
+  我们建议创建一个单独的文件来处理注册所有您的方块，以避免您的 `onEnable` 函数变得太大。
+</Callout>
 
 注册方块不会注册对应的物品。我们需要注册一个对应的物品，以便玩家可以获得该方块作为物品。通常，物品和方块使用相同的 key。由于我们的物品不需要任何特殊行为，我们将只使用 `RebarItem` 类作为物品：
 ```java title="ExampleAddonItems.java"

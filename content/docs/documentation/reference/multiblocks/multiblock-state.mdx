@@ -3,6 +3,8 @@ title: 多方块状态
 description: 了解如何检查和管理多方块的状态
 ---
 
+import { Callout } from 'fumadocs-ui/components/callout';
+
 您经常需要获取或监听关于多方块状态的信息。有两个由 Rebar 跟踪的重要信息需要了解：
 
 * 多方块是否形成？
@@ -41,5 +43,7 @@ public void onMultiblockUnformed(boolean partUnloaded) {
 
 在 `onMultiblockUnformed` 中，如果多方块因为被卸载而变为未形成状态，`partUnloaded` 为 true。如果为 false，这表示多方块的一部分已被破坏。
 
-!!! danger "覆盖这些方法时，务必确保调用 `RebarMultiblock.super.onMultiblockFormed()` 和 `RebarMultiblock.super.onMultiblockUnformed(partUnloaded)`。"
-    这是因为 `RebarSimpleMultiblock` 使用这些方法来管理 WAILA 覆盖、虚影方块等。
+<Callout type="error">
+  **覆盖这些方法时，务必确保调用 `RebarMultiblock.super.onMultiblockFormed()` 和 `RebarMultiblock.super.onMultiblockUnformed(partUnloaded)`。**
+  这是因为 `RebarSimpleMultiblock` 使用这些方法来管理 WAILA 覆盖、虚影方块等。
+</Callout>

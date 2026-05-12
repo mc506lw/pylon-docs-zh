@@ -25,8 +25,9 @@ import { Callout } from 'fumadocs-ui/components/callout';
 
 `HandlerRecipeBookClick#handlePylonItemPlacement` 方法应该处理放置如何进行，我们有一个方法，但通常它由 `AbstractCraftingMenu` 中的一个方法处理，因此我们需要使用反射来调用一些东西来模拟正常行为并只更改我们需要的部分。
 
-!!! note
-    为了优化这里的大部分调用，所有内容都使用方法句柄，这些方法可能会被调用很多次，因此它们必须是高性能的
+<Callout>
+  为了优化这里的大部分调用，所有内容都使用方法句柄，这些方法可能会被调用很多次，因此它们必须是高性能的
+</Callout>
 
 `ServerPlaceRecipe` 处理移动物品和核算它们的核心逻辑，然而大部分是私有的，这就是为什么我们创建自己的版本，将大多数行为委托给 NMS 类。
 
@@ -34,10 +35,11 @@ import { Callout } from 'fumadocs-ui/components/callout';
 
 目标是从 `ItemOrExact.Item` 匹配中排除我们的 Pylon 物品。
 
-!!! note
-    Minecraft 以 2 种方式匹配物品：
-    - ItemOrExact.Item（基于 Material 的匹配），
-    - ItemOrExact.Exact（pdc 和 component，完全匹配）。
+<Callout>
+  Minecraft 以 2 种方式匹配物品：
+  - ItemOrExact.Item（基于 Material 的匹配），
+  - ItemOrExact.Exact（pdc 和 component，完全匹配）。
+</Callout>
 
 ## 修复核算逻辑
 

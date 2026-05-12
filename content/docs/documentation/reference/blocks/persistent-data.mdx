@@ -3,6 +3,8 @@ title: 持久化数据
 description: 了解如何在 Rebar 方块中存储和加载持久化数据
 ---
 
+import { Callout } from 'fumadocs-ui/components/callout';
+
 # 持久化数据
 
 由于每个物理方块都有一个对应的实例，您可以在方块类中存储方块数据。
@@ -40,12 +42,16 @@ public class ExampleBlock extends RebarBlock implements RebarInteractBlock {
 
 `PersistentDataContainer`（PDC）是一种简单的持久化数据存储方式。可以将其结构视为类似于 JSON；一个嵌套的键值存储。每个值都由一个 `NamespacedKey` 标识。PDC 可以相互嵌套。
 
-!!! info "有关 PDC 的更多信息，请参见[Paper 文档](https://docs.papermc.io/paper/dev/pdc/)。"
+<Callout type="info">
+  有关 PDC 的更多信息，请参见[Paper 文档](https://docs.papermc.io/paper/dev/pdc/)。
+</Callout>
 
 在"普通"Minecraft 中，方块没有 PDC。实体、区块、物品堆栈和其他一些东西有。然而，通过黑暗魔法，Rebar 为每个方块分配了一个 PDC，您可以在卸载时保存数据，并在加载时从其中加载数据。
 
-!!! note "等等，这是如何工作的？"
-    在底层，方块 PDC 保存在区块 PDC 中。这有一个很大的优势：**Rebar 方块数据始终与区块的其他数据保持同步。** 传递给 `write` 方法以及加载构造函数的 PDC 是 transient（临时）- 它仅在方块被加载或保存时存在。
+<Callout>
+  **等等，这是如何工作的？**
+  在底层，方块 PDC 保存在区块 PDC 中。这有一个很大的优势：**Rebar 方块数据始终与区块的其他数据保持同步。** 传递给 `write` 方法以及加载构造函数的 PDC 是 transient（临时）- 它仅在方块被加载或保存时存在。
+</Callout>
 
 要在方块的 PDC 中保存数据，我们首先需要一个 key 来标识它：
 ```java title="ExampleBlock.java"
@@ -72,8 +78,10 @@ public class ExampleBlock extends RebarBlock implements RebarInteractBlock {
 }
 ```
 
-!!! danger "不要假设 `write` 仅在方块被卸载时调用"
-    如下所述，`write` 可能会因为方块被卸载以外的原因而被调用。如果您需要在方块被卸载时运行一些代码，请参见 [RebarUnloadBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarUnloadBlock.html)。
+<Callout type="error">
+  **不要假设 `write` 仅在方块被卸载时调用**
+  如下所述，`write` 可能会因为方块被卸载以外的原因而被调用。如果您需要在方块被卸载时运行一些代码，请参见 [RebarUnloadBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarUnloadBlock.html)。
+</Callout>
 
 您可以在加载构造函数中加载数据：
 ```java title="ExampleBlock.java"
@@ -175,7 +183,9 @@ Paper 已经提供了几个 PDT，包括 bytes、longs、byte 数组、lists 等
 
 您可以在[这里](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/datatypes/RebarSerializers.html)找到 PDT 的完整列表。当然，如果需要，您也可以创建自己的 PDT。
 
-!!! info "有关 PDT 的更多信息，请参见[Paper 文档](https://docs.papermc.io/paper/dev/pdc/#data-types)。"
+<Callout type="info">
+  有关 PDT 的更多信息，请参见[Paper 文档](https://docs.papermc.io/paper/dev/pdc/#data-types)。
+</Callout>
 
 
 ## 调试

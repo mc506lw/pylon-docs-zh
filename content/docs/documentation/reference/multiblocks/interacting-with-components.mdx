@@ -3,6 +3,8 @@ title: 与多方块组件交互
 description: 了解如何在多方块中与特定组件进行交互
 ---
 
+import { Callout } from 'fumadocs-ui/components/callout';
+
 您经常需要与多方块中的特定组件进行交互。例如，您可能希望在多方块燃烧燃料时将多方块中的熔炉点燃。为此，您可以使用 `getMultiblockComponent`、`getMultiblockComponentOrThrow` 和 `getMultiblockBlock` 方法。
 
 所有这些方法都会自动考虑多方块的旋转，因此您提供给这些方法的位置应该与您在 `getComponents` 中提供的位置相同。
@@ -59,7 +61,9 @@ public void tick() {
 
 ## 物品和流体舱口
 
-!!! info "本节仅与为 Pylon 创建附属组件相关"
+<Callout type="info">
+  **本节仅与为 Pylon 创建附属组件相关**
+</Callout>
 
 Pylon 添加了物品和流体舱口，它们对于多方块非常有用。
 
