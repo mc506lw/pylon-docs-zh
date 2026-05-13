@@ -1,0 +1,88 @@
+---
+title: 开发者命令
+description: MonolithLib 提供的开发者专用命令
+---
+
+# 开发者命令
+
+以下命令主要供开发者使用，用于创建和管理蓝图。
+
+## 命令列表
+
+| 命令 | 说明 |
+|------|------|
+| `/ml wand` | 获取选区魔杖（烈焰棒） |
+| `/ml save <文件名>` | 保存选区为蓝图 |
+| `/ml save <名称> --scaffold` | 保存脚手架阶段 |
+| `/ml save <名称> --assembled` | 保存组装阶段 |
+| `/ml merge <名称>` | 合并双阶段蓝图 |
+| `/ml reload` | 重载所有蓝图（OP） |
+
+## 命令详解
+
+### 选区工具
+
+```
+/ml wand
+```
+获取烈焰棒作为选区工具，用于选择区域创建蓝图。
+
+### 保存蓝图
+
+```
+/ml save <文件名>
+```
+保存当前选区为蓝图，蓝图会保存到 `plugins/MonolithLib/blueprints/` 目录下。
+
+### 双阶段蓝图
+
+对于复杂机器，可以创建双阶段蓝图：
+
+```
+/ml save <名称> --scaffold
+```
+保存脚手架阶段蓝图（宽松验证，只检查材质）。
+
+```
+/ml save <名称> --assembled
+```
+保存组装阶段蓝图（严格状态，精确匹配）。
+
+```
+/ml merge <名称>
+```
+合并脚手架和组装阶段，生成双阶段蓝图。
+
+### 重载蓝图
+
+```
+/ml reload
+```
+重载所有蓝图配置（需要 OP 权限），用于开发时热更新蓝图。
+
+## 工作流程示例
+
+### 创建简单蓝图
+
+1. 使用 `/ml wand` 获取选区魔杖
+2. 在游戏中搭建好结构
+3. 使用魔杖右键点击两个对角点定义选区
+4. 使用 `/ml save my_machine` 保存蓝图
+
+### 创建双阶段蓝图
+
+1. 在游戏中搭建脚手架结构（只关注材质）
+2. 使用 `/ml save my_machine --scaffold` 保存脚手架阶段
+3. 修改结构为最终状态（设置正确的方块朝向）
+4. 使用 `/ml save my_machine --assembled` 保存成型阶段
+5. 使用 `/ml merge my_machine` 合并双阶段
+
+## 权限节点
+
+| 命令 | 权限节点 |
+|------|----------|
+| `/ml wand` | `monolithlib.command.wand` |
+| `/ml save` | `monolithlib.command.save` |
+| `/ml merge` | `monolithlib.command.merge` |
+| `/ml reload` | `monolithlib.command.reload` |
+| 所有开发者命令 | `monolithlib.command.dev.*` |

@@ -1,0 +1,9 @@
+{
+  "pages": [
+    "index",
+    "install"
+  ],
+  "title": "首页",
+  "icon": "House",
+  "defaultOpen": true
+}

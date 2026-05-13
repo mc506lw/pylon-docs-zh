@@ -1,5 +1,51 @@
 ---
 title: 什么是 MonolithLib?
-description: 了解 MonolithLib 是什么，以及它将如何改变 Minecraft 游戏玩法
+description: 了解 MonolithLib 是什么，以及它如何改变 Minecraft 多方块机器的建造体验
 ---
-111
+
+# MonolithLib
+
+MonolithLib 是专门为 Rebar 框架打造的 Minecraft 服务器插件（依赖库）。
+
+## 解决的核心痛点
+
+Rebar 框架在多方块机器方面存在以下问题：
+
+1. **状态丢失** — 原生不支持楼梯朝向、半砖等复杂方块状态
+2. **匹配困难** — 放错一个楼梯方向就判定失败，玩家需要精确摆放每个方块
+3. **性能问题** — 暴力遍历匹配，结构越大延迟越严重
+
+## 主要功能
+
+| 功能 | 说明 |
+|------|------|
+| **高级验证引擎** | 只验证材质是否正确，无需玩家精确摆放每个方块朝向 |
+| **自动状态修正** | 玩家只需放对材质，系统自动将所有方块修正为精确状态 |
+| **极致性能预览** | 类似 Litematica 的逐层投影，仅渲染玩家周围 7 格投影方块 |
+| **零代码定义形状** | 支持导入 `.schem`/`.litematic`/`.nbt`，导出极速二进制 `.mnb` 格式 |
+
+## 目标用户
+
+### 普通玩家
+通过 `/ml` 命令获取蓝图物品、预览结构、放置建造，无需死磕方块朝向。
+
+### Rebar 开发者
+在游戏内创建蓝图，然后在插件中加载使用，快速实现大型多方块结构。
+
+## 文档导航
+
+### 玩家指南
+
+- [玩家命令](/docs/monolithlib/user/commands) — 所有玩家可用命令的详细说明
+- [蓝图使用指南](/docs/monolithlib/user/blueprint) — 获取和使用蓝图建造机器
+- [结构预览](/docs/monolithlib/user/preview) — 使用预览功能查看结构
+
+### 开发者指南
+
+- [快速开始](/docs/monolithlib/developer/quick-start) — 快速上手 MonolithLib API
+- [开发者命令](/docs/monolithlib/developer/commands) — 创建和管理蓝图的命令
+- [API 文档](/docs/monolithlib/developer/api) — 核心 API 的详细说明
+- [蓝图格式规范](/docs/monolithlib/developer/blueprint-format) — MNB 格式详解
+- [Rebar 集成](/docs/monolithlib/developer/integration) — 与 Rebar 框架集成指南
+
+简单来说：**MonolithLib 是 Rebar 生态的"增强插件"，让多方块机器的建造和验证更加流畅和用户友好。**

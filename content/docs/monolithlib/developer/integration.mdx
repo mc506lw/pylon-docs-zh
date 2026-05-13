@@ -1,0 +1,184 @@
+---
+title: Rebar 集成指南
+description: 如何将 MonolithLib 与 Rebar 框架集成
+---
+
+# Rebar 集成指南
+
+MonolithLib 专为 Rebar 框架设计，提供了完整的集成支持。本指南将介绍如何将 MonolithLib 与 Rebar 框架集成。
+
+## 核心集成组件
+
+### RebarAdapter
+
+`RebarAdapter` 是 MonolithLib 与 Rebar 框架之间的桥梁。
+
+```kotlin
+import top.mc506lw.monolith.feature.rebar.RebarAdapter
+
+val adapter = RebarAdapter()
+```
+
+### RebarModule
+
+`RebarModule` 是 Rebar 集成的核心模块。
+
+```kotlin
+import top.mc506lw.monolith.feature.rebar.RebarModule
+
+val module = RebarModule()
+module.enable()
+```
+
+## 自动检测 Rebar 方块
+
+MonolithLib 可以自动检测选区中的 Rebar 方块：
+
+```kotlin
+// 检测选区中的 Rebar 方块
+val rebarBlocks = adapter.detectRebarBlocks(world, region)
+
+// 创建 Rebar 谓词
+rebarBlocks.forEach { block ->
+    val predicate = adapter.createPredicate(block.rebarKey)
+    // 将谓词添加到蓝图中
+}
+```
+
+## 创建 Rebar 兼容的蓝图
+
+### 步骤 1: 定义蓝图
+
+```kotlin
+import top.mc506lw.monolith.core.model.Blueprint
+import top.mc506lw.monolith.validation.predicate.RebarPredicate
+
+val blueprint = Blueprint(
+    id = "my_rebar_machine",
+    assembledShape = shape,
+    metadata = BlueprintMetadata(
+        controllerOffset = Position(0, 0, 0),
+        controllerRebarKey = "rebar:controller"
+    )
+)
+```
+
+### 步骤 2: 添加 Rebar 谓词
+
+```kotlin
+// 添加 Rebar 控制器方块
+val controllerEntry = BlockEntry(
+    position = Position(0, 0, 0),
+    predicate = RebarPredicate("rebar:controller"),
+    blockData = "rebar:controller"
+)
+shape.addBlockEntry(controllerEntry)
+```
+
+## 建造流程集成
+
+MonolithLib 的建造流程与 Rebar 紧密集成：
+
+```
+SCAFFOLD（脚手架）
+    → 玩家按投影方块逐个放置
+    → 宽松验证（只检查材质）
+    ↓
+ASSEMBLED（成型）
+    → 自动修正所有方块状态
+    → 生成显示实体
+    → 绑定 Rebar 逻辑
+```
+
+### 触发 Rebar 检测
+
+当结构成型时，MonolithLib 会自动触发 Rebar 检测：
+
+```kotlin
+// 在建造完成时触发 Rebar 检测
+adapter.triggerRebarDetection(world, controllerPosition)
+```
+
+## 完整示例
+
+### 创建 Rebar 机器蓝图
+
+```kotlin
+import top.mc506lw.monolith.core.model.*
+import top.mc506lw.monolith.validation.predicate.*
+import top.mc506lw.monolith.feature.rebar.RebarAdapter
+
+// 创建形状
+val shape = Shape()
+
+// 添加 Rebar 控制器
+shape.addBlockEntry(BlockEntry(
+    position = Position(0, 0, 0),
+    predicate = RebarPredicate("rebar:controller"),
+    blockData = "rebar:controller"
+))
+
+// 添加其他方块（使用宽松谓词）
+shape.addBlockEntry(BlockEntry(
+    position = Position(1, 0, 0),
+    predicate = LoosePredicate("minecraft:cobblestone"),
+    blockData = "minecraft:cobblestone"
+))
+
+// 创建蓝图
+val blueprint = Blueprint(
+    id = "my_rebar_machine",
+    assembledShape = shape,
+    scaffoldShape = shape, // 使用相同形状作为脚手架
+    metadata = BlueprintMetadata(
+        controllerOffset = Position(0, 0, 0),
+        controllerRebarKey = "rebar:controller",
+        displayName = "My Rebar Machine",
+        description = "A custom Rebar machine"
+    ),
+    slots = emptyList(),
+    displayEntities = emptyList(),
+    customData = emptyMap()
+)
+
+// 保存蓝图
+BinaryFormat.save(blueprint, "/plugins/MonolithLib/blueprints/my_rebar_machine.mnb")
+```
+
+## 集成最佳实践
+
+### 1. 使用双阶段蓝图
+
+对于复杂机器，建议使用双阶段蓝图：
+
+- **SCAFFOLD**：使用宽松谓词，允许玩家自由放置
+- **ASSEMBLED**：使用严格谓词，确保精确状态
+
+### 2. 标记 Rebar 方块
+
+使用 `RebarPredicate` 标记所有 Rebar 方块，确保正确的验证行为。
+
+### 3. 设置控制器偏移
+
+正确设置 `controllerOffset` 确保 MonolithLib 能够找到控制器位置。
+
+### 4. 测试建造流程
+
+在发布前测试完整的建造流程，确保：
+- 脚手架阶段验证通过
+- 成型阶段自动修正状态
+- Rebar 逻辑正确绑定
+
+## 常见问题
+
+### Q: Rebar 方块没有被正确检测？
+
+A: 确保使用了 `RebarPredicate`，并且 `controllerRebarKey` 设置正确。
+
+### Q: 成型后 Rebar 机器没有激活？
+
+A: 检查 `controllerOffset` 是否指向正确的控制器位置，确保 `triggerRebarDetection` 被正确调用。
+
+### Q: 如何调试集成问题？
+
+A: 启用 MonolithLib 的调试日志，查看验证和建造过程的详细信息。

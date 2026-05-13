@@ -1,0 +1,108 @@
+---
+title: 玩家命令
+description: MonolithLib 提供的所有玩家命令说明
+---
+
+# 玩家命令
+
+MonolithLib 提供了 `/ml` 命令，用于普通玩家获取蓝图物品、预览结构和放置建造。
+
+## 命令列表
+
+| 命令 | 说明 |
+|------|------|
+| `/ml preview` | 预览结构（对准 Rebar 控制器） |
+| `/ml preview cancel` | 取消预览 |
+| `/ml build` | 开始建造（对准控制器） |
+| `/ml build cancel` | 取消建造 |
+| `/ml blueprint <ID>` | 获取蓝图物品 |
+| `/ml list` | 列出所有蓝图 |
+| `/ml info [ID]` | 查看蓝图详情 |
+| `/ml litematica easybuild` | 切换轻松放置模式 |
+| `/ml litematica printer` | 切换自动打印模式 |
+| `/ml layer up/down/<数字>` | 分层预览控制 |
+
+## 命令详解
+
+### 预览命令
+
+```
+/ml preview
+```
+对准 Rebar 控制器使用，会显示投影方块，告诉你如何搭建。
+
+```
+/ml preview cancel
+```
+取消当前预览。
+
+### 建造命令
+
+```
+/ml build
+```
+对准控制器开始建造，材质匹配后自动修正方块状态。
+
+```
+/ml build cancel
+```
+取消建造任务。
+
+### 蓝图管理
+
+```
+/ml blueprint <ID>
+```
+获取指定 ID 的蓝图物品。
+
+```
+/ml list
+```
+列出所有可用蓝图。
+
+```
+/ml info [ID]
+```
+查看蓝图详细信息，包括尺寸、阶段等。
+
+### Litematica 集成
+
+```
+/ml litematica easybuild
+```
+开启轻松放置模式，右键自动放置方块。
+
+```
+/ml litematica printer
+```
+开启自动打印模式。
+
+### 分层控制
+
+```
+/ml layer up
+```
+上一层。
+
+```
+/ml layer down
+```
+下一层。
+
+```
+/ml layer <数字>
+```
+跳转到指定层数。
+
+## 权限节点
+
+| 命令 | 权限节点 |
+|------|----------|
+| `/ml preview` | `monolithlib.command.preview` |
+| `/ml build` | `monolithlib.command.build` |
+| `/ml blueprint` | `monolithlib.command.blueprint` |
+| `/ml list` | `monolithlib.command.list` |
+| `/ml info` | `monolithlib.command.info` |
+| `/ml litematica` | `monolithlib.command.litematic` |
+| `/ml layer` | `monolithlib.command.layer` |
+| 所有玩家命令 | `monolithlib.command.player.*` |

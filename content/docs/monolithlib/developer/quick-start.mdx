@@ -1,0 +1,152 @@
+---
+title: 开发者快速开始
+description: 如何开始使用 MonolithLib API 开发多方块机器
+---
+
+# 开发者快速开始
+
+本指南将帮助你快速上手 MonolithLib API。推荐的开发流程是：**先在游戏内创建蓝图，再在插件中加载使用**。
+
+## 添加依赖
+
+首先，在你的项目中添加 MonolithLib 依赖：
+
+```xml
+<dependency>
+    <groupId>top.mc506lw.monolith</groupId>
+    <artifactId>monolithlib</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+## 第一步：在游戏内创建蓝图
+
+推荐在游戏内创建蓝图，这样可以直观地设计结构：
+
+### 1. 获取选区魔杖
+
+```
+/ml wand
+```
+
+### 2. 搭建结构并选择区域
+
+在游戏中搭建好你的多方块机器，然后使用魔杖右键点击两个对角点定义选区。
+
+### 3. 保存蓝图
+
+```
+/ml save my_machine
+```
+
+对于复杂机器，可以创建双阶段蓝图：
+
+```
+/ml save my_machine --scaffold   # 脚手架阶段（宽松验证）
+/ml save my_machine --assembled  # 成型阶段（严格状态）
+/ml merge my_machine             # 合并双阶段
+```
+
+蓝图会保存到 `plugins/MonolithLib/blueprints/` 目录下。
+
+## 第二步：在插件中加载蓝图
+
+创建好蓝图后，在你的插件中加载并注册：
+
+### 加载蓝图
+
+```kotlin
+import top.mc506lw.monolith.core.io.BinaryFormat
+import top.mc506lw.monolith.core.BlueprintManager
+
+// 加载蓝图文件
+val blueprint = BinaryFormat.load("plugins/MonolithLib/blueprints/my_machine.mnb")
+
+// 注册到蓝图管理器
+BlueprintManager.register(blueprint)
+```
+
+### 绑定到物品
+
+创建一个自定义物品，右键时放置蓝图：
+
+```kotlin
+// 在物品右键事件中
+val blueprint = BlueprintManager.get("my_machine")
+if (blueprint != null) {
+    // 放置蓝图到玩家点击的位置
+    blueprint.place(world, player.eyeLocation)
+}
+```
+
+## 第三步：验证与建造
+
+### 手动触发验证
+
+```kotlin
+import top.mc506lw.monolith.validation.ValidationEngine
+
+val engine = ValidationEngine()
+
+// 验证结构
+val result = engine.validate(
+    world = world,
+    origin = controllerPosition,
+    blueprint = blueprint,
+    stage = BuildStage.SCAFFOLD
+)
+
+if (result.valid) {
+    // 验证成功，自动修正方块状态
+    engine.correctStates(world, origin, blueprint)
+}
+```
+
+### 异步验证（大型结构推荐）
+
+```kotlin
+import top.mc506lw.monolith.validation.AsyncValidator
+
+val validator = AsyncValidator()
+
+validator.validateAsync(
+    world = world,
+    origin = controllerPosition,
+    blueprint = blueprint,
+    callback = { result ->
+        if (result.valid) {
+            // 验证成功后的逻辑
+        }
+    }
+)
+```
+
+## 完整示例
+
+### 在插件中集成蓝图
+
+```kotlin
+class MyPlugin : JavaPlugin() {
+    
+    override fun onEnable() {
+        // 加载蓝图
+        val blueprint = BinaryFormat.load("plugins/MonolithLib/blueprints/my_machine.mnb")
+        BlueprintManager.register(blueprint)
+        
+        // 注册命令：给予玩家蓝图物品
+        getCommand("give-machine")?.setExecutor { sender, cmd, label, args ->
+            if (sender is Player) {
+                val item = blueprint.createItem()
+                sender.inventory.addItem(item)
+            }
+            true
+        }
+    }
+}
+```
+
+## 下一步
+
+- 了解 [API 文档](/docs/monolithlib/developer/api/)
+- 学习 [蓝图格式规范](/docs/monolithlib/developer/blueprint-format/)
+- 查看 [Rebar 集成指南](/docs/monolithlib/developer/integration/)

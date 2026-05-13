@@ -1,0 +1,256 @@
+---
+title: API 文档
+description: MonolithLib 核心 API 的详细说明
+---
+
+# API 文档
+
+## 核心数据模型
+
+### Blueprint
+
+完整蓝图定义。
+
+```kotlin
+class Blueprint(
+    val id: String,
+    val assembledShape: Shape,
+    val scaffoldShape: Shape? = null,
+    val metadata: BlueprintMetadata,
+    val slots: List<SlotMapping>,
+    val displayEntities: List<DisplayEntityData>,
+    val customData: Map<String, String>
+)
+```
+
+### Shape
+
+结构形状定义。
+
+```kotlin
+class Shape(
+    val boundingBox: BoundingBox,
+    val blocks: List<BlockEntry>
+)
+```
+
+### BlockEntry
+
+单个方块记录。
+
+```kotlin
+class BlockEntry(
+    val position: Position,      // 相对坐标 (Short)
+    val predicate: BlockPredicate, // 匹配规则
+    val blockData: String        // 完整方块状态字符串
+)
+```
+
+### BuildStage
+
+建造阶段枚举。
+
+```kotlin
+enum class BuildStage {
+    SCAFFOLD,   // 脚手架阶段（宽松验证）
+    ASSEMBLED   // 成型阶段（严格状态）
+}
+```
+
+## 验证引擎 API
+
+### ValidationEngine
+
+核心验证引擎，负责检查结构是否正确。
+
+```kotlin
+class ValidationEngine {
+    // 验证结构
+    fun validate(
+        world: World,
+        origin: Position,
+        blueprint: Blueprint,
+        stage: BuildStage
+    ): ValidationResult
+    
+    // 自动修正方块状态（将玩家放置的方块修正为精确状态）
+    fun correctStates(
+        world: World,
+        origin: Position,
+        blueprint: Blueprint
+    )
+}
+```
+
+### AsyncValidator
+
+异步验证器，适合大型结构验证，不会卡顿。
+
+```kotlin
+class AsyncValidator {
+    // 异步验证
+    fun validateAsync(
+        world: World,
+        origin: Position,
+        blueprint: Blueprint,
+        callback: (ValidationResult) -> Unit
+    )
+}
+```
+
+### ValidationResult
+
+验证结果。
+
+```kotlin
+class ValidationResult(
+    val valid: Boolean,           // 是否验证通过
+    val missingBlocks: List<Position>,   // 缺失的方块位置
+    val mismatchedBlocks: List<MismatchInfo>  // 不匹配的方块信息
+)
+```
+
+## 谓词系统
+
+### BlockPredicate
+
+方块匹配谓词，决定如何判断玩家放置的方块是否符合要求。
+
+| 谓词类型 | 行为 |
+|----------|------|
+| `StrictPredicate` | 严格匹配所有方块状态属性 |
+| `LoosePredicate` | 仅匹配材质，忽略状态变化（如楼梯朝向） |
+| `RebarPredicate` | 匹配 Rebar 模组方块 |
+| `StairsNormalizer` | 自动规范化楼梯朝向 |
+
+```kotlin
+// 创建宽松谓词（仅匹配材质）
+val loose = LoosePredicate("minecraft:cobblestone")
+
+// 创建严格谓词（匹配完整状态）
+val strict = StrictPredicate("minecraft:oak_stairs[facing=north,half=bottom]")
+
+// 创建 Rebar 谓词
+val rebar = RebarPredicate("rebar:controller")
+```
+
+## IO 模块 API
+
+### BinaryFormat
+
+MNB 格式序列化/反序列化。
+
+```kotlin
+object BinaryFormat {
+    // 保存蓝图到文件
+    fun save(blueprint: Blueprint, path: String)
+    
+    // 从文件加载蓝图
+    fun load(path: String): Blueprint
+}
+```
+
+### LitematicFormat
+
+Litematica 格式支持。
+
+```kotlin
+object LitematicFormat {
+    // 导入 Litematica 格式为蓝图
+    fun import(path: String): Blueprint
+}
+```
+
+### SchemFormat
+
+Schematic 格式支持。
+
+```kotlin
+object SchemFormat {
+    // 导入 Schematic 格式为蓝图
+    fun import(path: String): Blueprint
+}
+```
+
+## Rebar 集成 API
+
+### RebarAdapter
+
+Rebar 适配类，处理与 Rebar 框架的交互。
+
+```kotlin
+class RebarAdapter {
+    // 检测选区中的 Rebar 方块
+    fun detectRebarBlocks(world: World, region: Region): List<RebarBlock>
+    
+    // 创建 Rebar 谓词
+    fun createPredicate(rebarKey: String): RebarPredicate
+    
+    // 触发 Rebar 检测（成型时调用）
+    fun triggerRebarDetection(world: World, position: Position)
+}
+```
+
+## 预览系统 API
+
+### PreviewModule
+
+预览模块，管理投影方块的显示。
+
+```kotlin
+class PreviewModule {
+    // 开始预览（显示投影方块）
+    fun startPreview(
+        player: Player,
+        blueprint: Blueprint,
+        origin: Position
+    )
+    
+    // 停止预览
+    fun stopPreview(player: Player)
+    
+    // 更新预览位置（跟随玩家移动）
+    fun updatePreview(player: Player)
+}
+```
+
+## 建造系统 API
+
+### StructureBuilder
+
+结构建造器，执行实际方块放置。
+
+```kotlin
+class StructureBuilder {
+    // 执行建造
+    fun build(
+        world: World,
+        origin: Position,
+        blueprint: Blueprint
+    ): BuildResult
+    
+    // 取消建造
+    fun cancel()
+}
+```
+
+### BuildSiteManager
+
+建造工地管理器，管理玩家的建造状态。
+
+```kotlin
+class BuildSiteManager {
+    // 创建建造工地
+    fun createBuildSite(
+        player: Player,
+        blueprint: Blueprint,
+        origin: Position
+    ): BuildSite
+    
+    // 获取玩家的建造工地
+    fun getBuildSite(player: Player): BuildSite?
+    
+    // 移除建造工地
+    fun removeBuildSite(player: Player)
+}
+```

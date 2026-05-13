@@ -15,13 +15,13 @@ export default function Layout({ children }: LayoutProps<'/'>) {
       links={[
         {
           type: 'custom',
-          // only displayed on navbar, not mobile menu
           on: 'nav',
           children: (
             <NavbarMenu>
-              <NavbarMenuTrigger>Documentation</NavbarMenuTrigger>
+              <NavbarMenuTrigger>文档</NavbarMenuTrigger>
               <NavbarMenuContent>
-                <NavbarMenuLink href="/docs">Hello World</NavbarMenuLink>
+                <NavbarMenuLink href="/docs/monolithlib">MonolithLib文档</NavbarMenuLink>
+                <NavbarMenuLink href="/docs/pylon">Pylon文档</NavbarMenuLink>
               </NavbarMenuContent>
             </NavbarMenu>
           ),

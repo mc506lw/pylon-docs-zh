@@ -1,0 +1,137 @@
+---
+title: 蓝图格式规范
+description: MonolithLib MNB 格式的详细规范
+---
+
+# 蓝图格式规范
+
+## MNB (Monolith Binary) 格式
+
+MNB 是 MonolithLib 自定义的二进制蓝图格式，文件扩展名为 `.mnb`，具有极高的读写性能。
+
+## 文件结构
+
+```
+┌─────────────────────────────────────┐
+│ Header (文件头)                      │
+│   - Magic: 0x4D4E4231 ("MNB1")      │
+│   - Version: 4 (当前版本)            │
+│   - FormatVersion, ConfigHash       │
+├─────────────────────────────────────┤
+│ BlueprintID (蓝图ID)                 │
+│ HasDualStage (是否有双阶段)          │
+├─────────────────────────────────────┤
+│ Assembled Shape (成型形态)           │
+│   - BoundingBox (尺寸)              │
+│   - BlockCount + BlockEntry列表     │
+├─────────────────────────────────────┤
+│ Scaffold Shape (脚手架形态，仅双阶段) │
+├─────────────────────────────────────┤
+│ Metadata (元数据)                    │
+│   - ControllerOffset (控制器偏移)—    │
+│   - ControllerRebarKey (可选)       │
+│   - DisplayName, Description        │
+│   - DisplayOffset                   │
+├─────────────────────────────────────┤
+│ Slots (槽位映射)                     │
+│   - SlotCount + [SlotId, Position] │
+├─────────────────────────────────────┤
+│ CustomData (自定义数据)              │
+├─────────────────────────────────────┤
+│ DisplayEntities (显示实体列表)       │
+└─────────────────────────────────────┘
+```
+
+## 文件头结构
+
+| 字段 | 类型 | 大小 | 说明 |
+|------|------|------|------|
+| Magic | UInt32 | 4 bytes | 魔数 `0x4D4E4231` ("MNB1") |
+| Version | UInt32 | 4 bytes | 版本号，当前为 4 |
+| FormatVersion | UInt16 | 2 bytes | 格式版本 |
+| ConfigHash | UInt64 | 8 bytes | 配置哈希 |
+
+## BlockEntry 结构
+
+每个方块记录包含：
+
+| 字段 | 类型 | 大小 | 说明 |
+|------|------|------|------|
+| Position.X | Int16 | 2 bytes | 相对 X 坐标 |
+| Position.Y | Int16 | 2 bytes | 相对 Y 坐标 |
+| Position.Z | Int16 | 2 bytes | 相对 Z 坐标 |
+| PredicateType | UInt8 | 1 byte | 谓词类型 |
+| BlockData | String | 变长 | 完整方块状态字符串 |
+
+### PredicateType 枚举
+
+| 值 | 谓词类型 | 说明 |
+|----|----------|------|
+| 0 | Strict | 严格匹配所有方块状态属性 |
+| 1 | Loose | 仅匹配材质，忽略状态变化 |
+| 2 | Rebar | 匹配 Rebar 模组方块 |
+| 3 | Air | 空气方块 |
+| 4 | Any | 任意方块 |
+
+## 支持的导入格式
+
+| 格式 | 扩展名 | 说明 |
+|------|--------|------|
+| MNB | `.mnb` | 自定义二进制格式（主要使用） |
+| Litematica | `.litematic` | Litematica 模组格式 |
+| Schematic | `.schem` | 原版 Schematic 格式 |
+| NBT | `.nbt` | NBT 结构格式 |
+
+## 双阶段蓝图
+
+对于复杂机器，MNB 支持双阶段蓝图：
+
+### SCAFFOLD（脚手架阶段）
+- 玩家按投影方块逐个放置
+- 宽松验证（只检查材质）
+- 忽略方块状态差异
+
+### ASSEMBLED（成型阶段）
+- 自动修正所有方块状态
+- 生成显示实体
+- 绑定 Rebar 逻辑
+
+## 元数据字段
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| ControllerOffset | Position | 控制器相对偏移 |
+| ControllerRebarKey | String (可选) | Rebar 控制器键 |
+| DisplayName | String | 显示名称 |
+| Description | String | 描述信息 |
+| DisplayOffset | Position | 显示偏移 |
+
+## 槽位映射
+
+用于定义机器的交互槽位：
+
+```
+SlotCount: UInt32
+[SlotId: String, Position: Position] * SlotCount
+```
+
+## 显示实体
+
+用于定义结构的视觉效果：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| EntityType | String | 实体类型 |
+| Position | Position | 相对位置 |
+| Rotation | Float3 | 旋转角度 |
+| Scale | Float3 | 缩放比例 |
+| NBT | CompoundTag | 实体数据 |
+
+## 自定义数据
+
+键值对形式的自定义数据，用于存储额外信息：
+
+```
+DataCount: UInt32
+[Key: String, Value: String] * DataCount
+```

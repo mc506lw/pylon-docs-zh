@@ -1,4 +1,8 @@
 {
-  "pages": ["(home)"],
+  "pages": [
+    "(home)",
+    "user",
+    "developer"
+  ],
   "root": true
 }

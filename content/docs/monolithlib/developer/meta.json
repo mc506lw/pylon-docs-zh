@@ -1,0 +1,12 @@
+{
+  "pages": [
+    "quick-start",
+    "api",
+    "blueprint-format",
+    "integration",
+    "commands"
+  ],
+  "title": "开发者指南",
+  "icon": "Wrench",
+  "defaultOpen": true
+}

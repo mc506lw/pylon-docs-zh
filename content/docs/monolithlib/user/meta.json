@@ -1,0 +1,10 @@
+{
+  "pages": [
+    "commands",
+    "blueprint",
+    "preview"
+  ],
+  "title": "用户指南",
+  "icon": "User",
+  "defaultOpen": true
+}
