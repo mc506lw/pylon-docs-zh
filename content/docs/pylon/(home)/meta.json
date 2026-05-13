@@ -2,6 +2,5 @@
   "title": "首页",
   "icon": "House",
   "pages": ["index", "getting-started", "install", "commands-permissions", "addon-list", "progress"],
-  "defaultOpen": true,
-  "root": true
+  "defaultOpen": true
 }

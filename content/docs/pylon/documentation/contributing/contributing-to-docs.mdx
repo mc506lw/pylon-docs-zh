@@ -1,0 +1,393 @@
+---
+title: 贡献文档
+description: 了解如何为 Pylon 中文文档站做出贡献
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+import { FileText, ChevronRight } from 'lucide-react';
+
+本文档站是基于 [Pylon 官方英文文档](https://pylonmc.github.io/) 的**第三方中文翻译/改编文档站**。我们致力于为中文社区提供更易理解的 Pylon 文档。
+
+欢迎各位贡献者帮助我们改进这个文档站！
+
+## 第0步：前置条件
+
+开始之前，请确认你的环境已经准备好以下工具：
+
+### Git
+
+克隆仓库和提交代码都离不开 Git。
+
+你可以用 [Git 命令行](https://git-scm.com/install/)，也可以用 GitHub Desktop 这类图形界面工具（推荐新手使用）。
+
+### GitHub 账号
+
+Fork 仓库和创建 PR 都需要 GitHub 账号。
+
+还没有的话可以[免费注册一个](https://github.com/signup)。
+
+### Node.js 和包管理器
+
+本项目基于现代前端框架构建，需要 Node.js 环境。
+
+在终端里检查一下是否已安装：
+
+```bash
+node --version
+# 应该显示 v18 或更高版本
+```
+
+<Tabs items={['pnpm (推荐)', 'yarn', 'npm']}>
+  <Tab value="pnpm (推荐)">
+    本项目推荐使用 [pnpm](https://pnpm.io/) 作为包管理器。
+
+    ```bash
+    pnpm --version
+    ```
+  </Tab>
+  <Tab value="yarn">
+    你也可以使用 [yarn](https://yarnpkg.com/) 作为包管理器。
+
+    ```bash
+    yarn --version
+    ```
+  </Tab>
+  <Tab value="npm">
+    或者使用 npm（Node.js 自带）。
+
+    ```bash
+    npm --version
+    ```
+  </Tab>
+</Tabs>
+
+<Callout type="tip">
+  **推荐使用 pnpm**
+  pnpm 更快、更节省磁盘空间。安装命令：`npm install -g pnpm`
+</Callout>
+
+---
+
+## 第1步：Fork 仓库
+
+打开本仓库的 GitHub 页面，点击右上角的 **Fork** 按钮，创建你自己的副本。
+
+---
+
+## 第2步：克隆你的 fork
+
+把 fork 到手上的仓库克隆到本地，才能预览和编辑。
+
+用命令行的话，去你的 fork 页面点绿色的 **Code** 按钮，复制 HTTPS 地址：
+
+然后运行：
+
+```bash
+git clone <REPLACE_URL_HERE>
+```
+
+---
+
+## 第3步：安装依赖
+
+仓库到手了，接下来安装依赖包。
+
+在项目根目录下执行：
+
+<Tabs items={['pnpm', 'yarn', 'npm']}>
+  <Tab value="pnpm">
+    ```bash
+    pnpm install
+    ```
+  </Tab>
+  <Tab value="yarn">
+    ```bash
+    yarn install
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npm install
+    ```
+  </Tab>
+</Tabs>
+
+这会安装项目所需的所有依赖包。
+
+---
+
+## 第4步：开始修改
+
+现在可以编辑文档了！
+
+<Callout type="warn">
+  你在 fork 上的所有修改不会自动生效，必须通过 PR 合入才会被合并到主分支。
+</Callout>
+
+文档用 Markdown 编写（.mdx 格式，支持 JSX 组件）。语法不熟的话可以看 [Mastering Markdown](https://guides.github.com/features/mastering-markdown/)。
+
+### 4.1 了解目录结构
+
+文档存放在 `content/docs/` 目录下（具体路径可能因项目配置而异）：
+
+```text
+content/
+└── docs/
+    └── documentation/
+        ├── contributing/    # 贡献指南
+        ├── installation/    # 安装指南
+        ├── getting-started/ # 入门教程
+        └── ...              # 其他章节
+```
+
+每个章节都有独立的目录，该章节用到的图片放在同目录下的 `img/` 文件夹中。
+
+### 4.2 创建新页面
+
+按以下步骤操作：
+
+1. 进入对应的子目录
+2. 新建一个 `.mdx` 或 `.md` 文件，取个有意义的名字
+
+**命名规则：**
+
+- 文件名以 `.md` 或 `.mdx` 结尾
+- 全部小写
+- 用连字符 `-` 代替空格
+- 不用特殊字符
+- 示例：`installing-addons.mdx`、`custom-recipes.mdx`
+
+然后：
+
+1. 用 Markdown 语法写内容
+2. 在文件头部添加 frontmatter（标题、描述等元数据）
+3. 保存文件
+4. 预览效果（见[第5步](#step-5-previewing-your-changes)）
+
+### 4.3 编辑现有页面
+
+1. 用编辑器打开要改的 `.mdx` 或 `.md` 文件
+2. 改内容
+3. 保存
+4. 预览（见[第5步](#step-5-previewing-your-changes)）
+
+### 4.4 添加图片
+
+#### 命名规范
+
+- 全部小写
+- 用连字符 `-` 代替空格
+- 取个描述性的名字
+- 优先用 PNG 格式
+- 示例：`github-fork.png`、`custom-item-example.png`
+
+#### 存放位置
+
+图片放在 markdown 文件**同一级目录**下的 `img/` 文件夹中。
+
+没有 `img/` 文件夹的话先新建一个。
+
+#### 在页面中引用
+
+```markdown
+![图片说明](img/your-image-name.png)
+```
+
+### 4.5 翻译/改进现有翻译
+
+如果你发现官方英文文档有更新但中文文档还没同步，或者现有的翻译不够准确/通顺，欢迎：
+
+1. 参考[官方英文文档](https://pylonmc.github.io/)的内容
+2. 对应修改中文翻译
+3. 确保技术术语翻译一致
+4. 必要时添加译者注说明
+
+---
+
+## 第5步：预览效果
+
+提交之前建议先在本地预览一下，确认显示正常。
+
+在项目根目录下运行：
+
+<Tabs items={['pnpm', 'yarn', 'npm']}>
+  <Tab value="pnpm">
+    ```bash
+    pnpm dev
+    ```
+  </Tab>
+  <Tab value="yarn">
+    ```bash
+    yarn dev
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npm run dev
+    ```
+  </Tab>
+</Tabs>
+
+这会启动一个本地开发服务器。浏览器打开终端提示的地址（通常是 `http://localhost:3000`）就能看到带了你修改的文档站点。
+
+保存文件后页面会自动热更新。
+
+---
+
+## 第6步：提交并推送
+
+改好了就可以提交并推送到你的 fork 了。
+
+在项目目录下执行：
+
+```bash
+git add .
+git commit -m "描述你改了什么的提交信息"
+git push
+```
+
+<Callout type="tip">
+  提交信息尽量写得清楚一些，说明改了什么、为什么这样改。
+  
+  例如：
+  - `docs: 修复安装指南中的错别字`
+  - `docs: 更新插件开发章节以匹配最新 API`
+  - `docs: 改进新手入门流程的表述`
+</Callout>
+
+---
+
+## 第7步：创建 PR
+
+推送到 GitHub 之后，就可以开 PR 提交你的修改了。
+
+1. 打开你在 GitHub 上的 fork 仓库
+2. 点 **Pull requests** 标签页
+3. 点绿色的 **New pull request** 按钮
+4. 选择目标分支为 `main`（或主分支）
+5. 填好标题和描述
+6. 点 **Create pull request**
+
+搞定！之后维护者会审查你的改动。没问题的话就会被合并。
+
+---
+
+## 第8步：更新 PR
+
+PR 提交之后如果还需要改（比如 reviewer 提了修改意见），操作很简单：
+
+重复[第4步](#step-4-making-your-changes)到[第6步](#step-6-committing-and-pushing-your-changes)就行，PR 会自动同步你的新改动，直到被合并或关闭。
+
+---
+
+## 贡献类型
+
+我们可以接受以下类型的贡献：
+
+- 📝 **翻译改进**：修正翻译错误、优化表达、统一术语
+- ✏️ **内容更新**：跟随官方文档更新保持同步
+- 🔧 **错误修复**：修复文档中的事实性错误或过时信息
+- 💡 **示例补充**：添加更多实用示例或截图
+- 🎨 **排版美化**：改善文档的可读性和结构
+
+<Callout type="warn">
+  **注意**
+  我们不接受以下类型的贡献：
+  - 添加与 Pylon 无关的内容
+  - 恶意篡改或破坏性修改
+  - 侵犯版权的内容
+</Callout>
+
+---
+
+## 行为准则
+
+请遵守以下原则：
+
+- **尊重他人**：友善沟通，建设性反馈
+- **注重质量**：确保贡献的内容准确、有用
+- **保持一致**：遵循现有的文档风格和格式规范
+- **及时响应**：PR 审查意见后尽快处理
+
+---
+
+**感谢你对 Pylon 中文文档的贡献！🎉**
+
+---
+
+<CollapsibleSection
+  title="📖 官方英文文档贡献指南"
+  icon={<FileText className="h-5 w-5" />}
+>
+
+> **以下是向 [Pylon 官方英文文档站](https://pylonmc.github.io/) 贡献的原始指南。**
+>
+> 如果你想为官方英文文档做贡献，请参考以下流程。本中文文档站的内容主要来源于官方文档的翻译和改编。
+>
+> ⚠️ **注意**：官方文档使用 MkDocs + Python 技术栈，与本文档站的构建方式不同。
+
+---
+
+#### 官方文档技术栈
+
+- **构建工具**：[MkDocs](https://www.mkdocs.org/)
+- **发布平台**：[GitHub Pages](https://pages.github.com/)
+- **编程语言**：Python 3.x
+- **包管理器**：pip
+
+#### 官方贡献前置条件
+
+**Python 和 pip**
+
+MkDocs 需要较新版本的 [Python](https://www.python.org/) 和包管理器 [pip](https://pip.pypa.io/en/stable/installation/)。
+
+```bash
+$ python3 --version
+Python 3.13.3
+$ pip3 --version
+pip 25.2
+```
+
+没装的话去[官方下载页](https://www.python.org/downloads/)安装即可。
+
+<Callout>
+  **Windows 用户注意**
+  安装时如果看到 "Add Python to PATH" 选项，记得勾上（默认是不勾的）。
+</Callout>
+
+#### 官方仓库结构
+
+```text
+docs/
+├── en/          # 英文文档
+├── zh-CN/       # 简体中文文档
+└── ...          # 其他语言
+```
+
+<Callout type="error">
+  **重要**
+  目前官方只接受英文文档的贡献——Rebar 和 Pylon 还在频繁变动中。其他语言的贡献请关注后续通知。
+</Callout>
+
+#### 官方贡献流程摘要
+
+1. **Fork** [官方文档仓库](https://github.com/pylonmc/docs)
+2. **克隆** 到本地
+3. **安装依赖**：`pip install -r requirements.txt`
+4. **编辑** `docs/en/` 下的 `.md` 文件
+5. **预览**：`mkdocs serve --livereload`
+6. **提交并推送**
+7. **创建 PR**
+
+#### 详细步骤
+
+完整步骤与上方本站的贡献流程类似（第1步至第8步），主要区别在于：
+
+- 依赖安装在 `docs/` 目录而非根目录
+- 使用 `mkdocs serve --livereload` 预览（端口 8000）
+- 文档存放在 `docs/en/` 目录下
+- 仅接受英文内容贡献
+
+</CollapsibleSection>
+

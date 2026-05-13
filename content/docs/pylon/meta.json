@@ -1,0 +1,4 @@
+{
+  "pages": ["(home)", "documentation", "create-addons"],
+  "root": true
+}

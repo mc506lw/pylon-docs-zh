@@ -2,6 +2,5 @@
   "title": "创建插件",
   "icon": "LayersPlus",
   "pages": ["tutorial-0", "tutorial-1", "tutorial-2", "tutorial-3", "tutorial-4"],
-  "defaultOpen": true,
-  "root": true
+  "defaultOpen": true
 }
