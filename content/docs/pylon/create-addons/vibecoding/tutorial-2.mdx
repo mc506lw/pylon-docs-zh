@@ -1,0 +1,180 @@
+---
+title: 代码库建立与上下文管理
+description: 给 AI 装上"参考书"，让它写出符合 Rebar 规范的代码。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+## 为什么需要这一步？
+
+在传统编程的教程里提到过：**LLM（大语言模型）不太能处理好 Rebar 的代码**。为什么？因为 Rebar 有自己的一套 API、设计模式和最佳实践，而 AI 的训练数据里可能没有（或者只有很少的）Rebar 相关的代码示例。
+
+结果就是：AI 会用"通用 Minecraft 插件开发"的方式去写代码，而不是用 **Rebar 的方式**。写出来的东西可能能跑，但不符合 Rebar 的规范、性能不佳、或者用了已经废弃的 API。
+
+<Callout type="danger">
+  如果你不给 AI 提供 Rebar 的参考代码，它大概率会瞎编 API 名称、用错类、或者写出根本无法编译的代码。别问我怎么知道的 😅
+</Callout>
+
+所以我们需要做两件事：
+
+1. **建立代码库**：把 Rebar 和 Pylon 的源码放到 AI 能看到的地方
+2. **配置上下文规则**：告诉 AI "这是 Rebar 项目，请参考这些代码来写"
+
+这样 AI 就能像看了教科书一样，写出符合规范的 Rebar 代码了。
+
+---
+
+## 建立代码库
+
+大多数 AI IDE 都有一个特殊的文件夹功能——这个文件夹里的文件会被 AI 作为"参考资料"读取，但不会被打包到最终的项目里。
+
+以 Trae CN 为例，我们可以创建一个 `.trae/guide` 文件夹，专门存放参考代码。
+
+对 AI 说：
+
+```txt
+我需要你在项目根目录下创建一个 .trae 文件夹（如果还没有的话），然后在里面创建一个 guide 子文件夹。
+
+接下来，请你：
+1. 克隆 pylonmc/rebar 仓库的代码到 .trae/guide/rebar 目录
+2. 克隆 pylonmc/pylon 仓库的代码到 .trae/guide/pylon 目录
+
+这些代码将作为参考资料，帮助你在编写我的筛子附属时使用正确的 Rebar API。
+```
+
+<Callout type="info" title="为什么要放 Pylon 的代码？">
+  Pylon 是基于 Rebar 开发的官方附属，它的代码是**最好的 Rebar 使用示例**。通过阅读 Pylon 的实现，AI 可以学到：
+  
+  - 物品/方块的正确定义方式
+  - 配置文件的读写方法
+  - 语言系统的使用
+  - 事件监听的注册方式
+  - 各种最佳实践
+  
+  比看十遍文档都管用。
+</Callout>
+
+等 AI 把代码克隆下来之后，你的项目结构大概长这样：
+
+```
+MyRebarAddon/
+├── .trae/
+│   └── guide/
+│       ├── rebar/          # Rebar 源码
+│       └── pylon/          # Pylon 源码
+├── src/                    # 你的附属代码
+├── build.gradle.kts
+└── ...
+```
+
+<Callout type="success" title="最佳实践">
+  **不要把整个仓库都塞进去！** 如果觉得代码量太大，可以只保留核心模块：
+  
+  - Rebar：`src/main/kotlin/io/github/pylonmc/rebar/` 下的 `item/`、`block/`、`config/` 等目录
+  - Pylon：`src/main/kotlin/io/github/pylonmc/pylon/` 下你感兴趣的部分（比如物品实现）
+  
+  这样既能提供足够的参考，又不会让 AI 的上下文窗口爆掉。
+</Callout>
+
+---
+
+## 配置上下文规则
+
+光有代码还不够——我们还得明确告诉 AI："嘿，这是个 Rebar 项目，写代码的时候要参考那些源码"。
+
+大多数 AI IDE 都支持设置"规则"或"系统提示词"。以 Trae CN 为例：
+
+1. 打开 **设置 → 规则**
+2. 点击 **创建规则 → 项目规则**
+3. 选择 **始终生效**（这样每次对话都会加载这个规则）
+
+然后在规则内容里写入：
+
+```txt
+## 项目信息
+
+- 项目类型：Minecraft Rebar 附属组件
+- 编程语言：Kotlin
+- 构建工具：Gradle
+
+## 参考资料
+
+我在 `.trae/guide/` 目录下放置了以下参考代码：
+- `rebar/`：Rebar 框架的完整源码，包含所有 API 定义和实现
+- `pylon/`：Pylon 官方附属的完整源码，是最好的 Rebar 使用示例
+
+## 编码要求
+
+1. **必须使用 Rebar API**：所有自定义物品、方块、实体等都通过 Rebar 提供的方式创建和注册
+2. **参考 Pylon 实现**：不确定怎么写的时候，先看看 Pylon 是怎么做的
+3. **遵循 Kotlin 惯用写法**：使用 Kotlin 的特性（扩展函数、数据类、协程等）让代码更简洁
+4. **性能优先**：避免不必要的对象创建、避免每 tick 执行重逻辑
+5. **配置化**：数值参数（如概率、时间等）要可配置，不要硬编码
+
+## 当前任务
+
+我正在开发一个"筛子"附属，功能是让玩家用筛网把各种方块筛成矿物和种子。
+详细需求见 [tutorial-1](./tutorial-1) 的需求拆解部分。
+```
+
+<Callout type="note" title="不同 IDE 的设置位置">
+  - **Trae CN**：设置 → 规则 → 创建项目规则
+  - **Claude Code**：`.claude/CLAUDE.md` 文件
+  - **Cursor**：`.cursorrules` 文件
+  - **OpenCode**：配置文件中的 system-prompt 部分
+  
+  功能类似，只是存放位置不同。
+</Callout>
+
+---
+
+## 验证配置是否生效
+
+配好之后，怎么知道 AI 到底有没有读到这些参考代码呢？可以测试一下。
+
+问 AI 一个只有看过 Rebar 源码才知道的问题，比如：
+
+```txt
+请问在 Rebar 中，创建一个自定义物品的正确流程是什么？需要用到哪些关键类？
+```
+
+如果 AI 回答中提到了以下内容，说明配置成功了 ✅：
+
+- `RebarItem.register`
+- `RebarItemSchema`
+- `ItemStackBuilder.rebar()`
+- `RebarRegistry.ITEMS`
+
+如果它开始扯 Bukkit 原生的 `Material`、`ItemStack` 那套东西，说明没读进去 ❌ ——回去检查一下文件路径和规则配置。
+
+<Callout type="question" title="AI 还是会犯错怎么办？">
+  即使配置了完整的代码库和规则，AI 也不可能 100% 正确。这时候你需要：
+  
+  1. **指出错误**："这个类在 Rebar 里不叫这个名字，应该叫 XXX"
+  2. **提供正确示例**："你看 Pylon 里的 Baguette 类是这么写的..."
+  3. **让它重新生成**：修正后让它重写相关代码
+  
+  多轮对话后，AI 会越来越懂你的项目的"口味"。
+</Callout>
+
+---
+
+## 总结
+
+到这里，Vibecoding 的准备工作就全部完成了！回顾一下我们做了什么：
+
+| 步骤 | 目的 | 对应章节 |
+|------|------|---------|
+| 搭建环境 | 安装 IDE、Java、初始化项目 | [AI编写附属](./tutorial-0) |
+| 选择模型 | 根据需求和预算选合适的 AI | [选择模型](./select-model) |
+| 拆解需求 | 把大目标拆成小任务 + 性能分析 | [需求拆解](./tutorial-1) |
+| 建立代码库 | 让 AI 能参考 Rebar/Pylon 源码 | 本章 |
+| 配置上下文 | 告诉 AI 这是 Rebar 项目、该怎么写 | 本章 |
+
+万事俱备，接下来就可以正式开始让 AI 写代码了！
+
+<Callout type="success">
+  🎉 恭喜你完成了所有准备工作！从下一章开始（如果你有的话），就是真正的编码实战环节了。
+  
+  记住：Vibecoding 的核心不是"让 AI 替你干活"，而是**让你不会写代码也能做出想要的东西**。保持耐心、多测试、多反馈，你会惊讶于自己能做到的事情。
+</Callout>

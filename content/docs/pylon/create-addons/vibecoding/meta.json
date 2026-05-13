@@ -1,0 +1,6 @@
+{
+  "title": "更简单的打法",
+  "icon": "Brain",
+  "pages": ["tutorial-0", "select-model", "tutorial-1", "tutorial-2"],
+  "defaultOpen": false
+}
