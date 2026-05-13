@@ -162,7 +162,7 @@ function CategoryAccordion({ category, defaultOpen }: { category: (typeof catego
 
 function FeaturedCard() {
     return (
-        <div className="group relative overflow-hidden rounded-2xl border border-fd-border bg-gradient-to-br from-fd-card to-fd-muted/20 p-5 sm:p-7 lg:p-10">
+        <div className="group relative overflow-hidden rounded-2xl border border-fd-border bg-linear-to-br from-fd-card to-fd-muted/20 p-5 sm:p-7 lg:p-10">
             <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-amber-500/10 blur-3xl transition-colors group-hover:bg-amber-500/15 sm:-right-8 sm:-top-8 sm:h-32 sm:w-32" />
             <div className="relative">
                 <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-[11px] font-medium text-amber-600 dark:text-amber-400 sm:mb-4 sm:gap-2 sm:px-3.5 sm:py-1.5 sm:text-xs">

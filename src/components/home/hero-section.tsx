@@ -15,7 +15,7 @@ export const HeroSection = () => (
                     </span>
                 </h1>
 
-                <p className="text-fd-muted-foreground max-w-xl text-base leading-relaxed sm:max-w-2xl sm:text-lg sm:text-xl">
+                <p className="text-fd-muted-foreground max-w-xl text-base leading-relaxed sm:max-w-2xl sm:text-xl">
                     电力系统、流体网络、物流管道、多方块机器
                     <br className="hidden sm:block" />
                     研究解锁、国际化、Addon API
@@ -24,7 +24,7 @@ export const HeroSection = () => (
                 </p>
 
                 <div className="flex flex-wrap justify-center gap-2.5 pt-1 sm:gap-3 sm:pt-0">
-                    <Button href="/docs" variant="primary">
+                    <Button href="/docs/pylon" variant="primary">
                         浏览文档
                     </Button>
                     <Button
