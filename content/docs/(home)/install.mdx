@@ -9,14 +9,14 @@ import { Callout } from 'fumadocs-ui/components/callout';
   PYLON 目前处于实验阶段。请仅在愿意删除的测试服务器上运行。下一个 Pylon 版本很可能不兼容当前版本。如果你在不应该的地方安装了 Pylon 并导致数据丢失，我们会嘲笑你的。
 </Callout>
 
-1. 确保你正在运行 Paper 或其分支。Pylon 不兼容 Spigot。
+1. 确认你在用 Paper 或其分支。Pylon 不兼容 Spigot。
 2. 从[这里](https://github.com/pylonmc/rebar/releases/latest)下载最新版本的 Rebar。
 3. 从[这里](https://github.com/pylonmc/pylon/releases/latest)下载最新版本的 Pylon。
 4. 将 .jar 文件放入插件文件夹并重启服务器。**[不要使用 /reload](https://madelinemiller.dev/blog/problem-with-reload/)**。首次启动会比平时更长，但之后 Rebar/Pylon 的加载速度会快很多。
-5. 查看 Rebar 和 Pylon 的插件文件夹，了解所有可用的配置选项。
-6. [安装一些附加组件](list-of-addons.md)。
+5. 看看 Rebar 和 Pylon 的插件文件夹，了解有哪些配置选项。
+6. [安装一些附属组件](addon-list)。
 7. 完成了！
 
 ### Rebar 数据存储在哪里？
 
-你可能注意到 Rebar 不使用数据库，并且在其插件文件夹中似乎没有任何存储文件。这是因为 Rebar 像 Minecraft 一样，把所有数据都存储在世界文件自身中！你不需要担心除世界文件之外的其他数据备份：**Rebar 的数据始终与世界数据保持一致。** 这也意味着 Rebar 与其他类似插件相比，更不易发生数据损坏。
+你可能发现 Rebar 没有用数据库，插件文件夹里也似乎没有存储文件。这是因为 Rebar 和 Minecraft 一样，数据直接存在世界文件里！你不用额外备份——**Rebar 的数据始终和世界数据在一起。** 和其他同类插件比，Rebar 也不容易出数据问题。

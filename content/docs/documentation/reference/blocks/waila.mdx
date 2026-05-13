@@ -5,18 +5,18 @@ description: 了解如何在 Rebar 方块中配置和使用 WAILA 显示
 
 # WAILA
 
-WAILA（What Am I Looking At）显示您正在查看的 Rebar 方块的信息：
+WAILA（What Am I Looking At）可以让你在注视方块时显示相关信息：
 
 ![WAILA example](img/waila-example.png)
 
-默认情况下，方块将在 WAILA 中简单地显示其名称：
+默认情况下，方块在 WAILA 中只显示名称：
 
 ![Example block WAILA](img/example-block-waila.png)
 
 
 ## 设置自定义 WAILA 文本
 
-您可以通过在 `en.yml` 中添加 `waila` key 来设置 WAILA 文本：
+你可以在 `en.yml` 里添加 `waila` 字段来自定义 WAILA 文本：
 
 ```yaml title="en.yml"
 item:
@@ -32,7 +32,7 @@ item:
 
 ## 覆盖 `getWaila`
 
-您可以覆盖 `getWaila` 来更改方块的 WAILA 的所有方面：
+你可以覆写 `getWaila` 方法来自定义 WAILA 的各项属性：
 ```java title="ExampleBlock.java"
 public class ExampleBlock extends RebarBlock {
 
@@ -41,7 +41,7 @@ public class ExampleBlock extends RebarBlock {
     @Override
     public @Nullable WailaDisplay getWaila(@NotNull Player player) {
         return new WailaDisplay(
-                getDefaultWailaTranslationKey(), // 文本（使用默认文本 - 相当于根本不覆盖 `getWaila`）
+                getDefaultWailaTranslationKey(), // 文本（用默认文本的话，相当于不覆写 `getWaila`）
                 BossBar.Color.BLUE, // 颜色
                 BossBar.Overlay.NOTCHED_12, // 样式
                 0.2F // 进度
@@ -55,7 +55,7 @@ public class ExampleBlock extends RebarBlock {
 
 ## 占位符
 
-与物品一样，您可以为 WAILA 文本提供 `RebarArgument` 形式的占位符：
+和物品一样，你也可以给 WAILA 文本添加 `RebarArgument` 形式的占位符：
 
 ```java title="ExampleBlock.java"
 public class ExampleBlock extends RebarBlock {

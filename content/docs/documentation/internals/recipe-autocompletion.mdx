@@ -3,11 +3,15 @@ title: 配方自动完成
 description: 了解 Pylon 如何防止物品自动补全到原版配方中
 ---
 
-!!! abstract "作者：Vaan1310"
+import { Callout } from 'fumadocs-ui/components/callout';
 
-为了避免 Pylon 物品自动补全到原版配方中，我们必须使用 NMS 并覆盖 2 种行为：
-- 物品移动到制作台
-- 配方的核算逻辑
+<Callout>
+  **作者：Vaan1310**
+</Callout>
+
+为了避免 Pylon 物品被自动补全到原版配方中，我们必须使用 NMS 并覆盖两种行为：
+- 物品移入制作台
+- 配方的匹配（核算）逻辑
 
 ## 起点
 
@@ -15,28 +19,30 @@ description: 了解 Pylon 如何防止物品自动补全到原版配方中
 
 ## 修复移动逻辑
 
-`HandlerRecipeBookClick` 是一个用于包含大多数基本逻辑的类。
+`HandlerRecipeBookClick` 是承载核心逻辑的类。
 
-由于许多其他功能依赖于配方书，我们只考虑与制作台相关的情况。
+因为很多其他功能也依赖配方书，所以我们只处理制作台相关的场景。
 
-`HandlerRecipeBookClick#handlePylonItemPlacement` 方法应该处理放置如何进行，我们有一个方法，但通常它由 `AbstractCraftingMenu` 中的一个方法处理，因此我们需要使用反射来调用一些东西来模拟正常行为并只更改我们需要的部分。
+`HandlerRecipeBookClick#handlePylonItemPlacement` 方法负责处理物品放置逻辑。我们有自己的实现，但正常情况下这个流程由 `AbstractCraftingMenu` 中的方法处理，所以我们需要通过反射来调用原有行为，只替换我们需要修改的部分。
 
-!!! note
-    为了优化这里的大部分调用，所有内容都使用方法句柄，这些方法可能会被调用很多次，因此它们必须是高性能的
+<Callout>
+  为了性能优化，这里的高频调用全部使用了 MethodHandle
+</Callout>
 
-`ServerPlaceRecipe` 处理移动物品和核算它们的核心逻辑，然而大部分是私有的，这就是为什么我们创建自己的版本，将大多数行为委托给 NMS 类。
+`ServerPlaceRecipe` 处理物品移动和核算的核心逻辑，但大部分方法是私有的，所以我们自己实现了一个版本，把大多数行为委托给 NMS 原有类。
 
-在遵循一系列私有方法调用的链之后（当然，我们不能覆盖它们）：`tryPlaceRecipe` → `placeRecipe` → `moveToGrid` → `findSlotMatchingCraftingIngredient`，我们到达了目标之一。
+顺着私有方法调用链往下追（这些方法我们没法覆写）：`tryPlaceRecipe` → `placeRecipe` → `moveToGrid` → `findSlotMatchingCraftingIngredient`，最终找到了我们的目标。
 
-目标是从 `ItemOrExact.Item` 匹配中排除我们的 Pylon 物品。
+目标是在 `ItemOrExact.Item` 匹配时排除 Pylon 物品。
 
-!!! note
-    Minecraft 以 2 种方式匹配物品：
-    - ItemOrExact.Item（基于 Material 的匹配），
-    - ItemOrExact.Exact（pdc 和 component，完全匹配）。
+<Callout>
+  Minecraft 以 2 种方式匹配物品：
+  - ItemOrExact.Item（基于 Material 的匹配），
+  - ItemOrExact.Exact（pdc 和 component，完全匹配）。
+</Callout>
 
-## 修复核算逻辑
+## 修复匹配逻辑
 
-现在物品不会按预期移动到网格，但它也不会失败，因此在这些情况下我们需要发送一个虚影配方，这由 `StackedItemContents#canCraft` 处理
+现在物品不会错误地移入制作网格了，但配方也不会报错——这种情况下我们需要发送一个虚影（ghost）配方，这由 `StackedItemContents#canCraft` 处理。
 
-`StackedItemContents` 基本上以它自己的方式核算库存中的每个物品，所以我做了一堆反射来添加一个临时方法：`accountPylonItems` 它使 Pylon 物品堆栈总是作为 ItemOrExact.Exact 处理
+`StackedItemContents` 用自己的方式逐个核算库存中的物品。我通过反射给它加了一个临时方法 `accountPylonItems`，让 Pylon 物品堆栈始终按 `ItemOrExact.Exact` 方式处理。

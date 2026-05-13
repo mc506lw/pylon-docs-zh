@@ -2,29 +2,31 @@
 title: 贡献文档
 description: 了解如何为 Pylon 文档站点做出贡献
 ---
-本指南将引导您完成为本文档站点做贡献的流程。该站点由 [MkDocs](https://www.mkdocs.org/) 和 [GitHub Pages](https://pages.github.com/) 提供支持。
+import { Callout } from 'fumadocs-ui/components/callout';
+
+本文档站基于 [MkDocs](https://www.mkdocs.org/) 搭建，通过 [GitHub Pages](https://pages.github.com/) 发布。下面是完整的贡献流程。
 
 ## 第0步：前置条件
 
-在开始之前，请确保您的系统上已安装以下内容：
+开始之前，请确认你的环境已经准备好以下工具：
 
 ### Git
 
-Git 是克隆仓库和管理更改所必需的。
+克隆仓库和提交代码都离不开 Git。
 
-您可以使用 [Git](https://git-scm.com/install/) 命令行界面，或者使用 GitHub Desktop 等图形界面工具（推荐）。
+你可以用 [Git 命令行](https://git-scm.com/install/)，也可以用 GitHub Desktop 这类图形界面工具（推荐新手使用）。
 
 ### GitHub 账号
 
-您需要一个 GitHub 账号来 fork 仓库并创建拉取请求。
+Fork 仓库和创建 PR 都需要 GitHub 账号。
 
-如果您还没有账号，可以[免费创建一个](https://github.com/signup)。
+还没有的话可以[免费注册一个](https://github.com/signup)。
 
 ### Python 和 pip
 
-MkDocs 需要在您的系统上安装较新版本的 [Python](https://www.python.org/) 及其包管理器 [pip](https://pip.pypa.io/en/stable/installation/)。
+MkDocs 需要较新版本的 [Python](https://www.python.org/) 和包管理器 [pip](https://pip.pypa.io/en/stable/installation/)。
 
-您可以从命令行检查是否已安装这些软件（版本可能不同）：
+在终端里检查一下是否已安装（版本号可能不同）：
 
 ```bash
 $ python3 --version
@@ -33,35 +35,36 @@ $ pip3 --version
 pip 25.2
 ```
 
-如果未安装 Python，您可以从[官方 Python 下载页面](https://www.python.org/downloads/)下载。
+没装的话去[官方下载页](https://www.python.org/downloads/)安装即可。
 
-!!! note "Windows 用户注意"
-    安装过程中，如果安装程序提供"Add Python to PATH"选项，请确保勾选（默认通常是关闭的）。
+<Callout>
+  **Windows 用户注意**
+  安装时如果看到 "Add Python to PATH" 选项，记得勾上（默认是不勾的）。
 
-    ![Add Python to PATH](img/python-windows-path.png)
+  ![Add Python to PATH](img/python-windows-path.png)
+</Callout>
 
 ---
 
 ## 第1步：Fork 仓库
 
-现在访问[文档仓库](https://github.com/pylonmc/docs)。
-点击页面右上角的"Fork"按钮，创建您自己的仓库副本。
+打开[文档仓库](https://github.com/pylonmc/docs)，点击右上角的 **Fork** 按钮，创建你自己的副本。
 
 ![GitHub Fork](img/github-fork.png)
 
 ---
 
-## 第2步：克隆您的 fork
+## 第2步：克隆你的 fork
 
-您需要将 fork 的仓库克隆到本地计算机，以便预览更改。
+把 fork 到手上的仓库克隆到本地，才能预览和编辑。
 
-如果您使用 GitHub Desktop，请按照[这些步骤](https://docs.github.com/en/desktop/adding-and-cloning-repositories/cloning-a-repository-from-github-to-github-desktop)操作。
+用 GitHub Desktop 的话，参考[官方指南](https://docs.github.com/en/desktop/adding-and-cloning-repositories/cloning-a-repository-from-github-to-github-desktop)操作即可。
 
-如果使用命令行，请前往 GitHub 上的 fork 仓库，点击绿色的"Code"按钮复制 HTTPS URL。
+用命令行的话，去你的 fork 页面点绿色的 **Code** 按钮，复制 HTTPS 地址：
 
 ![GitHub Clone URL](img/github-clone.png)
 
-然后执行以下命令：
+然后运行：
 
 ```bash
 git clone <REPLACE_URL_HERE>
@@ -71,30 +74,31 @@ git clone <REPLACE_URL_HERE>
 
 ## 第3步：安装依赖
 
-现在您的本地已经有了仓库，接下来需要安装所需的依赖。
+仓库到手了，接下来安装依赖包。
 
-在 `docs` 目录中运行：
+在 `docs` 目录下执行：
 
 ```bash
 pip install -r requirements.txt
 ```
 
-这将安装 MkDocs 和所有其他必要的软件包。
+这会安装 MkDocs 及其他所有必需的包。
 
 ---
 
-## 第4步：进行更改
+## 第4步：开始修改
 
-现在您可以开始编辑文档文件了！
+现在可以编辑文档了！
 
-!!! warning
-    您对 fork 所做的所有更改在通过拉取请求提交之前，都不会影响官方文档。
+<Callout type="warn">
+  你在 fork 上的所有修改不会影响官方文档，必须通过 PR 合入才会生效。
+</Callout>
 
-文档文件使用 Markdown 编写。如果您需要语法帮助，可以查阅[Mastering Markdown](https://guides.github.com/features/mastering-markdown/)或查看[此页面的 Markdown 文件](https://github.com/pylonmc/docs/blob/main/docs/en/documentation/contributing/contributing-to-docs.md?plain=1)。
+文档用 Markdown 编写。语法不熟的话可以看 [Mastering Markdown](https://guides.github.com/features/mastering-markdown/)，或者直接参考[本页的 Markdown 源码](https://github.com/pylonmc/docs/blob/main/docs/en/documentation/contributing/contributing-to-docs.md?plain=1)。
 
-### 4.1 了解文档结构
+### 4.1 了解目录结构
 
-文档按语言组织在 `docs/` 目录中：
+文档按语言分目录存放在 `docs/` 下：
 
 ```text
 docs/
@@ -103,136 +107,132 @@ docs/
 └── ...          # 其他语言
 ```
 
-对于英文文档，所有页面都位于 `docs/en/` 中。内容按不同章节和子目录组织。
+英文文档都在 `docs/en/` 下，按章节和子目录组织。
 
-!!! danger "重要"
-    目前我们只接受英文文档的贡献，因为 Rebar 和 Pylon 仍在进行重大更改。请关注未来关于其他语言贡献的更新。
+<Callout type="error">
+  **重要**
+  目前我们只接受英文文档的贡献——Rebar 和 Pylon 还在频繁变动中。其他语言的贡献请关注后续通知。
+</Callout>
 
-每个章节都有自己的目录，该章节的图像应放在同一目录下的 `img/` 文件夹中。
+每个章节都有独立的目录，该章节用到的图片放在同目录下的 `img/` 文件夹中。
 
 ### 4.2 创建新页面
 
-在 `docs` 目录中打开代码编辑器，按照以下步骤操作：
+打开 `docs` 目录，按以下步骤操作：
 
-1. 导航到 `docs/en/` 中的适当子目录（例如 `docs/en/installation/`）
-2. 创建一个具有描述性名称的 `.md` 文件
+1. 进入 `docs/en/` 下对应的子目录（比如 `docs/en/installation/`）
+2. 新建一个 `.md` 文件，取个有意义的名字
 
-**文件命名规则：**
+**命名规则：**
 
-- 文件名必须以 `.md` 结尾
-- 使用小写字母
-- 使用连字符 `-` 代替空格
-- 不要使用特殊字符
+- 文件名以 `.md` 结尾
+- 全部小写
+- 用连字符 `-` 代替空格
+- 不用特殊字符
 - 示例：`installing-addons.md`、`custom-recipes.md`、`getting-started.md`
 
 然后：
 
-1. 使用 [Markdown 语法](https://guides.github.com/features/mastering-markdown/)编写内容
+1. 用 [Markdown 语法](https://guides.github.com/features/mastering-markdown/)写内容
 2. 保存文件
-3. 预览更改（参见[第5步](#step-5-previewing-your-changes)）
+3. 预览效果（见[第5步](#step-5-previewing-your-changes)）
 
 ### 4.3 编辑现有页面
 
-1. 在代码编辑器中打开要编辑的文件
-2. 进行更改
-3. 保存文件
-4. 预览更改（参见[第5步](#step-5-previewing-your-changes)）
+1. 用编辑器打开要改的文件
+2. 改内容
+3. 保存
+4. 预览（见[第5步](#step-5-previewing-your-changes)）
 
 ### 4.4 添加图片
 
-#### 图片命名约定
+#### 命名规范
 
-- 仅使用小写字母
-- 使用连字符 `-` 代替空格
-- 使用描述性名称
-- 尽可能使用 PNG 格式
+- 全部小写
+- 用连字符 `-` 代替空格
+- 取个描述性的名字
+- 优先用 PNG 格式
 - 示例：`github-fork.png`、`custom-item-example.png`、`crafting-table.png`
 
-#### 图片放置位置
+#### 存放位置
 
-图片应放在与 markdown 文件**同一目录**的 `img/` 文件夹中。
+图片放在 markdown 文件**同一级目录**下的 `img/` 文件夹中。
 
-例如：
+例如页面路径是 `docs/en/installation/installing-pylon.md`，那图片就放 `docs/en/installation/img/` 下。
 
-- 如果您的页面是 `docs/en/installation/installing-pylon.md`
-- 将图片放在 `docs/en/installation/img/` 中
+没有 `img/` 文件夹的话先新建一个。
 
-如果该目录中不存在 `img/` 文件夹，请先创建它。
-
-#### 在页面中使用图片
-
-要在 markdown 文件中嵌入图片，请使用以下语法：
+#### 在页面中引用
 
 ```markdown
-![Image description](img/your-image-name.png)
+![图片说明](img/your-image-name.png)
 ```
 
 **示例：**
 
 ```markdown
-![GitHub Fork button](img/github-fork.png)
+![GitHub Fork 按钮](img/github-fork.png)
 ```
 
 ---
 
-## 第5步：预览更改
+## 第5步：预览效果
 
-在提交更改之前，最好在本地预览它们以确保一切看起来都正确。
+提交之前建议先在本地预览一下，确认显示正常。
 
-在 `docs` 目录中运行以下命令：
+在 `docs` 目录下运行：
 
 ```bash
 mkdocs serve --livereload
 ```
 
-这将启动一个本地 Web 服务器。在浏览器中打开 [`http://127.0.0.1:8000`](http://127.0.0.1:8000) 查看带有您更改的文档站点。
+这会启动一个本地服务器。浏览器打开 [`http://127.0.0.1:8000`](http://127.0.0.1:8000) 就能看到带了你修改的文档站点。
 
-预览会在您保存文件更改时自动更新。
+保存文件后页面会自动刷新。
 
 ---
 
-## 第6步：提交和推送更改
+## 第6步：提交并推送
 
-当您对更改满意后，需要将它们提交并推送到您的 fork。
+改好了就可以提交并推送到你的 fork 了。
 
-如果您使用 GitHub Desktop，请按照[这些步骤](https://docs.github.com/en/desktop/making-changes-in-a-branch/committing-and-reviewing-changes-to-your-project-in-github-desktop)操作。
+用 GitHub Desktop 的话，参考[官方指南](https://docs.github.com/en/desktop/making-changes-in-a-branch/committing-and-reviewing-changes-to-your-project-in-github-desktop)操作。
 
-如果使用命令行，请在 `docs` 目录中运行以下命令：
+用命令行的话，在 `docs` 目录下执行：
 
 ```bash
 git add .
-git commit -m "描述更改的提交信息"
+git commit -m "描述你改了什么的提交信息"
 git push
 ```
 
-!!! tip
-    编写清晰且描述性的提交信息，解释您做了什么以及为什么这样做。
+<Callout type="tip">
+  提交信息尽量写得清楚一些，说明改了什么、为什么这样改。
+</Callout>
 
 ---
 
-## 第7步：创建拉取请求
+## 第7步：创建 PR
 
-将更改推送到 GitHub 上的 fork 后，您可以创建拉取请求来提交更改。
+推送到 GitHub 之后，就可以开 PR 提交你的修改了。
 
-1. 前往 GitHub 上的 fork 仓库。您始终可以在 GitHub 仪表板或您的个人资料页面上找到您的 fork。
-2. 点击"Pull requests"选项卡。
+1. 打开你在 GitHub 上的 fork 仓库（在 GitHub 首页或个人主页都能找到）
+2. 点 **Pull requests** 标签页
    ![GitHub Pull Requests Tab](img/github-pull-requests.png)
-3. 点击绿色的"New pull request"按钮。
-4. 填写拉取请求的标题和描述。
-5. 点击"Create pull request"。
+3. 点绿色的 **New pull request** 按钮
+4. 填好标题和描述
+5. 点 **Create pull request**
 
-就这样！您的更改将经过维护者审查。如果一切正常，您的贡献将被接受。
-
----
-
-## 第8步：修改您的拉取请求
-
-如果您已经提交了拉取请求但需要做出更改（例如，审查者请求更改），您可以轻松完成。
-
-只需重复[第4步](#step-4-making-your-changes)到[第6步](#step-6-committing-and-pushing-your-changes)来制作和提交您的新更改。
-
-拉取请求将自动更新以包含您的新更改，直到它被合并或关闭。
+搞定！之后维护者会审查你的改动。没问题的话就会被合并。
 
 ---
 
-**感谢您为文档做出贡献！**
+## 第8步：更新 PR
+
+PR 提交之后如果还需要改（比如 reviewer 提了修改意见），操作很简单：
+
+重复[第4步](#step-4-making-your-changes)到[第6步](#step-6-committing-and-pushing-your-changes)就行，PR 会自动同步你的新改动，直到被合并或关闭。
+
+---
+
+**感谢你对文档的贡献！**

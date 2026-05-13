@@ -3,11 +3,13 @@ title: 设置
 description: 了解如何为 Rebar 方块配置和使用的设置系统
 ---
 
+import { Callout } from 'fumadocs-ui/components/callout';
+
 # 设置
 
 与物品一样，您可以为方块分配设置。
 
-假设我们有一个每次右键点击时计数器加一的方块：
+假设我们有一个每次右键点击计数器就加 1 的方块：
 
 ```java title="ExampleAddonKeys.java"
 public class ExampleAddonKeys {
@@ -75,12 +77,12 @@ item:
       <arrow> An example block
 ```
 
-假设您希望将计数器更改为可配置的量，而不是总是按 1 增加。首先，创建一个文件 `resources/settings/example_block.yml`（文件名必须是您想要更改的方块的 key）：
+假设你想让每次点击增加的数值变成可配置的，而不是固定加 1。先创建文件 `resources/settings/example_block.yml`（文件名必须和方块的 key 对应）：
 ```yaml title="example_block.yml"
 increment-by: 4
 ```
 
-您可以使用 `getSettings()` 获取配置值：
+用 `getSettings()` 就能拿到配置值：
 ```java title="ExampleBlock.java"
 public class ExampleBlock extends RebarBlock implements RebarInteractBlock {
 
@@ -93,7 +95,7 @@ public class ExampleBlock extends RebarBlock implements RebarInteractBlock {
 }
 ```
 
-现在，您可以将计数器更改为配置值，而不是按 1 增加：
+现在把计数器的增量改成从配置读取：
 ```java title="ExampleBlock.java"
 public class ExampleBlock extends RebarBlock implements RebarInteractBlock {
 
@@ -110,11 +112,11 @@ public class ExampleBlock extends RebarBlock implements RebarInteractBlock {
 }
 ```
 
-该块现在将按 4 的增量计数。
+这样方块每次就会按配置的增量（这里是 4）来计数了。
 
 ## 一个类，多个方块
 
-假设您想要有两种不同类型的计数器：一种每次计数增加 2，另一种每次增加 4。您不需要为此创建新的类。相反，您可以注册两个使用相同类的不同计数器块：
+假设你想要两种不同的计数器：一种每次加 2，另一种每次加 4。不用为此新建类，直接用同一个类注册两个方块就行：
 ```java title="ExampleAddonKeys.java"
 public class ExampleAddonKeys {
     public static final NamespacedKey EXAMPLE_BLOCK_1 = new NamespacedKey(ExampleAddon.getInstance(), "example_block_1");
@@ -163,7 +165,7 @@ item:
       <arrow> An example block
 ```
 
-每个块都可以有自己的设置：
+每个方块都可以有自己独立的配置：
 ```yaml title="example_block_1.yml"
 increment-by: 2
 ```
@@ -172,13 +174,13 @@ increment-by: 2
 increment-by: 4
 ```
 
-现在，您有两个块：一个每次计数增加 2，另一个每次增加 4。
+这样你就有了两个方块：一个每次加 2，另一个每次加 4。
 
 ## 方块和物品共享设置
 
-设置由 `NamespacedKey` 引用。在底层，`getSettings()` 只是 `Settings.get(getKey())` 的简写。由于在这种情况下物品与块具有相同的 keys，在物品类中调用 `getSettings()` 返回相同的设置。
+设置是通过 `NamespacedKey` 来关联的。底层实现上，`getSettings()` 就是 `Settings.get(getKey())` 的简写。因为这里物品和方块共用同一个 key，所以在物品类里调用 `getSettings()` 拿到的是同一份配置。
 
-为了演示这一点，假设我们想要向 Example Block 物品的 lore 中添加一个值，显示计数器增加了多少。我们可以将值硬编码到语言文件中：
+举个例子，假设你想在 Example Block 物品的 lore 里显示每次增加的数值。最直接的做法是把这个值硬写到语言文件里：
 ```java title="en.yml"
 item:
   example_block_1:
@@ -192,7 +194,7 @@ item:
       <arrow> <attr>Increments by:</attr> 4
 ```
 
-但是，如果配置值发生更改，此更改将不会反映在物品的 lore 中。因此，我们将提供一个占位符：
+但这样做有个问题：配置值改了之后，物品 lore 里的文字不会跟着变。所以我们应该用占位符：
 ```java title="en.yml"
 item:
   example_block_1:
@@ -206,7 +208,7 @@ item:
       <arrow> <attr>Increments by:</attr> %increment-by%
 ```
 
-为了提供占位符，我们需要创建一个新类来扩展 `RebarItem` 并覆盖 `getPlaceholders()`。然后我们将可配置的 `incrementBy` 值作为 `%increment-by%` 提供：
+要支持占位符，需要新建一个类继承 `RebarItem` 并覆写 `getPlaceholders()` 方法，把可配置的 `incrementBy` 值以 `%increment-by%` 的形式暴露出去：
 ```java title="ExampleBlockItem.java"
 public class ExampleBlockItem extends RebarItem {
 
@@ -225,10 +227,12 @@ public class ExampleBlockItem extends RebarItem {
 }
 ```
 
-!!! question "我真的需要在物品和方块中都获取 incrementBy 的值两次吗 - 一次在物品中，一次在方块中？"
-    不幸的是，是的。过去曾热烈讨论过绕过这个问题的其他方法，但这是最不糟糕的折衷方案。其他选项涉及更复杂的代码和更少的灵活性。
+<Callout type="warn">
+  **我真的需要在物品和方块里各取一次 `incrementBy` 吗？**
+  没办法，确实得这样。之前也讨论过别的方案，但相比之下这是最可行的折衷。其他方案要么代码更复杂，要么灵活性更差。
+</Callout>
 
-我们现在可以使用此类注册物品：
+接下来用这个类来注册物品：
 ```java title="ExampleAddonItems.java"
 public final class ExampleAddonItems {
 
@@ -248,7 +252,7 @@ public final class ExampleAddonItems {
 }
 ```
 
-这将在物品的 lore 中显示块递增计数的量：
+这样，物品 lore 里就会显示每次递增的数值了：
 
 ![Counter I](img/counter-1.png)
 ![Counter II](img/counter-2.png)

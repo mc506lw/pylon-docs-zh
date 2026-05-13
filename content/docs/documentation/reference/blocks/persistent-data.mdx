@@ -3,11 +3,13 @@ title: 持久化数据
 description: 了解如何在 Rebar 方块中存储和加载持久化数据
 ---
 
+import { Callout } from 'fumadocs-ui/components/callout';
+
 # 持久化数据
 
 由于每个物理方块都有一个对应的实例，您可以在方块类中存储方块数据。
 
-例如，考虑一个每次右键点击时计数器加一的方块：
+比如下面这个方块，每次右键点击计数器就加 1：
 
 ```java title="ExampleBlock.java"
 public class ExampleBlock extends RebarBlock implements RebarInteractBlock {
@@ -32,22 +34,26 @@ public class ExampleBlock extends RebarBlock implements RebarInteractBlock {
 }
 ```
 
-这开始看起来工作正常。然而，有一个问题。如果包含方块的区块被卸载，计数器将重置为零。这是因为当方块的区块被卸载时，类的实例被销毁，并且 `counter` 的值没有保存到任何地方。
+目前看起来一切正常，但其实有个隐患：如果方块所在的区块被卸载，计数器就会归零。原因是区块卸载时类的实例会被销毁，而 `counter` 的值根本没有持久化保存。
 
-为了解决这个问题，必须将 `counter` 的值保存到方块的 `PersistentDataContainer` 中。
+为此，我们需要把 `counter` 的值写入方块的 `PersistentDataContainer`。
 
 ## PersistentDataContainers
 
-`PersistentDataContainer`（PDC）是一种简单的持久化数据存储方式。可以将其结构视为类似于 JSON；一个嵌套的键值存储。每个值都由一个 `NamespacedKey` 标识。PDC 可以相互嵌套。
+`PersistentDataContainer`（简称 PDC）是一种简单的持久化数据存储方案。你可以把它理解成类似 JSON 的嵌套键值对结构，每个值都用 `NamespacedKey` 来标识，PDC 之间还可以互相嵌套。
 
-!!! info "有关 PDC 的更多信息，请参见[Paper 文档](https://docs.papermc.io/paper/dev/pdc/)。"
+<Callout type="info">
+  有关 PDC 的更多信息，请参见[Paper 文档](https://docs.papermc.io/paper/dev/pdc/)。
+</Callout>
 
-在"普通"Minecraft 中，方块没有 PDC。实体、区块、物品堆栈和其他一些东西有。然而，通过黑暗魔法，Rebar 为每个方块分配了一个 PDC，您可以在卸载时保存数据，并在加载时从其中加载数据。
+在原版 Minecraft 中，方块是没有 PDC 的，只有实体、区块、物品堆等才有。不过 Rebar 通过底层机制给每个方块都分配了 PDC，让你能在卸载时保存数据、加载时读取数据。
 
-!!! note "等等，这是如何工作的？"
-    在底层，方块 PDC 保存在区块 PDC 中。这有一个很大的优势：**Rebar 方块数据始终与区块的其他数据保持同步。** 传递给 `write` 方法以及加载构造函数的 PDC 是 transient（临时）- 它仅在方块被加载或保存时存在。
+<Callout>
+  **等等，这是怎么做到的？**
+  底层实现上，方块 PDC 实际是保存在区块 PDC 里的。这样做有个很大的好处：**Rebar 方块数据始终和区块的其他数据保持同步。** 需要注意的是，传给 `write` 方法和加载构造函数的 PDC 是临时的（transient）——它只在方块被加载或保存的那一瞬间存在。
+</Callout>
 
-要在方块的 PDC 中保存数据，我们首先需要一个 key 来标识它：
+要在方块的 PDC 中存数据，首先需要一个 key 来标识它：
 ```java title="ExampleBlock.java"
 public class ExampleBlock extends RebarBlock implements RebarInteractBlock {
 
@@ -57,7 +63,7 @@ public class ExampleBlock extends RebarBlock implements RebarInteractBlock {
 }
 ```
 
-您可以在 write 函数中保存数据：
+在 `write` 方法里保存数据：
 ```java title="ExampleBlock.java"
 public class ExampleBlock extends RebarBlock implements RebarInteractBlock {
 
@@ -72,10 +78,12 @@ public class ExampleBlock extends RebarBlock implements RebarInteractBlock {
 }
 ```
 
-!!! danger "不要假设 `write` 仅在方块被卸载时调用"
-    如下所述，`write` 可能会因为方块被卸载以外的原因而被调用。如果您需要在方块被卸载时运行一些代码，请参见 [RebarUnloadBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarUnloadBlock.html)。
+<Callout type="error">
+  **不要假设 `write` 只在方块卸载时才会被调用**
+  `write` 可能因为各种原因被触发，不限于方块卸载。如果你需要在方块卸载时执行特定逻辑，请参见 [RebarUnloadBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarUnloadBlock.html)。
+</Callout>
 
-您可以在加载构造函数中加载数据：
+在加载构造函数中读取数据：
 ```java title="ExampleBlock.java"
 public class ExampleBlock extends RebarBlock implements RebarInteractBlock {
 
@@ -90,7 +98,7 @@ public class ExampleBlock extends RebarBlock implements RebarInteractBlock {
 }
 ```
 
-全部整合在一起：
+合到一起，完整代码如下：
 ```java title="ExampleBlock.java"
 public class ExampleBlock extends RebarBlock implements RebarInteractBlock {
 
@@ -122,13 +130,13 @@ public class ExampleBlock extends RebarBlock implements RebarInteractBlock {
 }
 ```
 
-示例块现在保存其计数器并在重启时保持它。
+这样，示例方块就能持久保存计数器的值，重启后也不会丢失。
 
 ## PersistentDataTypes
 
-在上面，我们为 `set` 和 `get` 函数提供了 `PylonSerializers.INTEGER`。这是一个持久数据类型（PDT）。我们只能将某些类型的数据保存到磁盘（您将如何保存 `World` 例如？）。PDT 是一个类，它解释如何将数据类型序列化到这些原始数据类型之一，反之亦然。如果这听起来令人困惑，这里有一个例子。
+上面我们给 `set` 和 `get` 传了 `PylonSerializers.INTEGER`，这就是持久数据类型（PersistentDataType，简称 PDT）。磁盘上只能保存特定类型的数据（你总不能直接把一个 `World` 对象写进磁盘吧？）。PDT 的作用就是告诉系统：怎么把你的数据类型序列化成基本类型，以及怎么反序列化回来。听起来有点抽象？举个例子就明白了。
 
-Rebar 的 `BlockPosition` 包含 X、Y 和 Z 坐标以及以 UUID 形式存在世界。
+Rebar 的 `BlockPosition` 包含 X、Y、Z 坐标和世界 UUID：
 
 ```kotlin title="BlockPositionPersistentDataType.kt"
 class BlockPosition(val worldId: UUID?, val x: Int, val y: Int, val z: Int) {
@@ -136,7 +144,7 @@ class BlockPosition(val worldId: UUID?, val x: Int, val y: Int, val z: Int) {
 }
 ```
 
-假设我们想要编写一个 PDT 来让我们保存 `BlockPosition`。我们可以通过将 X、Y、Z 和 world ID 写入另一个 PDC 并返回这个新的 PDC 来做到这一点：
+假设我们要写一个 PDT 来持久化 `BlockPosition`。做法是把 X、Y、Z 和 world ID 写入一个新的 PDC，然后返回它：
 ```kotlin title="BlockPositionPersistentDataType.kt"
 object BlockPositionPersistentDataType : PersistentDataType<PersistentDataContainer, BlockPosition> {
 
@@ -171,13 +179,15 @@ object BlockPositionPersistentDataType : PersistentDataType<PersistentDataContai
 }
 ```
 
-Paper 已经提供了几个 PDT，包括 bytes、longs、byte 数组、lists 等。然而，Rebar 附带了许多新的有用序列化器，包括 UUIDs、sets、maps、enums、item stacks、materials、fluids、locations 等等。为了方便起见，所有 Rebar 的 PDT 都可以使用 `RebarSerializers` 类访问，以及所有默认的 Paper 序列化器。
+Paper 本身已经提供了不少 PDT，包括 byte、long、byte 数组、list 等。在此基础上，Rebar 又补充了很多实用的序列化器，涵盖 UUID、Set、Map、枚举、物品堆、材料、流体、坐标等等。为了方便使用，所有 Rebar 的 PDT 都可以通过 `RebarSerializers` 类来访问，Paper 自带的序列化器也一并包含在内。
 
-您可以在[这里](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/datatypes/RebarSerializers.html)找到 PDT 的完整列表。当然，如果需要，您也可以创建自己的 PDT。
+你可以在[这里](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/datatypes/RebarSerializers.html)查看 PDT 完整列表。当然，有需要的话你也可以自己写 PDT。
 
-!!! info "有关 PDT 的更多信息，请参见[Paper 文档](https://docs.papermc.io/paper/dev/pdc/#data-types)。"
+<Callout type="info">
+  有关 PDT 的更多信息，请参见[Paper 文档](https://docs.papermc.io/paper/dev/pdc/#data-types)。
+</Callout>
 
 
 ## 调试
 
-您可以使用 `Debug Waxed Weathered Cut Copper Stairs` 来查看方块的 PDC。只需运行 `/pdc debug` 获取物品，然后右键点击一个方块。这将调用方块的 `write` 函数，将结果 PDC 序列化为更易读的格式，并在聊天中显示结果。
+你可以用 `Debug Waxed Weathered Cut Copper Stairs` 来查看方块的 PDC 内容。执行 `/pdc debug` 获取物品，然后右键点击一个方块。这会调用方块的 `write` 方法，把结果 PDC 序列化成可读格式并显示在聊天栏中。

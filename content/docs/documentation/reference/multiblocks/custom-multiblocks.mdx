@@ -3,14 +3,14 @@ title: 自定义多方块
 description: 了解如何使用 RebarMultiblock 创建自定义多方块
 ---
 
-`RebarSimpleMultiblock` 非常有用且适用于大多数多方块。然而，有时您可能需要更大的灵活性。一个简单的例子是流体 tanks；一个多方块，它可以在其顶部有 0-8 个多方块储罐外壳。显然，这不适用于常规的 `RebarSimpleMultiblock`。
+`RebarSimpleMultiblock` 已经能覆盖大多数场景，但有时你需要更大的灵活性。一个典型的例子是流体储罐——顶部可以叠加 0~8 个储罐外壳，这种动态结构用 `RebarSimpleMultiblock` 就没法实现了。
 
-这可以使用 `RebarMultiblock` 来完成，`RebarSimpleMultiblock` 就是构建在其之上的。在它的核心，多方块系统只是一个变更检测系统，它监听方块被放置或破坏的情况，并在您的多方块有组件放置或破坏时通知它。为了做到这一点，变更检测系统需要您提供：
+这时就该用 `RebarMultiblock`，它其实就是 `RebarSimpleMultiblock` 的底层基础。从本质上说，多方块系统就是一个变更检测机制：监听方块的放置和破坏，当相关方块发生变化时通知你的多方块。为此，你需要提供两样东西：
 
-* 多方块跨越的区块列表
-* 一个函数，用于返回给定方块是否是多方块的一部分
+* 多方块所占的区块列表
+* 判断某个方块是否属于该多方块的函数
 
-要提供这些，您的多方块必须实现 `getChunksOccupied` 和 `isPartOfMultiblock`。例如：
+具体来说，就是实现 `getChunksOccupied` 和 `isPartOfMultiblock`：
 
 ```java
 @Override
@@ -24,9 +24,9 @@ public boolean isPartOfMultiblock(@NotNull Block otherBlock) {
 }
 ```
 
-注意，`isPartOfMultiblock` 如果方块**可能**是多方块的一部分，则必须返回 true，因此您不应该进行任何针对方块*类型*的检查 - 只是位置！例如，如果您的多方块需要在它下方的方块有一个火，那么 `isPartOfMultiblock` 应该始终在向它提供方块下方的方块时返回 true。
+注意：`isPartOfMultiblock` 在方块**可能**属于多方块时就必须返回 `true`，所以这里只判断位置，不要检查方块类型。举个例子，如果你的多方块下方需要一格火，那么 `isPartOfMultiblock` 在收到下方那格方块时应该始终返回 `true`，具体的类型检查留给 `checkFormed` 去做。
 
-此外，您必须实现 `checkFormed`，例如：
+此外，你还需要实现 `checkFormed`：
 
 ```java
 @Override
@@ -36,10 +36,10 @@ public boolean checkFormed() {
 }
 ```
 
-这将在与您的多方块（即在 `getChunksOccupied` 提供的区块中并且在 `isPartOfMultiblock` 中满足条件的方块）的任何方块被修改时被调用。它可以被看作是一个"刷新"函数，用于确保多方块仍然正确构造。
+只要多方块范围内的方块（即 `getChunksOccupied` 指定的区块中、且通过 `isPartOfMultiblock` 检测的方块）发生变动，`checkFormed` 就会被调用。你可以把它理解为"刷新"方法，用来确认多方块结构是否仍然完整。
 
-`RebarMultiblock` 仍然带有 `isFormedAndFullyLoaded`、`onMultiblockFormed` 和 `onMultiblockUnformed` 方法，这些方法对于实现您自己的多方块管理逻辑很有用。
+`RebarMultiblock` 同样提供了 `isFormedAndFullyLoaded`、`onMultiblockFormed` 和 `onMultiblockUnformed` 方法，方便你编写自定义的管理逻辑。
 
-显然，这是非常 barebones 的。您需要自己实现简单概念如旋转 - 您可能希望查看 `RebarSimpleMultiblock` 的源代码来使这更容易。
+可以看出，`RebarMultiblock` 的功能确实很基础——连旋转都需要自己实现。建议参考 `RebarSimpleMultiblock` 的源码来减少重复工作。
 
-最后，如果您想给您的自定义多方块像 `RebarSimpleMultiblock` 那样的虚影方块，您可以使用 [RebarGhostBlockHolder](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarGhostBlockHolder.html)。这会自动管理虚影方块。您可以使用 `addGhostBlock` 创建新的虚影方块，使用 `removeGhostBlock` 移除虚影方块。
+如果你还想给自定义多方块加上类似 `RebarSimpleMultiblock` 的虚影方块功能，可以使用 [RebarGhostBlockHolder](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/base/RebarGhostBlockHolder.html)。它会自动管理虚影方块的生命周期，你只需要调用 `addGhostBlock` 创建、`removeGhostBlock` 移除即可。
