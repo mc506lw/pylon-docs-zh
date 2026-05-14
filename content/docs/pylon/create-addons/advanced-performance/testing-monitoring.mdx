@@ -1,0 +1,158 @@
+# 测试、监控与持续优化
+
+## 1. 自动化性能测试
+
+### JMH 微基准测试
+
+**给 AI 的 Prompt**：
+
+```txt
+请为我编写一个 JMH（Java Microbenchmark Harness）基准测试类，
+用于测试电网系统的核心操作性能。
+
+需要测试的场景：
+1. 单次供电范围查询耗时（使用 SpatialHashGrid）
+2. 电网合并操作的耗时（1000 个节点的两个电网合并）
+3. 云仓库存取 10000 次物品的平均耗时
+4. 50 个并发线程同时存取云仓库的吞吐量
+
+请确保：
+- 测试环境预热足够（至少 5 次预热迭代）
+- 每个测试测量至少 1000 次调用
+- 输出平均值、P99、P99.9 的延迟统计
+- 包含内存分配速率（allocations/op）
+```
+
+**示例输出**：
+
+```
+Benchmark                              Mode  Cnt    Score   Error  Units
+PowerGridBenchmark.rangeQuery         avgt   200    0.012 ± 0.001  ms/op
+PowerGridBenchmark.gridMerge          avgt    100    1.234 ± 0.045  ms/op
+CloudWarehouseBenchmark.singleGet     avgt  1000    0.003 ± 0.000  ms/op
+CloudWarehouseBenchmark.batchGet10000 avgt    100   12.456 ± 0.234  ms/op
+ConcurrencyBenchmark.throughput       thrpt    20  45678.123 ± 1234.567  ops/s
+```
+
+### 集成测试策略
+
+- 如何模拟多玩家环境
+- 如何生成大规模测试数据
+- 自动化回归测试（CI/CD 集成）
+
+## 2. 生产环境监控
+
+### Metrics 集成
+
+使用 [Metrics](https://metrics.spigotmc.org/) 库收集运行时数据：
+
+**关键指标**：
+- **活跃电网数量**：监控内存占用趋势
+- **平均设备数/电网**：评估复杂度增长
+- **供电查询 QPS**：检测异常的热点区域
+- **云仓库操作延迟 P99**：发现慢查询
+- **GC 暂停频率**：判断是否存在内存泄漏
+
+**代码示例**：
+
+```kotlin
+class GridMetrics(private val plugin: JavaPlugin) {
+    private val metrics = factory("powergrid")
+
+    val activeGrids = metrics.buildGauge("active_grids_count")
+    val machinesPerGrid = metrics.buildHistogram("machines_per_grid")
+    val powerQueryLatency = metrics.buildTimer("power_query_latency")
+    val warehouseOperations = metrics.buildCounter("warehouse_operations_total")
+
+    fun recordQuery(duration: Long) {
+        powerQueryLatency.record(duration, TimeUnit.MILLISECONDS)
+    }
+}
+```
+
+### 可视化面板（可选）
+
+使用 Grafana + Prometheus 展示指标：
+
+**告警规则**：
+- TPS < 18 持续 30 秒 → 告警
+- 单次操作延迟 > 50ms → 告警
+- 内存使用 > 80% → 告警
+- 电网数量突然下降（可能是数据损坏）→ 告警
+
+## 3. 持续优化的方法论
+
+### PDCA 改进法
+
+```
+Plan (计划)
+    ↓ 识别性能瓶颈（spark profiler + 基准测试）
+Do (实施)
+    ↓ 让 AI 实现优化方案（参考本教程的方法）
+Check (检查)
+    ↓ 对比优化前后的基准测试数据
+Act (调整)
+    ↓ 如果有效 → 固定方案；如果无效 → 回滚并尝试新方向
+    └────────────────────────────────→ 回到 Plan
+```
+
+### 优化案例库
+
+**案例 1：从 O(n²) 到 O(log n)**
+- 问题：初始版本用双重循环检测供电范围
+- 方案：引入 R-tree 空间索引
+- 结果：查询速度提升 1000 倍
+
+**案例 2：减少 99% 的数据库写入**
+- 问题：每次库存变化都写数据库
+- 方案：内存缓冲 + 批量写入 + WAL 日志
+- 结果：I/O 等待降低 95%
+
+**案例 3：消除死锁**
+- 问题：细粒度锁导致死锁
+- 方案：改为不可变数据结构 + CAS 操作
+- 结果：并发吞吐量提升 3 倍
+
+## 4. 常见的优化陷阱
+
+<Callout type="danger">
+  ❌ **过早优化**：在没有数据支撑的情况下优化"感觉慢"的代码
+
+  ✅ **正确做法**：先用 profiler 找到真正的瓶颈，再针对性优化
+</Callout>
+
+<Callout type="danger">
+  ❌ **优化了错误的地方**：花了三天优化一个只占总时间 1% 的函数
+
+  ✅ **正确做法**：优化贡献最大的前 3 个热点（通常占 80%+ 时间）
+</Callout>
+
+<Callout type="danger">
+  ❌ **过度优化**：为了节省 0.01ms 把代码写得难以维护
+
+  ✅ **正确做法**：在可读性和性能之间找平衡，只有热代码才值得牺牲可读性
+</Callout>
+
+<Callout type="danger">
+  ❌ **忽视可扩展性**：当前数据量下优化有效，数据量增长 10 倍后又慢了
+
+  ✅ **正确做法**：选择复杂度优秀的数据结构，而不是针对特定规模的特殊优化
+</Callout>
+
+## 5. 性能预算（Performance Budget）
+
+建立明确的性能标准：
+
+| 操作类型 | 预算（MSPT 占比） | 实际测量 | 状态 |
+|---------|------------------|---------|------|
+| 单次供电查询 | < 0.05ms | 0.012ms | ✅ 通过 |
+| 电网拓扑更新 | < 5ms | 1.234ms | ✅ 通过 |
+| 云仓库存取 | < 0.1ms | 0.003ms | ✅ 通过 |
+| 批量保存（100个） | < 10ms | 8.5ms | ✅ 通过 |
+| **总计（每 tick）** | **< 1ms** | **0.48ms** | **✅ 通过** |
+
+**如何制定预算**：
+1. 目标 TPS ≥ 19（MSPT ≤ 52ms）
+2. Minecraft 本身占用 ~40-45ms
+3. 留给你的插件：~5-10ms
+4. 分配给各个子系统

@@ -1,0 +1,296 @@
+---
+title: 什么时候需要考虑性能？
+description: 从真实电网系统的性能灾难出发，理解何时以及为什么需要关注性能优化
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { AlertTriangle, Zap, Users, Cpu, TrendingDown, CheckCircle, XCircle, AlertCircle, BookOpen, Target, Lightbulb, ArrowRight, Shield, Database, Network, Lock } from 'lucide-react';
+
+# 什么时候需要考虑性能？
+
+## 一个真实的性能灾难故事
+
+<Callout type="warning">
+  <AlertTriangle className="w-5 h-5 shrink-0" />
+  **这是我在开发电网系统时亲身经历的故事** —— 如果你正在或即将开发复杂的 Pylon 附属，请务必读完这一章。
+</Callout>
+
+### 项目背景
+
+那是一个雄心勃勃的项目：**智能电网系统**。
+
+想象一下这个场景：
+
+- <Users className="inline w-4 h-4" /> **50 名玩家同时在线**
+- <Cpu className="inline w-4 h-4" /> **每位玩家拥有 200-600 台机器**（发电机、变压器、电缆、消耗设备）
+- 系统包含四个核心模块：
+  - <Network className="inline w-4 h-4 text-blue-500" /> **电网**：所有设备组成连通图，需要实时计算电力流向
+  - <Zap className="inline w-4 h-4 text-yellow-500" /> **供电桩**：7×7×7 范围内为设备供电
+  - <Database className="inline w-4 h-4 text-green-500" /> **云仓库**：跨区域存储系统
+  - <Shield className="inline w-4 h-4 text-purple-500" /> **权限系统**：细粒度的设备访问控制
+
+### 第一次上线的噩梦
+
+<TrendingDown className="inline w-6 h-6 text-red-500 mb-2" />
+
+当服务器第一次开放给玩家测试时，一切都看起来很美好——直到第 10 个玩家上线。
+
+<TPS 从稳定的 20.0 开始下跌：
+
+```
+19.8 → 18.5 → 15.2 → 11.3 → 7.8 → 4.2 → 2.1
+```
+
+**服务器的 TPS 直接跌到了个位数。**
+
+玩家开始抱怨：
+- "机器怎么没反应？"
+- "为什么我放下去的电缆消失了？"
+- "服务器是不是在卡？"
+
+那一刻我才意识到：**我的代码正在每秒执行数万次无意义的计算**。
+
+---
+
+## 性能问题的体感标准
+
+不是所有项目都需要性能优化。让我们用一个表格来判断：
+
+| 场景 | 同时在线 | 实体数量 | TPS 影响 | 是否需要优化 |
+|:-----|:--------|:---------|:---------|:-------------|
+| 筛子插件 | 10 人 | 几十个活跃物品 | 几乎无 | ❌ 不需要 |
+| 简单商店 | 50 人 | 几百个 NPC | 轻微 | ⚠️ 可选 |
+| **电网系统** | **50 人** | **10,000-30,000 设备** | **可能暴跌** | **✅ 必须** |
+| 大型自动化 | 100 人 | 100,000+ 物品流 | 必崩 | ✅✅ 必须专家级 |
+
+<Callout type="info">
+  <Lightbulb className="w-5 h-5 shrink-0" />
+  **简单判断法则**：如果你的系统在任何时刻需要追踪超过 **1,000 个活跃实体**，你就应该开始关心性能了。
+</Callout>
+
+---
+
+## ⚠️ 三个危险信号（红线）
+
+在深入技术细节之前，先记住这三个危险信号。如果你在代码中看到它们，**立即停下来重新思考**：
+
+### 🔴 红线 1：每 Tick 都要执行的逻辑
+
+```java
+// ❌ 错误示例：每 tick 检测所有机器的状态
+@EventHandler
+public void onTick(TickEvent event) {
+    for (Machine machine : allMachines) {
+        machine.checkStatus();  // 15,000 次调用/tick！
+    }
+}
+```
+
+```java
+// ✅ 正确示例：事件驱动，只在必要时触发
+@EventHandler
+public void onPlayerInteract(PlayerInteractEvent event) {
+    Machine machine = getMachineAt(event.getBlock());
+    if (machine != null) {
+        machine.handleInteraction(event.getPlayer());
+    }
+}
+```
+
+<Callout type="error">
+  <XCircle className="w-5 h-5 shrink-0" />
+  **问题所在**：Minecraft 服务端每秒运行 20 个 tick。如果每个 tick 你都遍历所有实体，哪怕每次只做简单操作，累积起来也会成为性能杀手。
+</Callout>
+
+---
+
+### 🔴 红线 2：O(n) 或更差的遍历
+
+```java
+// ❌ 错误示例：线性查找某个设备
+public Machine findMachine(Location loc) {
+    for (Machine machine : allMachines) {  // O(n)
+        if (machine.getLocation().equals(loc)) {
+            return machine;
+        }
+    }
+    return null;
+}
+```
+
+```java
+// ✅ 正确示例：使用 HashMap 实现快速定位
+private final Map<Location, Machine> machineMap = new HashMap<>();
+
+public Machine findMachine(Location loc) {
+    return machineMap.get(loc);  // O(1)
+}
+```
+
+<Callout type="error">
+  <XCircle className="w-5 h-5 shrink-0" />
+  **问题所在**：当 n = 15,000 时，O(n) 意味着每次查找要比较 15,000 次。而 O(1) 的 HashMap 只需一次。
+</Callout>
+
+---
+
+### 🔴 红线 3：频繁的对象创建
+
+```java
+// ❌ 错误示例：每次计算都创建新对象
+public void calculatePower() {
+    for (Machine machine : machines) {
+        PowerResult result = new PowerResult();  // 每次都 new！
+        result = machine.compute(result);
+        results.add(result);
+    }
+}
+```
+
+```java
+// ✅ 正确示例：复用对象或使用对象池
+private final PowerResult sharedResult = new PowerResult();
+
+public void calculatePower() {
+    for (Machine machine : machines) {
+        sharedResult.reset();
+        machine.compute(sharedResult);
+        // 使用结果...
+    }
+}
+```
+
+<Callout type="error">
+  <XCircle className="w-5 h-5 shrink-0" />
+  **问题所在**：频繁的对象创建会导致 **GC（垃圾回收）压力激增**，造成严重的卡顿（GC 停顿）。
+</Callout>
+
+---
+
+## 电网系统的复杂度分析
+
+让我们量化一下那个电网系统的性能挑战：
+
+### 📊 计算量估算
+
+| 功能模块 | 操作频率 | 单次操作量 | 总计/秒 |
+|:---------|:---------|:-----------|:---------|
+| <Zap className="inline w-4 h-4" /> 供电检测 | 每 tick (20/s) | 50人 × 300台 = 15,000 次 | **300,000 次/s** |
+| <Network className="inline w-4 h-4" /> 电网同步 | 变化时触发 | DFS/BFS 数千节点 | **不定期但极重** |
+| <Database className="inline w-4 h-4" /> 云仓库 | 玩家交互时 | 并发读写 + 锁竞争 | **峰值时阻塞主线程** |
+| <Shield className="inline w-4 h-4" /> 权限检查 | 每次操作 | 多层查询 | **叠加在其他操作上** |
+
+### 🔥 性能瓶颈的连锁反应
+
+```
+供电检测过重 → 占用大量 tick 时间
+       ↓
+其他插件无法及时处理 → TPS 下降
+       ↓
+tick 时间延长 → 下一个 tick 的供电检测积压
+       ↓
+恶性循环 → 服务器崩溃
+```
+
+<Callout type="warning">
+  <AlertTriangle className="w-5 h-5 shrink-0" />
+  **关键洞察**：性能问题很少是孤立的。一个模块的性能缺陷会像多米诺骨牌一样影响整个系统。
+</Callout>
+
+---
+
+## 本教程的学习路线图
+
+<BookOpen className="inline w-5 h-5 mb-2" />
+
+本教程将带你从理论到实践，完整掌握高性能 Pylon 附属开发的精髓：
+
+### 📚 章节概览
+
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 my-6">
+
+<div className="p-4 border rounded-lg bg-gradient-to-br from-blue-50 to-white dark:from-blue-950 dark:to-gray-900">
+  <div className="flex items-center gap-2 mb-2">
+    <span className="text-lg font-bold text-blue-600">02</span>
+    <Target className="w-5 h-5 text-blue-500" />
+  </div>
+  <h3 className="font-semibold mb-1">认识性能瓶颈</h3>
+  <p className="text-sm text-gray-600 dark:text-gray-400">学会识别和测量性能问题的工具与方法</p>
+</div>
+
+<div className="p-4 border rounded-lg bg-gradient-to-br from-green-50 to-white dark:from-green-950 dark:to-gray-900">
+  <div className="flex items-center gap-2 mb-2">
+    <span className="text-lg font-bold text-green-600">03</span>
+    <Network className="w-5 h-5 text-green-500" />
+  </div>
+  <h3 className="font-semibold mb-1">架构设计与数据结构</h3>
+  <p className="text-sm text-gray-600 dark:text-gray-400">选择正确的架构模式和数据结构来避免性能陷阱</p>
+</div>
+
+<div className="p-4 border rounded-lg bg-gradient-to-br from-purple-50 to-white dark:from-purple-950 dark:to-gray-900">
+  <div className="flex items-center gap-2 mb-2">
+    <span className="text-lg font-bold text-purple-600">04</span>
+    <Zap className="w-5 h-5 text-purple-500" />
+  </div>
+  <h3 className="font-semibold mb-1">编码实战</h3>
+  <p className="text-sm text-gray-600 dark:text-gray-400">具体的代码优化技巧与最佳实践</p>
+</div>
+
+<div className="p-4 border rounded-lg bg-gradient-to-br from-orange-50 to-white dark:from-orange-950 dark:to-gray-900">
+  <div className="flex items-center gap-2 mb-2">
+    <span className="text-lg font-bold text-orange-600">05</span>
+    <Cpu className="w-5 h-5 text-orange-500" />
+  </div>
+  <h3 className="font-semibold mb-1">测试与监控</h3>
+  <p className="text-sm text-gray-600 dark:text-gray-400">建立性能测试体系，持续监控系统健康状态</p>
+</div>
+
+<div className="p-4 border rounded-lg bg-gradient-to-br from-red-50 to-white dark:from-red-950 dark:to-gray-900">
+  <div className="flex items-center gap-2 mb-2">
+    <span className="text-lg font-bold text-red-600">06</span>
+    <CheckCircle className="w-5 h-5 text-red-500" />
+  </div>
+  <h3 className="font-semibold mb-1">总结与资源</h3>
+  <p className="text-sm text-gray-600 dark:text-gray-400">完整的知识回顾与延伸学习资源推荐</p>
+</div>
+
+</div>
+
+<ArrowRight className="inline w-5 h-5 mx-2" />
+
+准备好开始这段旅程了吗？点击下一章，让我们一起揭开性能优化的神秘面纱！
+
+---
+
+## 📖 前置知识要求
+
+在开始之前，请确保你具备以下基础：
+
+<Callout type="default">
+  <BookOpen className="w-5 h-5 shrink-0" />
+  
+  ### 必备条件
+  
+  - ✅ 完成 **Vibecoding 基础教程**（或具备等同的 Pylon 开发经验）
+  - ✅ 了解 Minecraft 服务端基本概念（**Tick**、**事件系统**、**实体**）
+  - ✅ 能够读懂 Java/Kotlin 代码逻辑
+  
+  ### 加分项（非必须）
+  
+  - 🎓 了解基本的数据结构（HashMap、List、Set 的区别）
+  - 🎓 听说过时间复杂度（O(n)、O(1) 等）
+  - 🎓 有一定的调试经验
+  
+  ### 不需要的
+  
+  - ❌ 不需要是算法专家
+  - ❌ 不需要精通 JVM 内部原理
+  - ❌ 不需要手写过高性能代码
+  
+  **唯一需要的**：一颗愿意学习的心 💜
+</Callout>
+
+<Callout type="success">
+  <CheckCircle className="w-5 h-5 shrink-0" />
+  **记住**：性能优化是一门实践性很强的技能。本教程会通过真实的案例，让你在实践中掌握这些知识。
+</Callout>
