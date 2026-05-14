@@ -1,0 +1,1636 @@
+---
+title: 编码实战：让 AI 写出第一个筛子插件
+description: 从零到一，手把手教你用 Vibecoding 的方式让 AI 写出完整的筛子附属代码。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+<Callout type="warning">
+  ⚠️ **本章完全由 AI 生成，缺乏实践经验验证**
+
+  本章内容是基于 Vibecoding 理论推导出来的编码实战指南，作者（mc506lw）本人尚未完整实践过这个流程。
+
+  文章中的代码示例、AI 对话记录、调试步骤等都是**模拟的**，可能存在以下问题：
+  - API 调用方式可能已过时或不准确
+  - 实际操作中可能会遇到文中未提及的问题
+  - AI 的回复可能与示例不完全一致
+
+  **建议**：将本章作为参考框架，而不是照搬的步骤。在实际操作时，保持灵活应变。
+
+  如果你在实践中发现了错误或有更好的方法，欢迎提 PR 修正！
+</Callout>
+
+## 前言：从零到一的实战环节
+
+欢迎来到编码实战章节！如果你已经完成了前面的所有准备工作（[搭建环境](./tutorial-0)、[选择模型](./select-model)、[需求拆解](./tutorial-1)、[代码库建立](./tutorial-2)），那么现在你的"武器库"已经就绪了。
+
+这一章的核心目标只有一个：**让 AI 帮你写出第一个能跑的筛子插件代码**。
+
+<Callout type="info">
+  💡 **Vibecoding 的精髓**：你不需要会写 Kotlin、不需要懂 Minecraft 插件开发、甚至不需要知道 Rebar API 长什么样。你需要做的只有两件事：
+  
+  1. **把需求说清楚**（用自然语言）
+  2. **判断 AI 给的代码对不对**（通过编译报错和运行测试）
+  
+  中间的所有编码工作，交给 AI。
+</Callout>
+
+我们会把整个开发过程拆成 **5 个步骤**，每个步骤都给你准备好了：
+- ✅ 可以直接复制粘贴给 AI 的 **Prompt 模板**
+- ✅ AI 应该返回的 **代码示例**（带详细注释）
+- ✅ 每一步完成后的 **验证方法**
+
+准备好了吗？让我们开始吧！
+
+---
+
+## 第一步：注册自定义物品（筛网）
+
+### 给 AI 的 Prompt
+
+把下面这段话直接发给 AI：
+
+```txt
+## 任务：注册一个自定义物品——筛网（Mesh）
+
+请参考 .trae/guide/ 下 Rebar 和 Pylon 的源码，为我的筛子附属创建第一个自定义物品：筛网。
+
+### 物品信息
+- 物品 ID：`sieve_mesh`
+- 显示名称：筛网
+- 材质/纹理：使用铁格子风格的贴图（先用默认材质占位）
+- 用途：玩家手持筛网右键点击筛子方块来触发筛矿操作
+- 最大堆叠数量：1（作为工具使用）
+- 耐久度：可配置，默认无限耐久
+
+### 要求
+1. 使用 Rebar API 注册物品（参考 Pylon 中 Baguette 或类似物品的实现方式）
+2. 创建对应的 Kotlin 类文件
+3. 在插件的主类中正确初始化和注册该物品
+4. 代码要有详细的中文注释，解释每一行的作用
+5. 遵循 Rebar 的命名规范和项目结构
+
+### 项目结构参考
+我的项目包名是 `com.example.sieveaddon`，主类是 `SieveAddon`。
+物品应该放在 `item` 子包下。
+```
+
+### AI 应该返回的代码
+
+AI 会给你一段类似这样的 Kotlin 代码（具体实现可能因版本而异）：
+
+```kotlin
+// 文件路径: src/main/kotlin/com/example/sieveaddon/item/SieveMesh.kt
+
+package com.example.sieveaddon.item
+
+// 导入 Rebar 的物品相关 API
+import io.github.pylonmc.rebar.item.RebarItem
+import io.github.pylonmc.rebar.item.RebarItemSchema
+import org.bukkit.Material
+import org.bukkit.inventory.ItemStack
+
+/**
+ * 筛网物品类
+ *
+ * 这是筛子附属的核心工具物品。玩家手持筛网，
+ * 右键点击筛子方块即可触发筛矿操作。
+ *
+ * @property schema Rebar 物品定义模式，包含物品的所有元数据
+ */
+class SieveMesh : RebarItem {
+
+    // 定义物品的模式（schema），描述物品的基本属性
+    override val schema = RebarItemSchema.builder()
+        // 设置物品的唯一标识符，格式通常是 "modid:item_id"
+        .id("sieveaddon:sieve_mesh")
+        // 设置物品在游戏中的显示名称
+        .displayName("§f筛网")
+        // 设置物品的基础材质（这里用铁格子作为临时占位）
+        // 后续可以替换为自定义模型
+        .baseMaterial(Material.IRON_BARS)
+        // 设置最大堆叠数量为 1（工具类物品通常不可堆叠）
+        .maxStackSize(1)
+        // 构建并生成最终的 schema 对象
+        .build()
+
+    /**
+     * 创建该物品的 ItemStack 实例
+     *
+     * 当需要给玩家物品时调用此方法，
+     * 返回一个配置好所有属性的物品栈
+     */
+    fun createItemStack(): ItemStack {
+        return ItemStackBuilder.rebar(this)  // 使用 Rebar 的构建器创建物品栈
+            .amount(1)                        // 数量为 1
+            .build()                          // 构建最终物品栈
+    }
+}
+```
+
+然后在主类中进行注册：
+
+```kotlin
+// 文件路径: src/main/kotlin/com/example/sieveaddon/SieveAddon.kt
+
+package com.example.sieveaddon
+
+// 导入必要的类
+import com.example.sieveaddon.item.SieveMesh
+import io.github.pylonmc.rebar.RebarRegistry
+import org.bukkit.plugin.java.JavaPlugin
+
+/**
+ * 筛子附属的主类
+ *
+ * 继承自 JavaPlugin，是整个插件的入口点。
+ * 负责初始化、注册所有自定义内容。
+ */
+class SieveAddon : JavaPlugin() {
+
+    // 伴生对象（companion object），相当于静态成员的容器
+    // 这里存放插件的实例引用和全局可访问的对象
+    companion object {
+        // 保存插件实例的引用，方便在其他地方获取
+        @JvmStatic
+        lateinit var instance: SieveAddon
+            private set
+
+        // 筛网物品的实例，全局唯一
+        @JvmStatic
+        val sieveMesh = SieveMesh()
+    }
+
+    /**
+     * 插件启用时调用的方法
+     *
+     * 这是 Bukkit/Rebar 插件的生命周期回调，
+     * 在服务器启动完成后执行。
+     */
+    override fun onEnable() {
+        // 保存实例引用
+        instance = this
+
+        // 输出启动日志，确认插件成功加载
+        logger.info("§a[SieveAddon] 筛子附属正在启动...")
+
+        try {
+            // ====== 注册自定义物品 ======
+            // 将筛网物品注册到 Rebar 的物品注册表中
+            // 注册后才能在游戏中使用 /rb give 命令获取
+            RebarRegistry.ITEMS.register(sieveMesh)
+
+            logger.info("§a[SieveAddon] ✓ 筛网物品注册成功！")
+        } catch (e: Exception) {
+            // 如果注册过程中出现异常，输出错误日志
+            logger.severe("§c[SieveAddon] ✗ 物品注册失败: ${e.message}")
+            e.printStackTrace()
+        }
+
+        logger.info("§a[SieveAddon] 筛子附属启动完成！")
+    }
+
+    /**
+     * 插件禁用时调用的方法
+     *
+     * 在服务器关闭或插件被卸载时执行。
+     * 用于清理资源、保存数据等收尾工作。
+     */
+    override fun onDisable() {
+        logger.info("§e[SieveAddon] 筛子附属已关闭。")
+    }
+}
+```
+
+### 代码逐行解释
+
+| 代码片段 | 作用 | 为什么重要 |
+|---------|------|-----------|
+| `RebarItemSchema.builder()` | 创建物品定义的构建器 | Rebar 用 Schema 模式定义物品属性，这是标准做法 |
+| `.id("sieveaddon:sieve_mesh")` | 设置唯一标识符 | 格式必须是 `modid:itemname`，用于内部引用 |
+| `.baseMaterial(Material.IRON_BARS)` | 设置基础材质 | 决定物品的外观和部分物理属性 |
+| `RebarRegistry.ITEMS.register()` | 注册物品到游戏 | **不注册就无法在游戏中使用** |
+
+<Callout type="success">
+  ✅ **第一步完成标志**：编译通过且没有报错。如果 Gradle build 成功，说明物品注册的基本结构是正确的。
+</Callout>
+
+### 如何验证物品是否注册成功
+
+编译打包后，把插件放入测试服务器的 `plugins` 目录，然后启动服务器。进入游戏后，在聊天栏输入：
+
+```
+/rb give sieveaddon:sieve_mesh
+```
+
+如果一切正常：
+- ✅ 你会收到一个名为"筛网"的物品
+- ✅ 物品显示为铁格子的外观
+- ✅ 最大堆叠数量为 1
+
+如果命令提示找不到这个物品：
+- ❌ 检查 `id` 是否与命令中的完全一致
+- ❌ 检查 `onEnable()` 中的注册代码是否被执行了
+- ❌ 查看服务器控制台有没有报错日志
+
+---
+
+## 第二步：注册自定义方块（筛子）
+
+### 给 AI 的 Prompt
+
+```txt
+## 任务：注册一个自定义方块——筛子（Sieve Block）
+
+在上一步我们已经注册了筛网物品，现在需要注册核心方块：筛子。
+
+### 方块信息
+- 方块 ID：`sieve_block`
+- 显示名称：筛子
+- 外观：木框 + 网格底部（先用类似织布机的材质占位）
+- 功能：
+  - 是一个实体方块（BlockEntity），可以存储数据
+  - 玩家右键时检测手中是否持有筛网
+  - 如果有筛网，开始筛矿计时
+  - 计时结束后产出矿物/种子
+
+### 要求
+1. 参考 Rebar 的方块注册 API（查看 guide/rebar 中的 block 相关代码）
+2. 创建 SieveBlock 类继承 RebarBlock
+3. 创建对应的 BlockEntity 类（如果 Rebar 支持的话）
+4. 实现基础的右键交互检测逻辑
+5. 代码要有详细中文注释
+6. 方块放在 `block` 子包下
+```
+
+### AI 应该返回的代码
+
+```kotlin
+// 文件路径: src/main/kotlin/com/example/sieveaddon/block/SieveBlock.kt
+
+package com.example.sieveaddon.block
+
+// 导入 Rebar 方块相关的 API
+import io.github.pylonmc.rebar.block.RebarBlock
+import io.github.pylonmc.rebar.block.RebarBlockSchema
+import org.bukkit.Material
+import org.bukkit.entity.Player
+import org.bukkit.event.block.Action
+import org.bukkit.inventory.EquipmentSlot
+
+/**
+ * 筛子方块类
+ *
+ * 这是筛子附属的核心方块。玩家放置此方块后，
+ * 手持筛网右键即可开始筛矿操作。
+ *
+ * 继承自 RebarBlock，获得 Rebar 框架提供的方块基础能力。
+ */
+class SieveBlock : RebarBlock {
+
+    // 定义方块的模式（schema）
+    override val schema = RebarBlockSchema.builder()
+        // 方块的唯一标识符
+        .id("sieveaddon:sieve_block")
+        // 游戏内显示名称
+        .displayName("§e筛子")
+        // 基础材质（用织布机作为临时占位，后续替换自定义模型）
+        .baseMaterial(Material.LOOM)
+        // 设置方块的硬度（挖掘所需时间）
+        .hardness(2.0f)
+        // 设置方块的爆炸抗性
+        .resistance(6.0f)
+        // 标记这是一个需要保存数据的方块（BlockEntity）
+        .hasBlockEntity(true)
+        .build()
+
+    /**
+     * 处理玩家与方块的交互事件
+     *
+     * 当玩家右键点击此方块时自动触发。
+     * 这是筛矿交互的入口点。
+     *
+     * @param player 发起交互的玩家对象
+     * @param action 交互类型（左键/右键等）
+     * @param slot 使用的装备槽位（主手/副手）
+     * @return true 表示已处理此事件，阻止后续逻辑
+     */
+    fun onInteract(player: Player, action: Action, slot: EquipmentSlot): Boolean {
+        // 只响应右键点击（不是左键攻击）
+        if (action != Action.RIGHT_CLICK_BLOCK) {
+            return false  // 不是右键，不处理，让其他逻辑继续
+        }
+
+        // 检测玩家主手是否持有筛网
+        val itemInHand = player.inventory.getItem(slot) ?: return false
+        val isHoldingMesh = checkIfSieveMesh(itemInHand)
+
+        if (!isHoldingMesh) {
+            // 玩家没有拿筛网，提示一下
+            player.sendMessage("§c[SieveAddon] 你需要拿着筛网才能使用筛子！")
+            return true  // 已处理（虽然拒绝了请求）
+        }
+
+        // TODO: 第四步会在这里添加筛矿计时和粒子效果逻辑
+        player.sendMessage("§a[SieveAddon] ✓ 检测到筛网！筛矿功能即将实现...")
+
+        return true  // 表示事件已被处理
+    }
+
+    /**
+     * 检查给定物品是否是筛网
+     *
+     * 通过比对物品的 Rebar ID 来判断。
+     *
+     * @param item 要检查的物品栈
+     * @return 如果是筛网返回 true，否则 false
+     */
+    private fun checkIfSieveMesh(item: ItemStack): Boolean {
+        // 从物品栈中获取 Rebar 物品的 ID
+        val rebarId = item.getRebarId() ?: return false
+        // 与我们注册的筛网 ID 进行比较
+        return rebarId == "sieveaddon:sieve_mesh"
+    }
+}
+```
+
+同样需要在主类中注册方块：
+
+```kotlin
+// 在 SieveAddon.kt 的 onEnable() 方法中添加：
+
+// 导入语句（放在文件顶部）
+import com.example.sieveaddon.block.SieveBlock
+
+// 在 companion object 中添加：
+@JvmStatic
+val sieveBlock = SieveBlock()
+
+// 在 onEnable() 的 try 块中添加：
+RebarRegistry.BLOCKS.register(sieveBlock)
+logger.info("§a[SieveAddon] ✓ 筛子方块注册成功！")
+```
+
+### 方块交互逻辑详解
+
+<Callout type="info">
+  📖 **关于右键检测**：Minecraft 的方块交互是通过事件系统实现的。当玩家右键一个方块时，服务器会触发 `PlayerInteractEvent`。我们需要在这个事件中：
+  
+  1. 判断点击的是不是我们的筛子方块
+  2. 判断玩家手里拿的是不是筛网
+  3. 如果条件满足，启动筛矿逻辑
+  
+  这一步我们只做前两步的检测，实际的筛矿逻辑留到后面实现。
+</Callout>
+
+### 验证方块是否注册成功
+
+1. 编译打包插件
+2. 放入测试服务器并重启
+3. 进入游戏，输入 `/rb give sieveaddon:sieve_block`
+4. 放置方块在地上
+5. 手持筛网，右键点击筛子方块
+6. 如果看到聊天栏提示 "✓ 检测到筛网！"，说明交互检测成功了！
+
+<Callout type="danger">
+  ⚠️ **常见问题**：如果右键没有任何反应，检查以下几点：
+  
+  - 方块的 `hasBlockEntity` 是否设置为 `true`
+  - 事件监听器是否正确注册（下一步会详细讲）
+  - 服务端日志是否有报错
+</Callout>
+
+---
+
+## 第三步：实现筛矿逻辑
+
+这是最核心的一步——让筛子真正"干活"。我们需要设计一套概率判定系统，根据输入的方块类型随机产出不同的物品。
+
+### 给 AI 的 Prompt
+
+```txt
+## 任务：实现筛矿的概率判定和物品生成系统
+
+现在我们的筛子方块已经能检测到玩家手持筛网了，接下来要实现真正的筛矿逻辑。
+
+### 功能需求
+
+1. **概率表设计**：
+   不同输入方块对应不同的产出物和概率。请帮我设计一个 YAML 配置文件格式来存储这些数据。
+
+   初始概率表如下：
+   - 泥土 → 小麦种子(7%)、草籽(7%)、西瓜种子(3%)、南瓜种子(3%)、甘蔗种子(3%)、萝卜种子(2%)、马铃薯种子(2%)、橡子(2%)、金合欢种子(1%)、云杉种子(1%)、桦木种子(1%) + 石子(必出2个)
+   - 沙砾 → 燧石(25%)、煤炭(13%)、青金石(5%)、钻石(1%)、绿宝石(1%)、破碎铁矿(20%)、破碎金矿(3%)、破碎铜矿(6%)、破碎锡矿(6%)、破碎铝矿(13%)
+   - 尘土 → 骨粉(20%)、红石(13%)、火药(7%)、萤石粉(6%)、烈焰粉(5%)、粉碎铁矿(20%)、粉碎金矿(3%)、粉碎铜矿(6%)、粉碎锡矿(7%)、粉碎铝矿(13%)
+   - 粉碎地狱岩 → 破碎铁矿(17%)、破碎金矿(17%)、破碎铜矿(10%)
+   - 灵魂沙 → 地狱疣(5%)、恶魂之泪(2%) + 下界石英(必出至少1个，33%概率出2个)
+   - 沙子 → 可可豆(3%)、仙人掌种子(3%)、丛林种子(2%)、古代孢子(1%)、破碎铁矿(20%)、破碎金矿(3%)、破碎铜矿(6%)、破碎锡矿(6%)、破碎铝矿(13%)
+   - 粉碎末地石 → 破碎锡矿(10%)
+
+2. **概率判定算法**：
+   各产出物的判定相互独立（即每个产出物单独掷骰子）。
+   请使用 ThreadLocalRandom 保证线程安全和性能。
+
+3. **物品生成**：
+   判定成功的产物直接放入玩家背包。
+   如果背包满了，在玩家脚下方块位置生成掉落物实体。
+
+4. **配置文件**：
+   所有概率数据从 YAML 配置文件读取，支持热重载（不需要重启服务器）。
+
+5. **代码要求**：
+   - 创建 `config` 子包存放配置相关类
+   - 创建 `mechanics` 子包存放筛矿逻辑
+   - 详细中文注释
+```
+
+### AI 应该返回的代码
+
+#### 1. YAML 配置文件设计
+
+```yaml
+# 文件路径: src/main/resources/sieve_drops.yml
+# 筛矿产出配置表
+# 格式说明:
+#   - input: 输入方块的 Material 名称（大写）
+#   - drops: 产出物列表
+#     - item: 产出物品的 Material 名称 或 自定义物品ID
+#       chance: 概率 (0.0 ~ 1.0)，表示每次筛矿时产出该物品的概率
+#       minCount: 最少产出数量
+#       maxCount: 最多产出数量（与 minCount 相同时固定数量）
+#       guaranteed: 是否必定产出（设为 true 时忽略 chance）
+
+sieve_drops:
+  DIRT:
+    guaranteed_drops:
+      - item: COBBLESTONE
+        guaranteed: true
+        minCount: 2
+        maxCount: 2
+    random_drops:
+      - item: WHEAT_SEEDS
+        chance: 0.07
+        minCount: 1
+        maxCount: 2
+      - item: GRASS_SEEDS  # 如果有模组提供的草籽
+        chance: 0.07
+        minCount: 1
+        maxCount: 1
+      - item: MELON_SEEDS
+        chance: 0.03
+        minCount: 1
+        maxCount: 1
+      - item: PUMPKIN_SEEDS
+        chance: 0.03
+        minCount: 1
+        maxCount: 1
+      - item: SUGAR_CANE  # 甘蔗（原版没有种子，用甘蔗代替）
+        chance: 0.03
+        minCount: 1
+        maxCount: 1
+
+  GRAVEL:
+    random_drops:
+      - item: FLINT
+        chance: 0.25
+        minCount: 1
+        maxCount: 1
+      - item: COAL
+        chance: 0.13
+        minCount: 1
+        maxCount: 2
+      - item: LAPIS_LAZULI
+        chance: 0.05
+        minCount: 1
+        maxCount: 3
+      - item: DIAMOND
+        chance: 0.01
+        minCount: 1
+        maxCount: 1
+      - item: EMERALD
+        chance: 0.01
+        minCount: 1
+        maxCount: 1
+
+  SOUL_SAND:
+    guaranteed_drops:
+      - item: QUARTZ
+        guaranteed: true
+        minCount: 1
+        maxCount: 1  # 特殊逻辑：33%概率变为2个，在代码中处理
+    random_drops:
+      - item: NETHER_WART
+        chance: 0.05
+        minCount: 1
+        maxCount: 2
+      - item: GHAST_TEAR
+        chance: 0.02
+        minCount: 1
+        maxCount: 1
+```
+
+#### 2. 配置加载器
+
+```kotlin
+// 文件路径: src/main/kotlin/com/example/sieveaddon/config/SieveConfig.kt
+
+package com.example.sieveaddon.config
+
+// 导入 YAML 处理和日志相关的类
+import org.bukkit.configuration.file.YamlConfiguration
+import java.io.File
+import java.io.InputStreamReader
+
+/**
+ * 筛矿配置管理器
+ *
+ * 负责读取和管理 sieve_drops.yml 配置文件中的概率数据。
+ * 支持热重载：调用 reload() 即可重新加载配置，无需重启服务器。
+ *
+ * 设计原则：
+ * - 配置文件缺失时使用默认值，不会导致崩溃
+ * - 提供清晰的错误提示，帮助定位配置问题
+ */
+object SieveConfig {
+
+    // 存储解析后的配置数据
+    // Key: 输入方块的 Material 名称
+    // Value: 该方块对应的筛矿结果配置
+    private val dropTables = mutableMapOf<String, DropTable>()
+
+    // 配置文件的引用
+    private var configFile: File? = null
+
+    // Bukkit 的 YamlConfiguration 对象，用于实际读取数据
+    private var yamlConfig: YamlConfiguration? = null
+
+    /**
+     * 初始化配置管理器
+     *
+     * 应在插件 onEnable() 时调用。
+     * 会尝试从插件目录加载配置文件，如果不存在则从 JAR 内释放默认配置。
+     *
+     * @param dataFolder 插件的数据目录（通常 plugin.getDataFolder()）
+     */
+    fun init(dataFolder: File) {
+        // 确保数据目录存在
+        if (!dataFolder.exists()) {
+            dataFolder.mkdirs()
+        }
+
+        // 定义配置文件路径
+        configFile = File(dataFolder, "sieve_drops.yml")
+
+        // 如果配置文件不存在，从 resources 目录复制一份默认配置出来
+        if (!configFile!!.exists()) {
+            saveDefaultConfig()
+        }
+
+        // 加载配置
+        reload()
+    }
+
+    /**
+     * 从 JAR 包内的 resources 释放默认配置文件
+     *
+     * 当外部配置文件不存在时调用，
+     * 把打包在插件 JAR 里的默认配置复制到插件目录。
+     */
+    private fun saveDefaultConfig() {
+        // 获取 classloader 来读取 JAR 内的资源
+        val inputStream = this.javaClass.classLoader
+            .getResourceAsStream("sieve_drops.yml")
+
+        if (inputStream != null) {
+            // 把资源流写入到外部文件
+            configFile!!.outputStream().use { output ->
+                inputStream.copyTo(output)
+            }
+        }
+    }
+
+    /**
+     * 重新加载配置文件
+     *
+     * 可以在运行时调用以刷新概率设置。
+     * 适合管理员修改配置后热更新。
+     */
+    fun reload() {
+        // 清空旧数据
+        dropTables.clear()
+
+        // 加载 YAML 文件
+        yamlConfig = YamlConfiguration.loadConfiguration(configFile!!)
+
+        // 解析配置数据
+        parseDropTables()
+
+        println("[SieveAddon] 配置重载完成，共加载 ${dropTables.size} 个筛矿表")
+    }
+
+    /**
+     * 解析 YAML 中的筛矿表数据
+     *
+     * 遍历配置文件中的每个输入方块条目，
+     * 构建 DropTable 对象并存入 Map。
+     */
+    private fun parseDropTables() {
+        // 获取 "sieve_drops" 节点下的所有子节点（即各种输入方块）
+        val section = yamlConfig?.getConfigurationSection("sieve_drops")
+            ?: return  // 如果没有 sieve_drops 节点，直接返回
+
+        // 遍历每种输入方块
+        for (inputKey in section.getKeys(false)) {
+            val inputSection = section.getConfigurationSection(inputKey) ?: continue
+
+            // 创建该输入方块的 DropTable
+            val dropTable = DropTable(inputKey)
+
+            // 解析必定产出的物品列表
+            val guaranteedSection = inputSection.getConfigurationSection("guaranteed_drops")
+            if (guaranteedSection != null) {
+                for (dropKey in guaranteedSection.getKeys(false)) {
+                    val dropEntry = parseDropEntry(guaranteedSection.getConfigurationSection(dropKey)!!)
+                    if (dropEntry != null) {
+                        dropTable.addGuaranteedDrop(dropEntry)
+                    }
+                }
+            }
+
+            // 解析随机产出的物品列表
+            val randomSection = inputSection.getConfigurationSection("random_drops")
+            if (randomSection != null) {
+                for (dropKey in randomSection.getKeys(false)) {
+                    val dropEntry = parseDropEntry(randomSection.getConfigurationSection(dropKey)!!)
+                    if (dropEntry != null) {
+                        dropTable.addRandomDrop(dropEntry)
+                    }
+                }
+            }
+
+            // 存储解析完成的 DropTable
+            dropTables[inputKey] = dropTable
+        }
+    }
+
+    /**
+     * 解析单个产出条目
+     *
+     * 从 YAML 的一个 section 中读取物品、概率、数量等信息。
+     *
+     * @param section 包含产出条目数据的配置段
+     * @return 解析后的 DropEntry 对象，解析失败返回 null
+     */
+    private fun parseDropEntry(section: org.bukkit.configuration.ConfigurationSection): DropEntry? {
+        return try {
+            DropEntry(
+                itemName = section.getString("item")!!,           // 物品名称（必需）
+                chance = section.getDouble("chance", 0.0),       // 概率（默认0）
+                guaranteed = section.getBoolean("guaranteed", false), // 是否必定产出
+                minCount = section.getInt("minCount", 1),         // 最小数量（默认1）
+                maxCount = section.getInt("maxCount", 1)          // 最大数量（默认1）
+            )
+        } catch (e: Exception) {
+            // 解析失败时打印警告，但不中断整个加载过程
+            println("[SieveAddon] ⚠ 无法解析产出条目: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * 获取指定输入方块对应的筛矿表
+     *
+     * @param inputMaterial 输入方块的 Material 名称（如 "DIRT"、"GRAVEL"）
+     * @return 对应的 DropTable，如果没有则返回 null
+     */
+    fun getDropTable(inputMaterial: String): DropTable? {
+        return dropTables[inputMaterial]
+    }
+
+    /**
+     * 数据类：单个产出条目的定义
+     *
+     * 描述一种可能产出的物品及其概率和数量规则。
+     */
+    data class DropEntry(
+        val itemName: String,      // 物品名称或自定义物品ID
+        val chance: Double,        // 产出概率 (0.0 ~ 1.0)
+        val guaranteed: Boolean,   // 是否必定产出
+        val minCount: Int,         // 最少产出数量
+        val maxCount: Int          // 最多产出数量
+    ) {
+        /**
+         * 生成本次的实际产出数量
+         *
+         * 在 minCount 和 maxCount 之间随机取值。
+         * 使用 ThreadLocalRandom 保证线程安全和高性能。
+         */
+        fun rollCount(): Int {
+            if (minCount == maxCount) return minCount  // 数量固定时直接返回
+            return ThreadLocalRandom.current().nextInt(minCount, maxCount + 1)
+        }
+
+        /**
+         * 判定本次是否产出该物品
+         *
+         * 对于必定产出的物品始终返回 true。
+         * 对于随机物品，按概率进行掷骰判定。
+         */
+        fun rollChance(): Boolean {
+            if (guaranteed) return true
+            return ThreadLocalRandom.current().nextDouble() < chance
+        }
+    }
+
+    /**
+     * 数据类：一种输入方块对应的完整筛矿表
+     *
+     * 包含该方块的所有必定产出和随机产出条目。
+     */
+    class DropTable(val inputType: String) {
+        private val guaranteedDrops = mutableListOf<DropEntry>()
+        private val randomDrops = mutableListOf<DropEntry>()
+
+        fun addGuaranteedDrop(entry: DropEntry) { guaranteedDrops.add(entry) }
+        fun addRandomDrop(entry: DropEntry) { randomDrops.add(entry) }
+
+        fun getGuaranteedDrops(): List<DropEntry> = guaranteedDrops.toList()
+        fun getRandomDrops(): List<DropEntry> = randomDrops.toList()
+
+        /** 该输入方块是否有任何筛矿配置 */
+        fun isEmpty(): Boolean = guaranteedDrops.isEmpty() && randomDrops.isEmpty()
+    }
+}
+```
+
+#### 3. 筛矿机制核心逻辑
+
+```kotlin
+// 文件路径: src/main/kotlin/com/example/sieveaddon/mechanics/SieveMechanic.kt
+
+package com.example.sieveaddon.mechanics
+
+// 导入相关类
+import com.example.sieveaddon.config.SieveConfig
+import org.bukkit.Location
+import org.bukkit.Material
+import org.bukkit.entity.Item
+import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
+
+/**
+ * 筛矿机制核心类
+ *
+ * 处理所有的筛矿逻辑：概率判定、物品生成、背包管理等。
+ * 这是一个纯逻辑类，不直接处理事件，而是被事件处理器调用。
+ *
+ * 设计为单例对象（object），因为不需要维护状态。
+ */
+object SieveMechanic {
+
+    /**
+     * 执行一次完整的筛矿操作
+     *
+     * 这是筛矿的主要入口方法。
+     * 根据输入方块的类型查找对应的概率表，
+     * 然后逐一判定每种产出物，最后将产物给到玩家。
+     *
+     * @param player 执行筛矿的玩家
+     * @param inputMaterial 被筛的输入方块材质
+     * @param sieveLocation 筛子方块的位置（用于掉落物生成）
+     * @return 筛矿结果信息（用于日志或反馈显示）
+     */
+    fun performSieve(
+        player: Player,
+        inputMaterial: Material,
+        sieveLocation: Location
+    ): SieveResult {
+
+        val result = SieveResult()
+        val materialName = inputMaterial.name  // 如 "DIRT"、"GRAVEL"
+
+        // ====== 第一步：查找概率表 ======
+        // 根据输入方块类型获取对应的筛矿配置
+        val dropTable = SieveConfig.getDropTable(materialName)
+
+        if (dropTable == null || dropTable.isEmpty()) {
+            // 没有找到对应的概率表，这种方块不能被筛
+            result.addMessage("§e[SieveAddon] ${getChineseName(inputMaterial)} 暂不支持筛矿。")
+            return result
+        }
+
+        // ====== 第二步：处理必定产出 ======
+        // 必定产出的物品不受概率影响，每次都会给出
+        for (drop in dropTable.getGuaranteedDrops()) {
+            val count = drop.rollCount()  // 确定本次产出数量
+            giveItemToPlayer(player, drop.itemName, count, sieveLocation, result)
+        }
+
+        // ====== 第三步：处理随机产出 ======
+        // 每种随机产出独立掷骰判定
+        for (drop in dropTable.getRandomDrops()) {
+            // 先判定是否命中概率
+            if (!drop.rollChance()) {
+                continue  // 没有命中，跳过这个物品
+            }
+
+            // 命中了，确定数量然后给予物品
+            val count = drop.rollCount()
+            giveItemToPlayer(player, drop.itemName, count, sieveLocation, result)
+        }
+
+        // ====== 第四步：生成结果摘要 ======
+        if (result.totalItems > 0) {
+            result.addMessage("§a[SieveAddon] ✓ 筛矿完成！共获得 ${result.totalItems} 个物品。")
+        } else {
+            result.addMessage("§7[SieveAddon] 这次什么都没筛到... 再试一次吧！")
+        }
+
+        return result
+    }
+
+    /**
+     * 将物品给予玩家
+     *
+     * 优先尝试放入玩家背包。如果背包已满，
+     * 则在筛子位置生成掉落物实体。
+     *
+     * @param player 目标玩家
+     * @param itemName 物品名称（原版 Material 名或自定义 ID）
+     * @param数量 物品数量
+     * @param dropLocation 掉落物备用位置
+     * @param result 结果收集器（记录给了什么）
+     */
+    private fun giveItemToPlayer(
+        player: Player,
+        itemName: String,
+        count: Int,
+        dropLocation: Location,
+        result: SieveResult
+    ) {
+        // 尝试将物品名转换为 Material 对象
+        val material = try {
+            Material.valueOf(itemName)
+        } catch (e: IllegalArgumentException) {
+            // 不是原版 Material，可能是自定义物品
+            // TODO: 处理自定义物品的情况
+            result.addMessage("§e[待实现] 自定义物品: $itemName")
+            return
+        }
+
+        // 创建物品栈
+        val itemStack = ItemStack(material, count)
+
+        // 尝试加入玩家背包
+        val leftover = player.inventory.addItem(itemStack)
+
+        // leftover 存放了放不下的物品
+        if (leftover.isNotEmpty()) {
+            // 背包满了，在筛子位置生成掉落物
+            for ((_, remainingStack) in leftover) {
+                dropLocation.world?.dropItemNaturally(dropLocation, remainingStack)
+                result.droppedItems++
+            }
+        }
+
+        // 记录结果
+        result.totalItems += count
+        result.addItem(getChineseName(material))
+    }
+
+    /**
+     * 获取材料的中文显示名称
+     *
+     * 用于在聊天消息中展示更友好的名称。
+     * 这是一个简化的映射表，实际项目中可以用配置文件或语言系统。
+     */
+    private fun getChineseName(material: Material): String {
+        return when (material) {
+            Material.DIRT -> "泥土"
+            Material.GRAVEL -> "沙砾"
+            Material.SOUL_SAND -> "灵魂沙"
+            Material.SAND -> "沙子"
+            Material.COAL -> "煤炭"
+            Material.DIAMOND -> "钻石"
+            Material.EMERALD -> "绿宝石"
+            Material.FLINT -> "燧石"
+            else -> material.name  // 没有映射的就返回英文名
+        }
+    }
+
+    /**
+     * 筛矿结果数据类
+     *
+     * 收集一次筛矿操作的所有结果信息，
+     * 包括获得的物品列表、消息等。
+     */
+    class SieveResult {
+        val obtainedItems = mutableListOf<String>()  // 获得的物品名称列表
+        val messages = mutableListOf<String>()       // 要发送给玩家的消息
+        var totalItems = 0                           // 获得的总物品数
+        var droppedItems = 0                         // 因背包满而掉落的物品数
+
+        fun addItem(name: String) { obtainedItems.add(name) }
+        fun addMessage(msg: String) { messages.add(msg) }
+
+        /**
+         * 将所有结果消息发送给玩家
+         */
+        fun sendToPlayer(player: Player) {
+            for (msg in messages) {
+                player.sendMessage(msg)
+            }
+        }
+    }
+}
+```
+
+<Callout type="success">
+  🎯 **第三步的关键设计决策**：
+  
+  1. **配置驱动**：所有概率数据都在 YAML 文件中，改数值不用改代码
+  2. **独立判定**：每种产出物单独掷骰，互不影响（符合无中生有 MOD 的设定）
+  3. **ThreadLocalRandom**：比 `java.util.Random()` 更快且线程安全
+  4. **优雅降级**：背包满时自动转为掉落物，不会丢失物品
+</Callout>
+
+---
+
+## 第四步：事件监听与交互
+
+有了筛矿逻辑之后，我们需要把它和玩家的实际操作连接起来。这一步要做三件事：监听事件、长按检测、粒子效果反馈。
+
+### 给 AI 的 Prompt
+
+```txt
+## 任务：实现筛矿的事件监听、长按检测和粒子效果
+
+### 当前进度
+- ✅ 筛网物品已注册
+- ✅ 筛子方块已注册（带基础交互检测）
+- ✅ 筛矿概率系统和物品生成逻辑已完成
+
+### 需要实现的功能
+
+1. **PlayerInteractEvent 监听**：
+   - 监听玩家的右键方块事件
+   - 判断点击的是否是筛子方块（sieveaddon:sieve_block）
+   - 判断玩家主手是否持有筛网
+   - 条件满足时启动筛矿计时
+
+2. **长按检测机制（3秒）**：
+   - 玩家需要持续按住右键 3 秒才能完成一次筛矿
+   - 如果中途松开，进度归零
+   - 计时期间显示进度条（使用 ActionBar 发送 "§e筛矿中... [====    ] 45%"）
+   - 每隔几 tick 检测玩家是否还在按住
+
+3. **粒子效果反馈**：
+   - 筛矿过程中在筛子位置持续播放粒子效果（建议用 BLOCK_CRACK 粒子，材质匹配输入方块）
+   - 筛矿完成时播放一次庆祝效果（如 EXPLOSION_NORMAL 粒子）
+
+4. **筛矿完成时的调用**：
+   - 3秒结束后，调用 SieveMechanic.performSieve() 执行筛矿
+   - 消耗玩家手中的输入方块（如果需要消耗的话）
+   - 将结果发送给玩家
+
+### 技术要求
+- 使用 Bukkit 的 Event 系统（@EventHandler 注解）
+- 使用 BukkitRunnable 或 Scheduler 进行定时检测
+- 粒子效果使用 Particle API
+- 代码放在 `listener` 子包下
+- 详细中文注释
+```
+
+### AI 应该返回的代码
+
+```kotlin
+// 文件路径: src/main/kotlin/com/example/sieveaddon/listener/SieveInteractionListener.kt
+
+package com.example.sieveaddon.listener
+
+// 导入 Bukkit 事件相关类
+import com.example.sieveaddon.SieveAddon
+import com.example.sieveaddon.block.SieveBlock
+import com.example.sieveaddon.config.SieveConfig
+import com.example.sieveaddon.mechanics.SieveMechanic
+import org.bukkit.Particle
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
+import org.bukkit.event.block.Action
+import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.scheduler.BukkitRunnable
+
+/**
+ * 筛子交互事件监听器
+ *
+ * 监听玩家与筛子方块的所有交互行为，
+ * 包括：右键检测、长按计时、粒子播放、筛矿执行。
+ *
+ * 这是一个 Bukkit 事件监听器，需要在插件启用时注册到 Server。
+ */
+class SieveInteractionListener : Listener {
+
+    // 存储正在筛矿的玩家及其状态
+    // Key: 玩家的 UUID
+    // Value: 该玩家的筛矿状态
+    private val activeSieges = mutableMapOf<java.util.UUID, SiegeState>()
+
+    /**
+     * 处理玩家交互事件
+     *
+     * 当玩家与方块/空气交互时触发。
+     * 我们只关心右键点击方块的操作。
+     *
+     * @param event Bukkit 的玩家交互事件对象
+     */
+    @EventHandler
+    fun onPlayerInteract(event: PlayerInteractEvent) {
+        // 只处理右键点击方块的情况
+        if (event.action != Action.RIGHT_CLICK_BLOCK) return
+        // 获取被点击的方块
+        val clickedBlock = event.clickedBlock ?: return
+        // 获取发起交互的玩家
+        val player = event.player
+
+        // ====== 判断是否点击了筛子方块 ======
+        // 通过比对方块数据来判断是不是我们的筛子
+        if (!isSieveBlock(clickedBlock)) return
+
+        // ====== 判断玩家是否手持筛网 ======
+        val mainHandItem = player.inventory.itemInMainHand
+        if (!isSieveMesh(mainHandItem)) {
+            // 不是筛网，提示玩家
+            player.sendMessage("§c[SieveAddon] 你需要拿着 §f筛网 §c才能使用筛子！")
+            return
+        }
+
+        // ====== 阻止默认行为 ======
+        // 防止方块被放置或其他默认交互发生
+        event.isCancelled = true
+
+        // ====== 启动或更新筛矿计时 ======
+        startOrContinueSiege(player, clickedBlock.location)
+    }
+
+    /**
+     * 判断给定方块是否是筛子方块
+     *
+     * 通过 Rebar 的方块数据系统进行比对。
+     *
+     * @param block 要判断的方块
+     * @return 如果是筛子方块返回 true
+     */
+    private fun isSieveBlock(block: org.bukkit.block.Block): Boolean {
+        // 获取方块的 Rebar ID 并与我们注册的筛子 ID 比较
+        val blockId = block.getRebarBlockId() ?: return false
+        return blockId == "sieveaddon:sieve_block"
+    }
+
+    /**
+     * 判断给定物品是否是筛网
+     *
+     * @param item 要判断的物品栈
+     * @return 如果是筛网返回 true
+     */
+    private fun isSieveMesh(item: org.bukkit.inventory.ItemStack?): Boolean {
+        if (item == null || item.type.isAir) return false
+        val itemId = item.getRebarItemId() ?: return false
+        return itemId == "sieveaddon:sieve_mesh"
+    }
+
+    /**
+     * 启动新的筛矿进程或延续已有的进程
+     *
+     * 如果该玩家已经在筛矿，不做任何操作（计时器会继续）。
+     * 如果是新的一次筛矿，创建状态对象并启动计时任务。
+     *
+     * @param player 正在筛矿的玩家
+     * @param sieveLocation 筛子方块的位置
+     */
+    private fun startOrContinueSiege(player: org.bukkit.entity.Player, sieveLocation: org.bukkit.Location) {
+        val playerId = player.uniqueId
+
+        // 检查该玩家是否已经在筛矿中
+        if (activeSieges.containsKey(playerId)) {
+            // 已经在筛矿了，不需要重复启动
+            // （计时器会持续检测玩家是否还在按住）
+            return
+        }
+
+        // ====== 创建新的筛矿状态 ======
+        val state = SiegeState(
+            player = player,
+            sieveLocation = sieveLocation,
+            startTime = System.currentTimeMillis(),
+            requiredDuration = 3000L  // 需要 3000 毫秒 = 3 秒
+        )
+
+        activeSieges[playerId] = state
+
+        // 发送开始消息
+        player.sendMessage("§a[SieveAddon] 开始筛矿... 请保持按住右键！")
+
+        // ====== 启动计时任务 ======
+        // 使用 BukkitRunnable 实现周期性检测
+        object : BukkitRunnable() {
+            override fun run() {
+                // 检查玩家是否仍在按住右键（简化检测：检查距离和朝向）
+                if (!isPlayerStillInteracting(player, sieveLocation)) {
+                    // 玩家松开了或离开了，取消筛矿
+                    cancelSiege(playerId, "已取消 — 请保持按住右键")
+                    this.cancel()  // 停止这个定时任务
+                    return
+                }
+
+                // 计算当前进度
+                val elapsed = System.currentTimeMillis() - state.startTime
+                val progress = (elapsed.toDouble() / state.requiredDuration).coerceAtMost(1.0)
+                val percent = (progress * 100).toInt()
+
+                // ====== 更新进度显示 ======
+                // 生成可视化进度条字符串
+                val progressBar = createProgressBar(progress)
+                player.sendActionBar("§e筛矿中... $progressBar §f$percent%")
+
+                // ====== 播放粒子效果 ======
+                spawnSieveParticles(sieveLocation, progress)
+
+                // ====== 检查是否完成 ======
+                if (progress >= 1.0) {
+                    // 筛矿完成！
+                    completeSiege(player, sieveLocation, state)
+                    this.cancel()  // 停止定时任务
+                }
+            }
+        }.runTaskTimer(SieveAddon.instance, 0L, 5L)  // 每 5 tick（0.25秒）执行一次
+    }
+
+    /**
+     * 检测玩家是否仍在与筛子交互
+     *
+     * 简化的检测方式：检查玩家是否在筛子附近且朝向大致正确。
+     * 更精确的方式可以使用 Packet 监听，但那个更复杂。
+     *
+     * @param player 要检测的玩家
+     * @param sieveLocation 筛子的位置
+     * @return 如果玩家似乎还在交互返回 true
+     */
+    private fun isPlayerStillInteracting(player: org.bukkit.entity.Player, sieveLocation: org.bukkit.Location): Boolean {
+        // 检查玩家是否在线
+        if (!player.isOnline) return false
+
+        // 检查玩家是否在筛子 3 格范围内
+        val distance = player.location.distance(sieveLocation)
+        if (distance > 3.0) return false
+
+        // 检查玩家是否朝向筛子（粗略检测）
+        val direction = player.location.direction
+        val toSieve = sieveLocation.clone().add(0.5, 0.5, 0.5).subtract(player.eyeLocation).toVector().normalize()
+        val dotProduct = direction.dot(toSieve)
+
+        // dotProduct > 0 表示玩家大致朝向筛子方向
+        return dotProduct > 0.0
+    }
+
+    /**
+     * 生成 ASCII 进度条
+     *
+     * 根据当前进度生成一个可视化的进度条字符串。
+     *
+     * @param progress 当前进度 (0.0 ~ 1.0)
+     * @return 格式化后的进度条字符串
+     */
+    private fun createProgressBar(progress: Double): String {
+        val totalBars = 10          // 进度条总长度（字符数）
+        val filledBars = (totalBars * progress).toInt()  // 已填充的部分
+        val emptyBars = totalBars - filledBars             // 未填充的部分
+
+        // 使用 Unicode 字符绘制进度条
+        val filled = "█".repeat(filledBars)   // 填充字符
+        val empty = "░".repeat(emptyBars)      // 空白字符
+
+        return "§e[$filled§7$empty§e]"
+    }
+
+    /**
+     * 在筛子位置播放粒子效果
+     *
+     * 筛矿过程中持续调用，营造视觉反馈。
+     * 粒子类型和颜色随进度变化。
+     *
+     * @param location 筛子位置
+     * @param progress 当前进度
+     */
+    private fun spawnSieveParticles(location: org.bukkit.Location, progress: Double) {
+        val world = location.world ?: return
+
+        // 在筛子上方 0.5 格处生成粒子
+        val particleLoc = location.clone().add(0.5, 1.2, 0.5)
+
+        // 根据进度选择不同的粒子效果
+        if (progress < 1.0) {
+            // 筛矿进行中：使用 BLOCK_DUST 粒子模拟灰尘飞扬
+            world.spawnParticle(
+                Particle.BLOCK_DUST,           // 粒子类型：方块碎屑
+                particleLoc,                   // 生成位置
+                3,                             // 粒子数量
+                0.3, 0.3, 0.3,               // 扩散范围 (x, y, z)
+                0.01,                         // 速度
+                org.bukkit.Material.DIRT.createBlockData()  // 使用泥土材质的粒子
+            )
+        } else {
+            // 筛矿完成：使用爆炸粒子作为庆祝效果
+            world.spawnParticle(
+                Particle.EXPLOSION_NORMAL,     // 爆炸粒子
+                particleLoc,
+                10,                            // 更多粒子
+                0.5, 0.5, 0.5,               // 更大的扩散范围
+                0.1                            // 速度
+            )
+        }
+    }
+
+    /**
+     * 完成筛矿操作
+     *
+     * 计时结束时调用，执行实际的筛矿逻辑。
+     *
+     * @param player 完成筛矿的玩家
+     * @param sieveLocation 筛子位置
+     * @param state 筛矿状态对象
+     */
+    private fun completeSiege(
+        player: org.bukkit.entity.Player,
+        sieveLocation: org.bukkit.Location,
+        state: SiegeState
+    ) {
+        // 从活跃列表中移除
+        activeSieges.remove(player.uniqueId)
+
+        // 清除 ActionBar（否则进度条会残留）
+        player.sendActionBar("")
+
+        // TODO: 这里应该获取玩家正在筛的输入方块类型
+        // 暂时用泥土作为演示
+        val inputMaterial = org.bukkit.Material.DIRT
+
+        // 调用筛矿机制执行筛矿
+        val result = SieveMechanic.performSieve(player, inputMaterial, sieveLocation)
+
+        // 将结果发送给玩家
+        result.sendToPlayer(player)
+    }
+
+    /**
+     * 取消筛矿操作
+     *
+     * 玩家松开右键或离开时调用。
+     *
+     * @param playerId 玩家的 UUID
+     * @param reason 取消原因（显示给玩家）
+     */
+    private fun cancelSiege(playerId: java.util.UUID, reason: String) {
+        val state = activeSieges.remove(playerId) ?: return
+
+        // 清除 ActionBar
+        state.player.sendActionBar("")
+
+        // 通知玩家
+        state.player.sendMessage("§7[SieveAddon] $reason")
+    }
+
+    /**
+     * 筛矿状态数据类
+     *
+     * 记录一次筛矿过程中的所有状态信息。
+     */
+    data class SiegeState(
+        val player: org.bukkit.entity.Player,     // 正在筛矿的玩家
+        val sieveLocation: org.bukkit.Location,   // 筛子方块的位置
+        val startTime: Long,                      // 开始时间戳（毫秒）
+        val requiredDuration: Long                // 所需总时长（毫秒）
+    )
+}
+```
+
+别忘了在主类中注册监听器：
+
+```kotlin
+// 在 SieveAddon.kt 的 onEnable() 中添加：
+
+import com.example.sieveaddon.listener.SieveInteractionListener
+import com.example.sieveaddon.config.SieveConfig
+
+// 在 try 块中添加：
+// 初始化配置
+SieveConfig.init(dataFolder)
+
+// 注册事件监听器
+server.pluginManager.registerEvents(SieveInteractionListener(), this)
+logger.info("§a[SieveAddon] ✓ 筛子交互监听器注册成功！")
+```
+
+<Callout type="info">
+  ⏱️ **关于长按检测的技术细节**：
+  
+  Minecraft 服务端并没有直接的"按住"事件。我们的实现方案是：
+  
+  1. 玩家第一次右键时，启动一个定时任务（BukkitRunnable）
+  2. 这个任务每 5 tick（0.25 秒）运行一次
+  3. 每次运行时检查玩家是否还在筛子旁边且朝向正确
+  4. 如果检测到玩家"离开"，取消计时并通知玩家
+  5. 如果累计时间达到 3 秒，执行筛矿逻辑
+  
+  这种方案的优点是实现简单；缺点是不能 100% 准确检测"松开右键"的动作。对于筛子这种非竞技性功能来说，足够用了。
+</Callout>
+
+---
+
+## 第五步：构建与测试
+
+代码写得差不多了，是时候看看能不能跑起来了！
+
+### 给 AI 的 Prompt
+
+```txt
+## 任务：指导我完成构建和测试
+
+请告诉我：
+
+1. **Gradle 构建命令**：
+   - 如何编译项目？完整的命令是什么？
+   - 编译成功后，输出的 JAR 文件在哪里？
+   - 如果有编译错误，常见的错误类型和解决方法有哪些？
+
+2. **测试服务器搭建**：
+   - 推荐用什么测试服务器？（Paper? Purpur?）
+   - 需要安装哪些依赖（Rebar 等）？
+   - 服务器配置文件需要注意什么？
+
+3. **功能测试清单**：
+   我需要一个完整的测试 checklist，包括：
+   - 物品获取测试
+   - 方块放置测试
+   - 交互检测测试
+   - 筛矿流程测试
+   - 概率验证方法
+   - 边界情况测试（背包满、离线等）
+
+4. **调试技巧**：
+   - 如何在代码中加日志来排查问题？
+   - 常用的调试命令有哪些？
+```
+
+### AI 应该返回的指引
+
+#### 1. Gradle 构建命令
+
+```bash
+# 进入项目根目录
+cd /path/to/MySieveAddon
+
+# 清理并构建（推荐首次使用）
+./gradlew clean build
+
+# 或者只构建（增量编译，更快）
+./gradlew build
+
+# 如果想跳过测试直接构建
+./gradlew build -x test
+```
+
+构建成功后，JAR 文件位于：
+```
+build/libs/SieveAddon-1.0-SNAPSHOT.jar
+```
+
+<Callout type="danger">
+  🔴 **Windows 用户注意**：上面的 `./gradlew` 在 Windows 上要改成 `gradlew.bat`：
+  
+  ```bash
+  gradlew.bat clean build
+  ```
+</Callout>
+
+#### 2. 测试服务器搭建
+
+推荐使用 **Paper** 或 **Purpur** 作为测试服务器（性能好、兼容性好）：
+
+```bash
+# 1. 下载 Paper 服务器 JAR
+# 访问 https://papermc.io/downloads 下载最新稳定版
+
+# 2. 创建服务器目录
+mkdir test-server
+cd test-server
+
+# 3. 放入 paper.jar 并启动一次（生成配置文件）
+java -Xmx1G -jar paper.jar --nogui
+
+# 4. 同意 EULA（编辑 eula.txt，把 false 改成 true）
+echo "eula=true" > eula.txt
+
+# 5. 安装 Rebar（把 rebar.jar 放入 plugins 目录）
+# 从 Rebar 的 Release 页面下载
+
+# 6. 安装你的筛子插件
+cp ../build/libs/SieveAddon-1.0-SNAPSHOT.jar plugins/
+
+# 7. 再次启动服务器
+java -Xmx1G -jar paper.jar --nogui
+```
+
+<Callout type="success">
+  💡 **内存建议**：测试服务器分配 1GB 内存就够了（`-Xmx1G`）。如果是本地测试，甚至 512MB 也能跑起来。
+</Callout>
+
+#### 3. 功能测试清单
+
+| # | 测试项 | 操作步骤 | 预期结果 | 状态 |
+|---|--------|---------|---------|------|
+| 1 | 获取筛网 | `/rb give sieveaddon:sieve_mesh` | 背包中出现筛网物品 | ⬜ |
+| 2 | 获取筛子 | `/rb give sieveaddon:sieve_block` | 背包中出现筛子方块 | ⬜ |
+| 3 | 放置筛子 | 手持筛子右键地面 | 筛子方块出现在地上 | ⬜ |
+| 4 | 空手交互 | 不拿东西右键筛子 | 提示"需要拿着筛网" | ⬜ |
+| 5 | 错误物品交互 | 拿着钻石剑右键筛子 | 提示"需要拿着筛网" | ⬜ |
+| 6 | 正确交互 | 拿着筛网右键筛子 | 出现"开始筛矿"提示 + 进度条 | ⬜ |
+| 7 | 松开取消 | 右键后立即松开 | 提示"已取消" | ⬜ |
+| 8 | 完成筛矿 | 按住右键 3 秒 | 粒子爆炸效果 + 获得物品 | ⬜ |
+| 9 | 背包满测试 | 塞满背包后再筛矿 | 物品变成掉落物 | ⬜ |
+| 10 | 配置重载 | 修改 sieve_drops.yml 后执行重载命令 | 新概率生效 | ⬜ |
+
+<Callout type="info">
+  📋 **如何做概率验证**？
+  
+  由于概率的存在，你不能只筛一次就说"对了"或"错了"。建议：
+  
+  - 至少筛 **50~100 次**同一个方块
+  - 统计各产出物的出现次数
+  - 与理论概率对比（允许一定的偏差）
+  
+  比如：沙砾出燧石的理论概率是 25%，100 次大约应该出现 20~30 次。如果只出现了 5 次，那可能有问题。
+</Callout>
+
+#### 4. 调试技巧
+
+**添加日志**：
+
+```kotlin
+// 在代码中任何你想观察的地方加上这行
+logger.info("[SieveAddon-DEBUG] 当前变量值: $yourVariable")
+
+// 例如在筛矿判定时：
+println("[SieveAddon-DEBUG] 正在判定物品: ${drop.itemName}, 概率: ${drop.chance}, 命中: ${drop.rollChance()}")
+```
+
+**常用调试命令**：
+
+```
+# 重新加载插件（不用重启服务器）
+/rl                                    # 或 /reload
+# 注意：/reload 在生产环境不推荐使用，但测试时很方便
+
+# 给自己物品（测试用）
+/rb give sieveaddon:sieve_mesh
+/rb give sieveaddon:sieve_block
+
+# 查看当前运行的插件
+/plugins
+# 或 /pl
+
+# 查看 Rebar 的注册信息（如果有这个命令的话）
+/rb list items
+/rb list blocks
+```
+
+---
+
+## 常见问题快速排查
+
+在开发和测试过程中，你几乎一定会遇到各种问题。这里列出了最常见的问题和解决方法，方便快速查阅。
+
+### 一、编译错误
+
+| 错误类型 | 可能原因 | 解决方法 |
+|---------|---------|---------|
+| `Unresolved reference: RebarItem` | Rebar 依赖没有正确引入 | 检查 `build.gradle.kts` 中的 dependencies，确保 Rebar 的坐标正确 |
+| `Cannot find symbol: RebarRegistry` | API 版本不匹配 | 确认使用的 Rebar 版本与文档一致，可能需要升级或降级 |
+| `Type mismatch` | Kotlin 类型推断问题 | 显式声明变量类型，或让 AI 修正类型转换 |
+| `Duplicate class` | 文件重复或包路径冲突 | 检查是否有同名的类文件存在 |
+| `'onEnable' overrides nothing` | 继承的基类不对 | 确认主类继承了 `JavaPlugin`（不是 `Plugin` 或其他类） |
+
+<Callout type="warning">
+  📌 **遇到编译错误时的标准操作流程**：
+  
+  1. **复制完整错误信息**（不要只复制一行）
+  2. **粘贴给 AI**："编译报错，请帮我修复：[粘贴错误]"
+  3. **让它先分析原因**，再给出修改方案
+  4. **修改后重新编译**，看是否还有新错误
+  
+  大多数编译错误 AI 都能一次性修好。如果反复出现同一个错误，可能是依赖配置有问题。
+</Callout>
+
+### 二、运行时崩溃
+
+| 崩溃现象 | 常见原因 | 排查方法 |
+|---------|---------|---------|
+| 服务器启动时报错 | 插件 main 声明错误 | 检查 `plugin.yml` 或 `bukkit.yml` 中的 `main` 字段是否指向正确的类路径 |
+| 注册物品时崩 | 物品 ID 格式错误或冲突 | 确保 ID 格式为 `modid:name`，且不与其他插件冲突 |
+| 右键方块时崩 | 事件处理器有空指针 | 检查 `clickedBlock`、`player` 等是否做了 null 检查 |
+| 筛矿执行时崩 | 配置文件格式错误 | 检查 `sieve_drops.yml` 的缩进和语法是否正确 |
+| 粒子效果崩 | 粒子参数无效 | 检查 `spawnParticle` 的参数，特别是 `data` 参数 |
+
+<Callout type="danger">
+  🧨 **如何读懂崩溃报告**？
+  
+  服务器崩溃时会生成 `logs/latest.log` 文件。关键信息通常在最后几十行：
+  
+  ```
+  [ERROR] Could not pass event PlayerInteractEvent to SieveAddon v1.0
+  java.lang.NullPointerException: Cannot invoke "Object.toString()" because "<local1>" is null
+      at com.example.sieveaddon.listener.SieveInteractionListener.onPlayerInteract(SieveInteractionListener.kt:42)
+      ...
+  ```
+  
+  关键信息解读：
+  - `PlayerInteractEvent` → 出问题的时机（玩家交互时）
+  - `NullPointerException` → 错误类型（空指针）
+  - `SieveInteractionListener.kt:42` → **出错的具体文件和行号**
+  
+  把这几行发给 AI，它基本能立刻定位问题。
+</Callout>
+
+### 三、Rebar API 变更的处理
+
+Rebar 还在活跃开发中，API 可能会发生变更。如果你发现代码中的某个类或方法不存在了：
+
+1. **查看 Rebar 的更新日志**：Release 页面通常会有迁移指南
+2. **重新克隆 guide 代码**：`.trae/guide/rebar` 更新到最新版
+3. **问 AI**："Rebar API 更新了，旧的 XXX 方法不见了，新的替代方案是什么？"
+4. **参考 Pylon**：Pylon 通常会第一时间适配 Rebar 的变更，它的代码是最好的参考
+
+<Callout type="info">
+  🔧 **版本锁定建议**：
+  
+  为了避免 API 变更导致的意外问题，建议在 `build.gradle.kts` 中锁定 Rebar 的版本：
+  
+  ```kotlin
+  dependencies {
+      compileOnly("io.github.pylonmc:rebar:1.x.x")  // 用固定的版本号
+  }
+  
+  // 不要用 "+" 或 "latest" 这种动态版本
+  ```
+  
+  等你的插件稳定后再考虑升级依赖。
+</Callout>
+
+### 四、功能异常但没报错
+
+有时候最烦人的情况是——**没报错，但功能不对**：
+
+| 症状 | 可能原因 | 排查方向 |
+|------|---------|---------|
+| 右键没反应 | 事件优先级被其他插件抢占 | 检查 `@EventHandler` 的 priority 设置 |
+| 筛不出东西 | 概率表没有正确加载 | 加日志确认 `SieveConfig.dropTables` 是否有数据 |
+| 总是筛出同样的东西 | 随机数种子问题 | 确认使用了 `ThreadLocalRandom` 而不是 `Random()` |
+| 进度条不动 | BukkitRunnable 没有正确调度 | 检查 `runTaskTimer` 的参数和插件实例 |
+| 粒子看不到 | 客户端渲染距离或粒子设置 | 检查游戏的粒子效果设置（视频设置 → 粒子） |
+
+---
+
+## 总结
+
+恭喜你读到了这里！🎉 让我们来回顾一下这一章完成的工作：
+
+| 步骤 | 内容 | 关键产出 |
+|------|------|---------|
+| **第一步** | 注册筛网物品 | `SieveMesh.kt` + Rebar 物品注册 |
+| **第二步** | 注册筛子方块 | `SieveBlock.kt` + 右键检测逻辑 |
+| **第三步** | 筛矿概率系统 | `SieveConfig.kt` + `SieveMechanic.kt` + YAML 配置 |
+| **第四步** | 事件监听与交互 | `SieveInteractionListener.kt` + 长按检测 + 粒子效果 |
+| **第五步** | 构建与测试 | Gradle 构建 + 测试服务器 + 测试清单 |
+
+<Callout type="success">
+  🏆 **你已经完成了从零到一的全过程！**
+  
+  即使代码还有 bug、即使有些地方还需要调整，但你已经：
+  
+  - ✅ 学会如何向 AI 描述需求
+  - ✅ 学会了审核和修正 AI 生成的代码
+  - ✅ 学会了构建、部署和测试 Minecraft 插件
+  - ✅ 学会了基本的排错思路
+  
+  这些技能不仅适用于筛子插件，也适用于任何你想做的 Rebar 附属。Vibecoding 的方法论是通用的——**只要你能说清楚想要什么，AI 就能帮你实现**。
+</Callout>
+
+<Callout type="warning">
+  🔄 **接下来做什么**？
+  
+  1. **实际动手试试**：按照本章的步骤，真正跑一遍流程
+  2. **发现问题随时问 AI**：遇到报错不要慌，把错误信息丢给它
+  3. **迭代改进**：第一版肯定不完美，慢慢优化就好
+  4. **分享经验**：如果你在实践中发现了更好的方法，欢迎回来提 PR 帮助完善这篇教程！
+  
+  记住：**完成比完美更重要**。先做出能跑的东西，再去追求完美。
+</Callout>

@@ -1,0 +1,722 @@
+---
+title: 架构设计与数据结构选择
+description: 从零设计高性能电网系统的核心架构，包括并查集、空间哈希网格和云仓库三大关键决策。
+---
+
+# 电网系统实战 —— 架构设计与数据结构选择
+
+> 这是核心章节。我们将从零开始，一步步设计一个能够支撑 **50 人同时在线**、**15,000+ 设备实例**的高性能电网系统。每一个决策背后都有明确的性能数据和工程考量。
+
+---
+
+## 1. 系统架构总览
+
+整个电网系统采用**分层架构**，职责清晰、易于测试和扩展：
+
+```
+┌─────────────────────────────────────────────┐
+│                  API 层                      │
+│  (供其他插件/命令调用)                        │
+├──────────┬──────────┬───────────────────────┤
+│ 电网管理 │ 设备管理  │      库存管理           │
+│ (网格)   │ (增删改查)│   (云仓库抽象)          │
+├──────────┴──────────┴───────────────────────┤
+│              核心引擎层                       │
+│  · 供电范围计算                              │
+│  · 电网拓扑更新                              │
+│  · 能量流模拟                                │
+├─────────────────────────────────────────────┤
+│              数据层                          │
+│  · 序列化/反序列化                           │
+│  · 持久化存储                                │
+│  · 缓存管理                                  │
+└─────────────────────────────────────────────┘
+```
+
+### 各层职责
+
+| 层级 | 核心类 | 职责 |
+|------|--------|------|
+| **API 层** | `PylonAPI`, `DeviceRegistry`, `CloudWarehouse` | 对外暴露接口，处理权限校验与参数验证 |
+| **核心引擎层** | `PowerGridEngine`, `SpatialIndex`, `EnergyFlowSimulator` | 纯计算逻辑，不依赖 Bukkit API |
+| **数据层** | `StorageManager`, `Serializer`, `CacheManager` | 序列化、持久化、缓存策略 |
+
+:::tip 设计原则
+
+**核心引擎层不依赖任何 Minecraft/Bukkit API**。这意味着：
+- 可以在纯 JVM 环境下跑单元测试
+- 未来移植到其他平台（如 Fabric/Sponge）只需重写 API 层
+- 核心算法的复杂度分析不受 I/O 干扰
+
+:::
+
+---
+
+## 2. 三大关键设计决策
+
+### 决策 1：电网如何表示？
+
+#### 问题定义
+
+在 Minecraft 中，电网由**电线**连接各个设备形成。玩家可以：
+- 放置新电线 → 合并两个连通分量
+- 破坏电线 → 可能导致一个连通分量分裂成多个
+- 查询某设备所属电网 → 需要快速找到所有相连设备
+
+这是一个经典的**动态连通性（Dynamic Connectivity）**问题。
+
+#### 选择：并查集（Union-Find）+ 邻接表
+
+| 方案 | Union 操作 | Find 操作 | 删除后重建 | 适用场景 |
+|------|-----------|-----------|-----------|---------|
+| 纯邻接表 | O(1) | O(n) BFS/DFS | 天然支持 | 图遍历为主 |
+| **Union-Find + 邻接表** | **O(α(n)) ≈ O(1)** | **O(α(n)) ≈ O(1)** | 局部 BFS | **动态连通性查询 ✅** |
+| 线段树 / 树状数组 | O(log n) | O(log n) | 不适用 | 静态区间查询 |
+
+> **α(n)** 是反阿克曼函数，对于实际中所有可能的 n 值，α(n) ≤ 4。所以 Union-Find 的操作可以视为 **O(1)**。
+
+#### 给 AI 的实现 Prompt
+
+```txt
+我需要一个 Kotlin 类来管理 Minecraft 电网的连通性，使用并查集（Union-Find）数据结构。
+
+需求：
+1. 每个电网设备都有一个唯一 ID
+2. 支持操作：addNode, union(id1, id2), findRoot(id), removeNode(id)
+3. 当移除节点导致电网分裂时，能够正确识别新的连通分量
+4. 线程安全
+
+请提供完整实现，包含路径压缩和按秩合并优化。
+同时给出使用示例，展示电线放置/移除的场景。
+```
+
+#### AI 应返回的关键实现框架
+
+```kotlin
+class DisjointSet<T> {
+    private val parent = ConcurrentHashMap<T, T>()
+    private val rank = ConcurrentHashMap<T, Int>()
+    private val adjacency = ConcurrentHashMap<T, MutableSet<T>>()
+
+    fun addNode(node: T) {
+        parent.putIfAbsent(node, node)
+        rank.putIfAbsent(node, 0)
+        adjacency.putIfAbsent(node, ConcurrentHashMap.newKeySet())
+    }
+
+    fun find(node: T): T {
+        val p = parent[node] ?: throw IllegalArgumentException("Node not found: $node")
+        if (p != node) {
+            val root = find(p)
+            parent[node] = root
+        }
+        return parent[node]!!
+    }
+
+    fun union(nodeA: T, nodeB: T) {
+        val rootA = find(nodeA)
+        val rootB = find(nodeB)
+        if (rootA == rootB) return
+
+        val rankA = rank[rootA]!!
+        val rankB = rank[rootB]!!
+
+        when {
+            rankA < rankB -> parent[rootA] = rootB
+            rankA > rankB -> parent[rootB] = rootA
+            else -> {
+                parent[rootB] = rootA
+                rank[rootA] = rankA + 1
+            }
+        }
+
+        adjacency[nodeA]?.add(nodeB)
+        adjacency[nodeB]?.add(nodeA)
+    }
+
+    fun removeNode(node: T): Set<Set<T>> {
+        val neighbors = adjacency.remove(node) ?: return emptySet()
+        for (neighbor in neighbors) {
+            adjacency[neighbor]?.remove(node)
+        }
+        parent.remove(node)
+        rank.remove(node)
+
+        if (neighbors.size < 2) return neighbors.map { setOf(it) }.toSet()
+
+        val visited = mutableSetOf<T>()
+        val components = mutableSetOf<Set<T>>()
+        for (start in neighbors) {
+            if (start in visited) continue
+            val component = bfsComponent(start, visited)
+            components.add(component)
+        }
+        return components
+    }
+
+    private fun bfsComponent(start: T, visited: MutableSet<T>): Set<T> {
+        val queue: ArrayDeque<T> = ArrayDeque()
+        val component = mutableSetOf<T>()
+        queue.add(start)
+        while (queue.isNotEmpty()) {
+            val current = queue.pollFirst()
+            if (current in visited) continue
+            visited.add(current)
+            component.add(current)
+            for (neighbor in adjacency[current] ?: emptySet()) {
+                if (neighbor !in visited) queue.addLast(neighbor)
+            }
+        }
+        return component
+    }
+
+    fun isConnected(nodeA: T, nodeB: T): Boolean = find(nodeA) == find(nodeB)
+
+    fun getComponentSize(node: T): Int {
+        val root = find(node)
+        return parent.keys.count { find(it) == root }
+    }
+}
+```
+
+#### 关键技术点解析
+
+| 技术点 | 实现方式 | 效果 |
+|--------|---------|------|
+| **路径压缩** | `find()` 中递归将节点直接挂到根上 | 后续查找接近 O(1) |
+| **按秩合并** | `union()` 中按树高度合并 | 避免树退化成链表 |
+| **线程安全** | `ConcurrentHashMap` + 无锁读取 | 支持主线程 + 异步任务并发 |
+| **删除重建** | `removeNode()` 时对邻居做局部 BFS | 只重建受影响的子图 |
+
+:::warning removeNode 的性能陷阱
+
+`removeNode()` 是整个 Union-Find 中**最昂贵的操作**。当删除一个度为 d 的节点时，最坏情况下需要对所有邻居做 BFS，时间复杂度为 **O(d²)**。
+
+**缓解策略**：
+- 电线破坏事件远少于查询事件（放置 : 破坏 ≈ 10 : 1）
+- 将重建操作放入异步队列，不阻塞主线程
+- 对于单区块内的操作，d 通常 < 20，实际开销可接受
+
+:::
+
+---
+
+### 决策 2：供电范围如何检测？
+
+#### 问题定义
+
+每个供电桩需要为周围 **7×7×7 = 343 格**范围内的机器供电。当有以下事件发生时：
+
+1. **新机器放置** → 需要快速找到附近是否有供电桩
+2. **供电桩被破坏** → 需要通知范围内所有机器断电
+3. **机器移动** → 需要更新其空间索引位置
+
+如果用暴力遍历，每个 tick 都扫描所有供电桩对 → **O(n²)**，不可接受。
+
+#### 选择：空间哈希网格（Spatial Hashing Grid）
+
+```
+世界空间（无限大）
+┌───┬───┬───┬───┬───┐
+│   │   │ ● │   │   │  ← cellSize = 16
+├───┼───┼───┼───┼───┤      每个 cell 存储该区域内的实体
+│   │ ○ │   │ ○ │   │      ● = 供电桩
+├───┼───┼───┼───┼───┤      ○ = 机器
+│   │   │   │   │   │
+├───┼───┼───┼───┼───┤
+│   │   │   │   │   │
+└───┴───┴───┴───┴───┘
+
+查询 (x,y,z) 附近 7 格范围：
+→ 只需检查周围 3×3×3 = 27 个 cell（通常只有 8 个非空）
+```
+
+#### 给 AI 的实现 Prompt
+
+```txt
+我需要一个 Kotlin 类来实现空间哈希网格（Spatial Hash Grid），用于加速 3D 空间范围查询。
+
+使用场景：Minecraft 插件中的供电系统，供电桩为周围 7x7x7 范围内的机器供电。
+
+需求：
+1. 世界被划分为固定大小的单元格（cellSize = 16 格）
+2. 支持操作：insert, remove, queryNearby, updatePosition
+3. 线程安全
+4. 高效处理动态插入/删除
+
+请提供完整实现，并说明如何集成到现有的供电系统中。
+特别关注：当一个供电桩被破坏时，如何高效地通知所有受影响的机器。
+```
+
+#### AI 应返回的关键实现框架
+
+```kotlin
+class SpatialHashGrid<T>(
+    private val cellSize: Int = 16,
+    private val queryRadius: Int = 7
+) {
+    private data class CellKey(val x: Int, val y: Int, val z: Int)
+
+    private val grid = ConcurrentHashMap<CellKey, CopyOnWriteArraySet<T>>()
+    private val entityPositions = ConcurrentHashMap<T, Triple<Int, Int, Int>>()
+
+    private fun toCellKey(x: Int, y: Int, z: Int) =
+        CellKey(x / cellSize, y / cellSize, z / cellSize)
+
+    fun insert(entity: T, x: Int, y: Int, z: Int) {
+        val key = toCellKey(x, y, z)
+        grid.computeIfAbsent(key) { CopyOnWriteArraySet() }.add(entity)
+        entityPositions[entity] = Triple(x, y, z)
+    }
+
+    fun remove(entity: T) {
+        val pos = entityPositions.remove(entity) ?: return
+        val key = toCellKey(pos.first, pos.second, pos.third)
+        grid[key]?.remove(entity)
+        if (grid[key]?.isEmpty() == true) grid.remove(key)
+    }
+
+    fun updatePosition(entity: T, newX: Int, newY: Int, newZ: Int) {
+        remove(entity)
+        insert(entity, newX, newY, newZ)
+    }
+
+    fun queryNearby(centerX: Int, centerY: Int, centerZ: Int): Set<T> {
+        val result = mutableSetOf<T>()
+        val minCellX = (centerX - queryRadius) / cellSize
+        val maxCellX = (centerX + queryRadius) / cellSize
+        val minCellY = (centerY - queryRadius) / cellSize
+        val maxCellY = (centerY + queryRadius) / cellSize
+        val minCellZ = (centerZ - queryRadius) / cellSize
+        val maxCellZ = (centerZ + queryRadius) / cellSize
+
+        for (cx in minCellX..maxCellX) {
+            for (cy in minCellY..maxCellY) {
+                for (cz in minCellZ..maxCellZ) {
+                    grid[CellKey(cx, cy, cz)]?.let { result.addAll(it) }
+                }
+            }
+        }
+        return result
+    }
+
+    fun getEntitiesInCell(cellX: Int, cellY: Int, cellZ: Int): Set<T>? =
+        grid[CellKey(cellX, cellY, cellZ)]
+}
+```
+
+#### 性能对比
+
+| 操作 | 暴力遍历 | 空间哈希网格 | 加速比 |
+|------|---------|-------------|--------|
+| 查询附近供电桩 | O(500) 扫描全部 | O(8~27) 仅检查邻近 cell | **20~60x** |
+| 插入新供电桩 | O(1) 加入列表 | O(1) 计算坐标加入 cell | 相同 |
+| 移动机器 | O(1) 更新坐标 | O(1~2) 先删后插 | 相似 |
+| 供电桩被破坏 | O(m) 遍历所有机器 | O(k) 仅查询邻近 cell 内机器 | **10~100x** |
+
+:::info 为什么不用 R-Tree 或 QuadTree？
+
+R-Tree 和四叉树在**动态插入/删除频繁**的场景下，维护树结构的平衡成本很高（节点分裂/合并）。而电网系统中：
+- 实体数量相对稳定（几千级别）
+- 查询范围固定（7 格半径）
+- 插入/删除频率中等
+
+空间哈希网格的 **O(1) 插入/删除** 和 **常数级查询** 在这个场景下是最优解。
+
+:::
+
+---
+
+### 决策 3：云仓库如何实现？
+
+#### 问题定义
+
+云仓库是多个能量核心（Energy Core）库存的**逻辑聚合视图**。玩家存入物品时，系统自动分散到各核心；取出时自动从任意有货的核心获取。
+
+挑战在于：
+- 不能每次读取都聚合所有核心库存（太慢）
+- 写入需要保证一致性（不能丢物品）
+- 多个操作可能并发执行
+
+#### 选择：虚拟视图 + 延迟写入
+
+```
+                    ┌──────────────────┐
+                    │   CloudWarehouse  │
+                    │   （虚拟视图层）    │
+                    └────────┬─────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              ↓              ↓              ↓
+        ┌──────────┐  ┌──────────┐  ┌──────────┐
+        │ Core #1  │  │ Core #2  │  │ Core #3  │
+        │ 库存: A×64│  │ 库存: B×32│  │ 库存: C×16│
+        └──────────┘  └──────────┘  └──────────┘
+```
+
+#### 三层策略详解
+
+##### 读操作：缓存视图 + TTL 刷新
+
+```kotlin
+class CloudWarehouse(
+    private val cores: List<EnergyCore>,
+    private val cacheTtlMillis: Long = 1000L
+) {
+    private data class CachedView(
+        val snapshot: Map<ItemStack, Int>,
+        val version: Long,
+        val timestamp: Long
+    )
+
+    @Volatile private var cachedView: CachedView? = null
+
+    fun getTotalQuantity(itemType: ItemStack): Int {
+        val view = getOrCreateView()
+        return view.snapshot.entries
+            .filter { it.key.isSimilar(itemType) }
+            .sumOf { it.value }
+    }
+
+    private fun getOrCreateView(): CachedView {
+        val current = cachedView
+        if (current != null && System.currentTimeMillis() - current.timestamp < cacheTtlMillis) {
+            return current
+        }
+        return buildFreshView().also { cachedView = it }
+    }
+
+    private fun buildFreshView(): CachedView {
+        val aggregated = HashMap<ItemStack, Int>()
+        for (core in cores) {
+            for ((item, qty) in core.getInventorySnapshot()) {
+                aggregated.merge(item, qty, Integer::sum)
+            }
+        }
+        return CachedView(
+            snapshot = aggregated,
+            version = System.nanoTime(),
+            timestamp = System.currentTimeMillis()
+        )
+    }
+}
+```
+
+##### 写操作：队列缓冲 + 批量提交
+
+```kotlin
+class WriteBuffer(
+    private val flushIntervalMillis: Long = 500L,
+    private val maxBatchSize: Int = 50
+) {
+    private data class PendingWrite(
+        val coreId: UUID,
+        val operation: WriteOperation,
+        val timestamp: Long,
+        val version: Long
+    )
+
+    private val buffer = ConcurrentLinkedQueue<PendingWrite>()
+    private val scheduler = Executors.newSingleThreadScheduledExecutor()
+
+    init {
+        scheduler.scheduleAtFixedRate(
+            { flush() },
+            flushIntervalMillis,
+            flushIntervalMillis,
+            TimeUnit.MILLISECONDS
+        )
+    }
+
+    fun enqueue(coreId: UUID, operation: WriteOperation, expectedVersion: Long) {
+        buffer.offer(PendingWrite(coreId, operation, System.currentTimeMillis(), expectedVersion))
+        if (buffer.size >= maxBatchSize) flush()
+    }
+
+    @Synchronized
+    private fun flush() {
+        val batch = mutableListOf<PendingWrite>()
+        while (buffer.isNotEmpty() && batch.size < maxBatchSize) {
+            buffer.poll()?.let { batch.add(it) }
+        }
+        if (batch.isEmpty()) return
+
+        val grouped = batch.groupBy { it.coreId }
+        for ((coreId, writes) in grouped) {
+            applyBatch(coreId, writes)
+        }
+    }
+}
+```
+
+##### 冲突处理：乐观锁 + 版本号
+
+```kotlin
+class OptimisticCoreInventory {
+    @Volatile private var version = 0L
+    private val inventory = HashMap<ItemStack, Int>()
+
+    @Synchronized
+    fun withdraw(item: ItemStack, quantity: Int, expectedVersion: Long): Boolean {
+        if (this.version != expectedVersion) return false
+
+        val current = inventory[item] ?: 0
+        if (current < quantity) return false
+
+        inventory[item] = current - quantity
+        this.version++
+        return true
+    }
+
+    fun getCurrentVersion(): Long = version
+}
+```
+
+:::warning 最终一致性 vs 强一致性
+
+云仓库采用的是**最终一致性（Eventual Consistency）**模型：
+- 读操作可能在短时间内看到过期数据（最多 cacheTtlMillis = 1s）
+- 写操作通过版本号防止覆盖冲突
+- 极端情况下可能出现"超发"（两个玩家同时取走最后一份物品）
+
+对于游戏场景来说，这是**可接受的权衡**。如果需要强一致性，可以使用分布式锁（如 Redis Redlock），但会显著增加延迟。
+
+:::
+
+---
+
+## 3. 数据流图
+
+下面展示一次完整的 **"玩家使用机器 → 消耗电力 → 从云仓库取物品"** 流程：
+
+```
+Player 使用机器（例如：自动合成台）
+    ↓
+① Machine.requestPower(requestedAmount)
+    │  检查自身电量是否充足
+    ↓
+② PowerSupplySystem.checkRange(machineLocation)
+    │  通过 SpatialHashGrid.queryNearby() 查找附近供电桩
+    │  时间复杂度：O(k)，k 为邻近 cell 内实体数（通常 8~27）
+    ↓
+③ PowerGrid.distributeEnergy(sourceId, targetId, amount)
+    │  通过 DisjointSet.findRoot() 验证源和目标在同一电网内
+    │  时间复杂度：O(α(n)) ≈ O(1)
+    │  计算传输损耗、线缆负载
+    ↓
+④ Machine.consumePower(actualAmount)
+    │  机器获得电力，开始工作
+    ↓
+⑤ CloudWarehouse.retrieveItem(requiredItem, quantity)
+    │  ⑤a. 读取缓存视图（命中则直接返回，~0ms）
+    │  ⑤b. 缓存未命中 → 聚合各核心库存（~5~20ms）
+    │  ⑤c. 选定目标核心，发起乐观锁写入
+    ↓
+⑥ EnergyCore.updateInventory(delta)
+    │  进入 WriteBuffer 排队
+    │  下一个 flush 周期（≤500ms）批量写入
+    ↓
+⑦ 返回结果给 Machine → Player 看到合成结果
+```
+
+### 各阶段耗时估算
+
+| 阶段 | 耗时 | 是否阻塞主线程 |
+|------|------|---------------|
+| ① 请求电力 | ~0.01 ms | ✅ 是 |
+| ② 空间范围查询 | ~0.05 ms | ✅ 是 |
+| ③ 电网能量分配 | ~0.02 ms | ✅ 是 |
+| ④ 电力消耗 | ~0.01 ms | ✅ 是 |
+| ⑤ 云仓库读取 | ~0.1~5 ms（视缓存命中） | ✅ 是（读缓存）/ ❌ 否（聚合） |
+| ⑥ 库存写入 | 异步，~5~20 ms | ❌ 否 |
+| **总计（主线程）** | **~0.2~5.1 ms** | — |
+
+> 即使最坏情况下（缓存未命中），主线程阻塞也不超过 **5ms**，远低于 Minecraft 单 tick 的 **50ms** 预算。
+
+---
+
+## 4. 内存占用估算
+
+基于 **50 人在线服务器**的经验数据：
+
+| 数据结构 | 单个对象大小 | 50 人场景总量 | 内存占用 |
+|---------|------------|------------|---------|
+| 并查集节点（DisjointSet Node） | ~64 bytes（parent + rank 引用） | ~15,000 设备 | ~1 MB |
+| 空间索引格子（Grid Cell） | ~256 bytes（CopyOnWriteArraySet 开销） | ~1,000 个活跃格子 | ~256 KB |
+| 设备状态（Device State） | ~128 bytes（类型+位置+电量等） | ~15,000 台设备 | ~2 MB |
+| 邻接表边（Adjacency Edges） | ~32 bytes（每条边两个引用） | ~30,000 条连线 | ~1 MB |
+| 云仓库缓存视图（Cached View） | ~512 bytes（聚合后的物品快照） | ~100 种物品 | ~50 KB |
+| 写缓冲队列（Write Buffer） | ~64 bytes（每条待写记录） | ~200 条排队 | ~13 KB |
+| **总计** | | | **~4.4 MB** |
+
+:::info 结论：内存不是瓶颈
+
+即使玩家数量翻倍到 **100 人**，总内存占用也不会超过 **10 MB**。现代服务器动辄 **4~16 GB** 的堆内存，这点开销微不足道。
+
+**真正的瓶颈是 CPU**——尤其是每 tick 的范围查询和电网拓扑更新。这也是我们花大量精力优化这两个点的原因。
+
+:::
+
+---
+
+## 5. 扩展性考虑
+
+### 5.1 如何支持未来新增的设备类型？
+
+采用**策略模式（Strategy Pattern）+ 注册表机制**：
+
+```kotlin
+interface DeviceBehavior {
+    val typeId: String
+    fun onPowerReceived(device: Device, amount: Int)
+    fun onTick(device: Device)
+    fun serialize(device: Device): Map<String, Any>
+    fun deserialize(data: Map<String, Any>): Device
+}
+
+object DeviceRegistry {
+    private val behaviors = mutableMapOf<String, DeviceBehavior>()
+
+    fun register(behavior: DeviceBehavior) {
+        behaviors[behavior.typeId] = behavior
+    }
+
+    fun get(typeId: String): DeviceBehavior? = behaviors[typeId]
+
+    fun getAllTypes(): Set<String> = behaviors.keys.toSet()
+}
+
+// 新增设备只需：
+// class AutoCrafterBehavior : DeviceBehavior { ... }
+// DeviceRegistry.register(AutoCrafterBehavior())
+```
+
+**优势**：新增设备类型**零修改核心代码**，只需实现接口并注册。
+
+### 5.2 如何支持跨区块（Chunk）的电网？
+
+```
+Chunk (0,0)          Chunk (1,0)          Chunk (0,1)
+┌──────────┐        ┌──────────┐        ┌──────────┐
+│  [发电机] ════════╗  [电线]   │        │          │
+│           ║       │          │        │          │
+│  [机器]   ║       │  [机器]   │        │  [机器]   │
+└──────────╨────────┴──────────┘        └──────────┘
+             ↑ 跨区块边界
+```
+
+关键设计点：
+
+1. **电网 ID 使用全局 UUID**，不依赖区块坐标
+2. **跨区块电线存储在两端区块各一份**（冗余存储，以空间换一致性）
+3. **区块卸载时**：将该区块内的设备标记为 `UNLOADED`，不从 Union-Find 中移除
+4. **区块加载时**：重新激活设备，恢复正常的供电计算
+5. **跨区块查询**通过 `WorldStorageService` 按需加载相邻区块数据
+
+```kotlin
+class CrossChunkGridManager {
+    private val chunkLoadedStatus = ConcurrentHashMap<ChunkCoord, Boolean>()
+
+    fun onChunkUnload(coord: ChunkCoord) {
+        chunkLoadedStatus[coord] = false
+        val devicesInChunk = deviceRegistry.getByChunk(coord)
+        devicesInChunk.forEach { it.state = DeviceState.UNLOADED }
+    }
+
+    fun onChunkLoad(coord: ChunkCoord) {
+        chunkLoadedStatus[coord] = true
+        val devicesInChunk = deviceRegistry.getByChunk(coord)
+        devicesInChunk.forEach { it.state = DeviceState.ACTIVE }
+        rebuildLocalTopology(coord)
+    }
+
+    private fun rebuildLocalTopology(coord: ChunkCoord) {
+        val adjacentChunks = getAdjacentCoords(coord)
+        val allDevices = adjacentChunks.flatMap { deviceRegistry.getByChunk(it) }
+        for (device in allDevices) {
+            for (neighbor in getNeighbors(device)) {
+                if (isConnected(device, neighbor)) {
+                    disjointSet.union(device.id, neighbor.id)
+                }
+            }
+        }
+    }
+}
+```
+
+### 5.3 如何处理世界加载/卸载时的数据持久化？
+
+采用**增量快照 + WAL（Write-Ahead Log）**双保险：
+
+```
+持久化策略：
+
+┌─────────────────────────────────────────────────┐
+│                   存储层                         │
+├────────────────────┬────────────────────────────┤
+│   全量快照          │     WAL 日志               │
+│   (每 5 分钟)       │     (实时追加)              │
+│   → pylon_snapshot │     → pylon_wal.log        │
+│   .dat             │                            │
+├────────────────────┴────────────────────────────┤
+│  启动恢复流程：                                   │
+│  1. 加载最近的全量快照                            │
+│  2. 回放快照之后的所有 WAL 记录                   │
+│  3. 截断已应用的 WAL 条目                         │
+└─────────────────────────────────────────────────┘
+```
+
+```kotlin
+class PersistenceManager(
+    private val dataFolder: File,
+    private val snapshotIntervalMinutes: Long = 5L
+) {
+    private val walFile = File(dataFolder, "pylon_wal.log")
+    private val serializer = PylonSerializer()
+
+    fun saveIncremental(change: GridChange) {
+        walFile.appendText(serializer.serializeChange(change) + "\n")
+    }
+
+    fun saveFullSnapshot(gridState: GridState) {
+        val snapshotFile = File(dataFolder, "pylon_snapshot_${System.currentTimeMillis()}.dat")
+        snapshotFile.writeBytes(serializer.serializeSnapshot(gridState))
+        trimOldSnapshots(retainLatest = 3)
+        truncateWAL()
+    }
+
+    fun loadState(): GridState {
+        val latestSnapshot = findLatestSnapshot() ?: return GridState.empty()
+        var state = serializer.deserializeSnapshot(latestSnapshot)
+        if (walFile.exists()) {
+            val changes = walFile.readLines().map { serializer.deserializeChange(it) }
+            for (change in changes) {
+                state = state.applyChange(change)
+            }
+        }
+        return state
+    }
+}
+```
+
+:::tip 数据完整性保障
+
+- **WAL 采用 append-only 模式**，即使服务器崩溃也不会丢失未刷盘的数据
+- **快照保留最近 3 份**，防止单份损坏无法恢复
+- **所有序列化使用 Protocol Buffers 或 JSON**，具备前向兼容性（新增字段不影响旧格式读取）
+
+:::
+
+---
+
+## 小结
+
+本章我们从架构层面解决了电网系统的三个核心问题：
+
+| 问题 | 解决方案 | 核心收益 |
+|------|---------|---------|
+| 电网连通性管理 | Union-Find + 邻接表 | O(1) 查询/合并，支持动态分裂 |
+| 供电范围检测 | 空间哈希网格 | 查询加速 20~60x，插入/删除 O(1) |
+| 云仓库聚合 | 虚拟视图 + 延迟写入 + 乐观锁 | 读缓存命中时 < 1ms，最终一致 |
+
+这三个决策共同构成了电网系统的**性能基线**。下一章我们将深入具体的代码实现，看看这些抽象如何在 Kotlin 中落地。

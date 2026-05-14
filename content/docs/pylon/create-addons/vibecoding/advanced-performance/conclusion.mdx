@@ -1,0 +1,152 @@
+---
+title: 总结与进阶之路
+description: 回顾进阶性能教程的核心知识，规划后续学习路径，提供实用资源推荐。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# 总结与进阶之路
+
+## 1. 知识回顾表
+
+| 章节 | 核心知识点 | 掌握的技能 | 实战产出 |
+|------|-----------|-----------|---------|
+| 认识性能瓶颈 | Tick 模型、四大杀手 | 使用 spark 诊断问题 | 能识别性能红线 |
+| 数据结构选择 | 并查集、空间索引 | 让 AI 实现复杂数据结构 | 高效的电网系统架构 |
+| 编码实战 | 批量处理、异步 IO | 迭代优化 AI 生成的代码 | 经过压力测试的核心模块 |
+| 测试监控 | JMH 基准测试、Metrics | 建立 PDCA 优化循环 | 完整的性能监控体系 |
+
+## 2. 作者的真实体会
+
+### 从筛子到电网的心路历程
+
+> "当我第一次做完筛子插件的时候，我觉得 Vibecoding 太简单了——不就是跟 AI 说几句话的事吗？
+>
+> 直到我开始做电网系统……
+>
+> 50 个人同时在线，每个人几百台设备，TPS 直接跌到个位数。那时候我才意识到：**简单插件和复杂系统之间隔着一条巨大的鸿沟**。
+>
+> 这条鸿沟不是靠'更强的 AI'就能跨越的，而是需要你理解：什么是性能瓶颈、为什么会出现、如何系统地解决。
+>
+> 这套教程就是我想填补的那块拼图。"
+
+## 3. 进阶学习路径
+
+### 第一阶段：巩固基础（现在 - 1个月）
+
+- [ ] 用本教程的方法重构一个现有插件
+- [ ] 阅读 Rebar 源码中性能敏感的部分
+- [ ] 学会使用 spark 和 VisualVM
+
+### 第二阶段：深入学习（1-3个月）
+
+- [ ] 学习 JVM 调优（GC 参数、内存模型、JIT 编译）
+- [ ] 了解 PaperMC 的优化策略（异步区块加载、chunk 系统）
+- [ ] 深入研究并发编程（CompletableFuture、Reactive Streams）
+
+### 第三阶段：实战项目（3-6个月）
+
+- [ ] 尝试开发一个中等复杂度的系统（物流管道、自动化农场）
+- [ ] 为开源项目贡献性能优化 PR
+- [ ] 建立自己的性能优化工具库/Prompt 模板库
+
+### 第四阶段：成为专家（6个月+）
+
+- [ ] 研究 Minecraft 的源码（特别是服务端的 tick 循环）
+- [ ] 参与 PaperMC 或类似项目的开发
+- [ ] 分享你的知识和经验（写博客、做教程、录视频）
+
+## 4. 推荐资源
+
+### 官方文档
+
+- [PaperMC Wiki](https://papermc.io/wiki) - 性能优化官方指南
+- [Spigot API Docs](https://hub.spigotmc.org/javadocs/spigot/) - API 参考
+- [Rebar 文档](../../documentation/overview.md) - 你正在用的框架
+
+### 书籍
+
+- 《Effective Java》（Joshua Bloch）- Java 最佳实践
+- 《Concurrency in Practice》（Brian Goetz）- 并发编程圣经
+- 《Designing Data-Intensive Applications》（Martin Kleppmann）- 数据系统设计
+
+### 工具
+
+- [Spark](https://www.spigotmc.org/resources/spark.57637/) - 性能分析必备
+- [JMH](https://openjdk.org/projects/code-tools/jmh/) - 微基准测试框架
+- [YourKit / JProfiler](https://www.ej-technologies.com/products/jprofiler/overview.html) - 商业级性能分析器
+- [Grafana + Prometheus](https://grafana.com/) - 监控可视化
+
+### 社区
+
+- [Pylon Discord](https://discord.gg/4tMAnBAacW) - 提问和讨论
+- [PaperMC Forums](https://papermc.io/forums/) - 高质量技术交流
+- [r/admincraft](https://www.reddit.com/r/admincraft/) - 服务器管理经验分享
+
+## 5. Prompt 模板库汇总
+
+整理本教程中所有有用的 Prompt 模板，方便以后查阅：
+
+**架构设计类**：
+
+- [ ] 电网系统需求拆解（来自 introduction）
+- [ ] 并查集实现（来自 architecture）
+- [ ] 空间索引实现（来自 architecture）
+- [ ] 云仓库设计（来自 architecture）
+
+**编码实现类**：
+
+- [ ] EnergyCore 类（来自 coding-practice）
+- [ ] 供电桩范围检测（来自 coding-practice）
+- [ ] 云仓库分布式存取（来自 coding-practice）
+- [ ] 调试命令（来自 coding-practice）
+
+**测试优化类**：
+
+- [ ] JMH 基准测试（来自 testing-monitoring）
+- [ ] Metrics 集成（来自 testing-monitoring）
+- [ ] 性能问题诊断（来自 bottlenecks）
+
+## 6. 最后的话
+
+<Callout type="success">
+  ## 🎉 恭喜你完成了进阶性能教程！
+
+  **你现在拥有的不仅仅是知识，更是一种思维方式**：
+
+  - 不再害怕复杂系统——你知道如何拆解它
+  - 不再盲目信任 AI——你知道如何审核和优化它的输出
+  - 不再忽略性能问题——你有系统的诊断和解决方法
+
+  **Vibecoding 的终极目标**不是让你永远依赖 AI，而是让你能够：
+
+  - 用 AI 快速实现想法
+  - 用知识保证质量
+  - 用经验避免陷阱
+
+  这套组合拳，才是真正的超能力。💪
+</Callout>
+
+<Callout type="info">
+  ## 📝 持续改进
+
+  这套教程会随着我的实践经验不断更新。如果你在阅读或实践中发现了任何问题：
+
+  - **错误修正**：欢迎提 PR
+  - **内容补充**：欢迎分享你的案例
+  - **经验反馈**：欢迎告诉我什么有用、什么没用
+
+  让我们一起让这套教程变得更好！
+</Callout>
+
+---
+
+**作者**：mc506lw  
+**最后更新**：2026 年 5 月  
+**版本**：1.0.0（初始版）
+
+**致谢**：
+- Rebar/Pylon 团队提供的优秀框架
+- Trae CN 提供的 AI 编程环境
+- 所有为开源社区贡献代码的开发者
+- 正在阅读这套教程的你 🙌

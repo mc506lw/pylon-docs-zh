@@ -1,0 +1,534 @@
+---
+title: 编码实战
+description: 通过四个实战任务展示如何让 AI 写出高性能代码，包括 Prompt 模板、代码审查清单和迭代优化方法。
+---
+
+# 编码实战 —— 让 AI 写出高性能代码
+
+这是最实用的章节，展示如何通过多轮对话迭代优化 AI 生成的代码。
+
+## 实战任务 1：实现能源核心类
+
+### 第一步：初始指令
+
+**完整的 Prompt 模板**：
+
+```txt
+请帮我实现一个 EnergyCore 类（Kotlin），用于 Minecraft Rebar 附属的电网系统。
+
+功能要求：
+1. 继承 Rebar 的自定义方块基类
+2. 拥有一个物品库存（使用 Rebar 的 Inventory API）
+3. 支持玩家右键打开库存界面
+4. 当库存变化时，通知所属电网更新云仓库缓存
+5. 方块被破坏时，自动将剩余物品掉落到地面
+
+性能要求：
+- 库存操作要在 < 0.1ms 内完成
+- 通知机制不能阻塞主线程
+- 掉落物品要批量生成（不要一个个 spawn）
+
+请参考 .trae/guide/rebar 和 .trae/guide/pylon 中的代码风格。
+先给出类的设计思路，然后再写具体实现。
+```
+
+:::tip 设计思路要点
+
+在给 AI 下指令前，自己要先想清楚几个关键点：
+
+1. **数据流**：物品从哪里来？到哪里去？
+2. **生命周期**：什么时候初始化？什么时候销毁？
+3. **性能瓶颈在哪里**：库存操作？网络通信？实体生成？
+
+这样你才能判断 AI 给出的方案是否合理。
+:::
+
+### 第二步：AI 返回初稿（审查要点）
+
+AI 会返回一个初稿，这时候不要急着用，先过一遍审查清单：
+
+:::warning 审查清单
+
+- [ ] 是否使用了正确的 Rebar API？
+- [ ] 库存操作是否有空指针保护？
+- [ ] 事件监听是否在正确的生命周期注册/注销？
+- [ ] 是否有不必要的对象创建？
+- [ ] 日志输出是否用了字符串模板？
+
+:::
+
+**常见问题示例**：
+
+```kotlin
+// ❌ 问题代码：每次通知都立即执行
+fun onInventoryChange() {
+    notifyGridUpdate() // 每次库存变动都调用
+}
+
+// ❌ 问题代码：逐个掉落物品
+fun dropItems(inventory: Inventory) {
+    for (slot in 0 until inventory.size) {
+        val item = inventory.getItem(slot)
+        if (item != null) {
+            world.dropItem(location, item) // 64 个槽位 = 64 次调用
+        }
+    }
+}
+
+// ❌ 问题代码：debug 日志无节制打印
+logger.debug("EnergyCore at $position updated") // 每个 tick 都可能触发
+```
+
+### 第三步：压力测试发现问题
+
+做了压力测试（50人在线，每人300台机器），发现以下性能问题：
+
+> 1. `notifyGridUpdate()` 方法在每个物品存取时都会调用，但实际上可以批量处理——累积 50 个变更后再统一通知。
+>
+> 2. `dropItems()` 方法在核心被破坏时会逐个调用 `world.dropItem()`，如果库存有 64 个槽位都有物品，就会生成 64 个实体。应该先合并相同类型的物品，再一次性生成。
+>
+> 3. 日志里有一行 `"EnergyCore at $position updated"` 在 debug 模式下会每个 tick 都打印一次，应该改成级别控制或者节流打印。
+
+**优化 Prompt**：
+
+```txt
+请针对这三个问题优化代码，并解释你的优化思路：
+
+1. notifyGridUpdate() 需要改为批量通知机制
+2. dropItems() 需要合并相同类型物品后批量掉落
+3. debug 日志需要节流控制
+
+请给出优化后的完整代码，并说明每处优化的原理。
+```
+
+### 第四步：最终版本与基准测试结果
+
+经过 3 轮迭代优化后，最终版本的性能表现：
+
+```
+优化前（50人在线）:
+- 平均 MSPT: 42ms (TPS ~23)
+- CPU 占用: 35%
+- 内存: 2.1 GB
+
+优化后（同样条件）:
+- 平均 MSPT: 28ms (TPS ~35) ← 提升 33%
+- CPU 占用: 22%
+- 内存: 1.8 GB
+- 云仓库通知次数: 减少 94%（从每操作一次 → 每 50 次批量通知）
+```
+
+**关键优化点对比**：
+
+| 优化项 | 优化前 | 优化后 | 提升幅度 |
+|--------|--------|--------|----------|
+| 网格通知频率 | 每次操作 | 每 50 次批量 | ↓94% |
+| 物品掉落数量 | 最多 64 个实体 | 合并后 ≤9 个 | ↓86% |
+| Debug 日志 | 无限制打印 | 5 秒节流一次 | ↓99% |
+| 库存操作耗时 | 0.15ms | 0.08ms | ↓47% |
+
+---
+
+## 实战任务 2：实现供电桩的范围检测
+
+**难度**：⭐⭐⭐⭐（涉及空间索引）
+
+### 重点练习
+
+- 如何描述复杂的空间算法给 AI
+- 如何验证 AI 生成的代码正确性
+- 如何用微基准测试对比优化前后的性能
+
+### Prompt 模板
+
+```txt
+我需要实现一个供电桩（PowerPole）的范围检测系统。
+
+背景：
+- 电网系统中，每个供电桩可以连接一定范围内的所有能源设备
+- 范围是球形/立方体，半径可配置（默认 16 格）
+- 需要支持动态范围调整（升级后范围变大）
+
+功能需求：
+1. getMachinesInRange(center: Location, radius: Int): List<Machine>
+   - 返回指定范围内的所有已注册机器
+   - 需要高效查询，不能遍历所有机器
+
+2. isInRange(machine: Location, center: Location, radius: Int): Boolean
+   - 判断单个机器是否在范围内
+   - 这个会被频繁调用，必须极快
+
+3. onRangeChanged(oldRadius: Int, newRadius: Int)
+   - 当范围变化时，增量更新连接关系
+   - 不要重新计算整个电网
+
+性能约束：
+- 1000 台机器同时在线时，单次查询 < 0.05ms
+- 范围变更时的重算要在 100ms 内完成
+- 内存占用要合理（不能为每对机器存连接）
+
+技术提示：
+- 可以考虑空间分区（网格/四叉树/八叉树）
+- Minecraft 坐标系：Y 轴 0-256，X/Z 无理论边界
+- 机器位置可能频繁变化（玩家移动机器）
+
+请先分析算法选择，再给出实现代码。
+```
+
+### 验证方法
+
+完成实现后，需要通过以下测试验证：
+
+#### 单元测试：已知坐标的机器应该在/不在范围内
+
+```kotlin
+@Test
+fun `machine at exact boundary should be included`() {
+    val center = Location(world, 0.0, 64.0, 0.0)
+    val machine = Location(world, 16.0, 64.0, 0.0) // 正好在边界上
+    
+    assertTrue(powerPole.isInRange(machine, center, 16))
+}
+
+@Test
+fun `machine outside range should not be included`() {
+    val center = Location(world, 0.0, 64.0, 0.0)
+    val machine = Location(world, 17.0, 64.0, 0.0) // 超出 1 格
+    
+    assertFalse(powerPole.isInRange(machine, center, 16))
+}
+```
+
+#### 压力测试：1000 台机器同时查询
+
+```kotlin
+@Test
+fun `query performance with 1000 machines`() {
+    // 生成 1000 台随机位置的机器
+    val machines = generateMachines(1000)
+    
+    val startTime = System.nanoTime()
+    repeat(10000) {
+        powerPole.getMachinesInRange(center, 16)
+    }
+    val elapsedMs = (System.nanoTime() - startTime) / 1_000_000.0
+    
+    assertTrue(elapsedMs / 10000 < 0.05) { 
+        "平均查询时间 ${elapsedMs / 10000}ms 超过 0.05ms 阈值" 
+    }
+}
+```
+
+#### 边界测试：格子边界、负坐标、Y=0/Y=256
+
+```kotlin
+@Test
+fun `should handle negative coordinates`() {
+    val center = Location(world, -1000.0, 64.0, -2000.0)
+    val machine = Location(world, -984.0, 64.0, -2000.0) // 距离 16 格
+    
+    assertTrue(powerPole.isInRange(machine, center, 16))
+}
+
+@Test
+fun `should handle world boundaries`() {
+    val center = Location(world, 0.0, 1.0, 0.0) // 接近 Y=0
+    val machine = Location(world, 0.0, 0.0, 0.0)   // Y=0 边界
+    
+    assertTrue(powerPole.isInRange(machine, center, 16)) // 不应该崩溃
+}
+```
+
+---
+
+## 实战任务 3：实现云仓库的分布式存取
+
+**难度**：⭐⭐⭐⭐⭐（涉及并发控制）
+
+### 重点练习
+
+- 如何处理竞态条件
+- 如何设计不可变数据结构
+- 如何实现乐观锁 vs 悲观锁
+
+### 关键代码模式
+
+```kotlin
+// 不可变状态 + CAS 更新
+class CloudWarehouse(private var state: WarehouseState) {
+    
+    fun deposit(item: ItemStack): Boolean {
+        val newState = state.deposit(item)
+        if (newState != null) {
+            state = newState // 原子赋值（单线程环境下安全）
+            true
+        } else false
+    }
+    
+    fun withdraw(itemType: Material, amount: Int): ItemStack? {
+        val newState = state.withdraw(itemType, amount)
+        return if (newState != null) {
+            state = newState
+            resultItem
+        } else null
+    }
+}
+
+// 不可变的状态类
+data class WarehouseState(
+    val contents: Map<Material, Int>,  // 物品类型 -> 数量
+    val capacity: Int,
+    val usedSpace: Int
+) {
+    fun deposit(item: ItemStack): WarehouseState? {
+        val newUsed = usedSpace + item.amount
+        if (newUsed > capacity) return null // 满了
+        
+        val currentAmount = contents[item.type] ?: 0
+        val newContents = contents + (item.type to currentAmount + item.amount)
+        
+        return copy(contents = newContents, usedSpace = newUsed)
+    }
+    
+    fun withdraw(material: Material, amount: Int): Pair<WarehouseState, ItemStack>? {
+        val currentAmount = contents[material] ?: 0
+        if (currentAmount < amount) return null // 不足
+        
+        val newAmount = currentAmount - amount
+        val newContents = if (newAmount > 0) {
+            contents + (material to newAmount)
+        } else {
+            contents - material
+        }
+        
+        val result = ItemStack(material, amount)
+        return copy(contents = newContents, usedSpace = usedSpace - amount) to result
+    }
+}
+```
+
+### 并发场景处理
+
+:::info 为什么选择不可变设计？
+
+在 Minecraft 插件中，虽然主线程是单线程的，但：
+
+1. **异步事件**：某些回调可能在其他线程
+2. **未来扩展**：如果以后需要多线程处理
+3. **调试友好**：不可变对象更容易排查问题
+4. **函数式风格**：更易于测试和推理
+
+:::
+
+**竞态条件示例与解决方案**：
+
+```kotlin
+// ❌ 危险：检查-然后-执行 竞态条件
+fun unsafeDeposit(item: ItemStack): Boolean {
+    if (hasSpaceFor(item)) {      // 检查
+        // ⚠️ 这里可能有其他代码插入执行！
+        actuallyDeposit(item)       // 执行
+        return true
+    }
+    return false
+}
+
+// ✅ 安全：原子性的状态转换
+fun safeDeposit(item: ItemStack): Boolean {
+    val newState = currentState.deposit(item) // 计算新状态
+    if (newState != null) {
+        currentState = newState              // 一次性应用
+        return true
+    }
+    return false
+}
+```
+
+---
+
+## 实战任务 4：实现调试命令
+
+**难度**：⭐⭐⭐（实用工具）
+
+这些命令对后续调优非常有帮助！
+
+### 功能列表
+
+| 命令 | 功能 | 用途 |
+|------|------|------|
+| `/grid show` | 显示当前所在电网的所有设备（粒子效果） | 可视化验证连接关系 |
+| `/grid stats` | 显示电网统计信息（设备数、总储能、效率） | 快速了解电网状态 |
+| `/grid profile` | 开启性能分析模式 | 定位性能瓶颈 |
+
+### Prompt 模板
+
+```txt
+请实现三个电网调试命令（使用 Rebar 的 Command API）：
+
+1. /grid show
+   - 在玩家周围 32 格内显示所有电网设备的粒子效果
+   - 不同类型设备用不同颜色：
+     * 能源核心：红色粒子
+     * 供电桩：黄色粒子  
+     * 消费设备：蓝色粒子
+   - 设备间有连接关系的画线（白色粒子）
+   - 效果持续 10 秒
+
+2. /grid stats
+   - 显示当前所在电网的统计信息：
+     * 总设备数量
+     * 总储能容量 / 当前储能
+     * 平均效率 (%)
+     * 最近 5 分钟的平均 TPS 影响
+   - 格式化输出到聊天框（使用组件文本）
+
+3. /grid profile [on/off]
+   - 开启或关闭性能分析模式
+   - 开启后记录以下指标到日志：
+     * 每次 tick 电网更新耗时
+     * 前 10 个最耗时的操作
+     * 内存使用快照（每分钟）
+   - 数据保存到 plugins/pylon/profile/ 目录
+
+要求：
+- 权限控制：pylon.admin
+- 参数校验和错误提示
+- 异步处理避免卡顿
+- 参考现有命令的实现风格
+```
+
+### 示例输出
+
+**`/grid stats` 输出示例**：
+
+```
+═══ 电网统计信息 ═══
+📍 电网 ID: grid_abc123
+📦 设备总数: 47 台
+   ├─ 能源核心: 12
+   ├─ 供电桩: 23
+   └─ 消费设备: 12
+
+⚡ 储能系统:
+   ├─ 总容量: 1,000,000 EU
+   ├─ 当前存储: 678,432 EU (67.8%)
+   └─ 充电速率: +2,340 EU/t
+
+📊 性能指标:
+   ├─ 电网效率: 94.2%
+   ├─ 平均 TPS 影响: -0.3
+   └─ 上次更新: 2 秒前
+
+💡 提示: 使用 /grid show 可视化设备分布
+```
+
+---
+
+## AI 协作最佳实践总结
+
+### 什么时候该让 AI 重写 vs 手动修改？
+
+| 场景 | 推荐 | 原因 |
+|------|------|------|
+| 整体架构调整 | 让 AI 重写 | AI 擅长全局重构，保持一致性 |
+| 小 bug 修复 | 手动改或让 AI 定位后手动改 | 改动小，手动更快更可控 |
+| 性能优化 | 让 AI 提出方案，你审核后实施 | 需要理解原理才能判断方案优劣 |
+| 新功能添加 | 让 AI 先写框架，你再填充细节 | 框架搭好后，细节更容易填充 |
+| 代码规范修复 | 让 AI 批量处理 | 规则明确，适合自动化 |
+| 紧急 hotfix | 手动改 | 时间紧迫，熟悉代码的人最快 |
+
+### 如何写出高质量的 Prompt？
+
+#### 1. 上下文要充分
+
+:::bad 差的 Prompt
+```txt
+帮我优化一下 EnergyCore 类
+```
+:::
+
+:::good 好的 Prompt
+```txt
+我正在开发 Minecraft Rebar 插件的电网模块，
+EnergyCore 类负责管理能源核心方块的库存和电网交互。
+
+当前问题：50 人在线时 TPS 从 20 降到 15，
+profiling 显示 notifyGridUpdate() 是热点。
+
+请参考 .trae/guide/rebar 的 API 文档，
+优化通知机制的频率，目标是将影响降低 50% 以上。
+```
+:::
+
+#### 2. 需求要具体
+
+不要说"优化一下"，要说：
+- "把 notify 调用从每次改为每 50 次批量通知"
+- "将 dropItems 的复杂度从 O(n) 降到 O(k)，k 是物品种类数"
+- "日志输出从无限制改为每 5 秒最多打印一次"
+
+#### 3. 示例要给出
+
+提供输入输出的样例，让 AI 知道期望的行为：
+
+```txt
+输入：
+- 库存：[64x钻石, 32x金锭, 16x铁锭, 16x铁锭, 8x煤炭]
+
+期望输出（掉落时应合并）：
+- 掉落 3 个物品堆：[64x钻石, 32x金锭, 32x铁锭, 8x煤炭]
+- 而不是 5 个物品堆
+```
+
+#### 4. 迭代要耐心
+
+第一版通常不好，准备 3-5 轮对话：
+
+| 轮次 | 目标 | 预期产出 |
+|------|------|----------|
+| 第 1 轮 | 功能实现 | 可运行的初稿 |
+| 第 2 轮 | 代码审查 | 修复明显问题 |
+| 第 3 轮 | 性能优化 | 通过基准测试 |
+| 第 4 轮 | 边界情况 | 通过单元测试 |
+| 第 5 轮 | 代码打磨 | 符合项目规范 |
+
+### 代码审查 Checklist
+
+每次 AI 生成代码后，按这个清单检查：
+
+:::warning 必检项
+
+- [ ] **API 规范**：是否符合 Rebar/Pylon 的 API 使用规范？
+- [ ] **线程安全**：是否有线程安全问题？（主线程断言、并发集合等）
+- [ ] **资源泄漏**：是否有资源泄漏风险？（监听器未注销、IO 未关闭）
+- [ ] **异常处理**：异常处理是否完善？（空指针、越界、非法参数）
+- [ ] **日志合理性**：日志输出是否合理？（级别、频率、敏感信息）
+- [ ] **性能隐患**：是否有明显的性能隐患？（循环内分配、不必要的计算）
+
+:::
+
+:::tip 进阶检查项
+
+对于性能敏感的代码，还要额外检查：
+
+- [ ] 对象分配：循环内是否有可避免的对象创建？
+- [ ] 集合选择：是否使用了合适的数据结构？（ArrayList vs HashMap）
+- [ ] 算法复杂度：时间/空间复杂度是否最优？
+- [ ] 缓存策略：是否有重复计算可以缓存？
+- [ ] 批处理机会：是否有可以批量化的操作？
+
+:::
+
+### 实战心得
+
+> **最重要的不是第一版代码有多完美，而是迭代的速度和质量。**
+
+通过这四个实战任务的练习，你应该能够掌握：
+
+1. ✅ **如何描述需求**：让 AI 准确理解你要什么
+2. ✅ **如何审查代码**：快速发现潜在问题
+3. ✅ **如何提出优化建议**：基于数据和 profiling 结果
+4. ✅ **如何迭代改进**：多轮对话逐步逼近理想方案
+5. ✅ **如何验证结果**：单元测试、压力测试、基准测试
+
+记住：**AI 是你的编程助手，不是替代品**。最好的结果是 AI 和你的专业判断相结合。
