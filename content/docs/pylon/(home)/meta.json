@@ -1,6 +1,1 @@
-{
-  "title": "首页",
-  "icon": "House",
-  "pages": ["index", "getting-started", "install", "commands-permissions", "addon-list", "progress"],
-  "defaultOpen": true
-}
+{"title": "首页", "icon": "House", "pages": ["index", "install", "commands-permissions", "addon-list", "progress", "glossary"], "defaultOpen": true}

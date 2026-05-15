@@ -1,0 +1,348 @@
+---
+title: 术语表
+description: Pylon / Rebar 文档中出现的特殊术语定义表，帮助你理解领域专属词汇。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# 术语表
+
+<Callout type="info">
+  本页面收录了 Pylon / Rebar 文档中具有**特殊定义**的术语。如果你在阅读其他文档时遇到看不懂的词，可以在这里查找。
+  
+  术语按类别排列，每个条目包含**中文译名**、**英文原文**和**文档中的具体含义**。
+</Callout>
+
+---
+
+## 核心框架
+
+### Pylon
+
+一个基于 **Rebar** 框架构建的 Minecraft Java 技术插件。给原版玩法带来电力、柴油机器、新流体与管道、物流等内容。Pylon 本身就是 Rebar 的一个官方附属（Addon）。
+
+### Rebar
+
+强大的底层框架，允许开发者添加自定义方块、物品、研究等。实现了流体处理逻辑、货物路由、多方块系统等复杂功能。本身使用 **Kotlin** 编写。所有 Pylon 附属都依赖 Rebar。
+
+### 附属（Addon）
+
+基于 Rebar 框架开发的扩展模块。通过实现 `RebarAddon` 接口并继承 `JavaPlugin` 来创建。模板仓库为 `rebar-addon-template`。Pylon 是最著名的官方附属，但你也可以创建自己的附属。
+
+### NamespacedKey（命名空间键）
+
+Rebar 识别自定义物品、方块、研究、实体的唯一标识方式。格式为 `modid:itemname`（如 `pylon:copper_dust`），将字符串和附属名称组合以避免不同模组之间的命名冲突。
+
+---
+
+## 方块系统
+
+### 虚影方块（Ghost Block / 投影方块 / 幽灵方块）
+
+多方块搭建时的**视觉占位符**，告诉玩家"这个位置应该放什么方块"。它不是真实的方块——只是客户端渲染的投影，用于引导玩家正确搭建多方块结构。
+
+由 `RebarSimpleMultiblock` 自动创建和管理；自定义多方块中需手动使用 `RebarGhostBlockHolder` 来管理。
+
+> **为什么叫"幽灵/虚影/投影"？** 因为它看起来像方块，但玩家无法与之交互、无法破坏它，它只是一个"幻影"。英文原文 Ghost Block 直译就是"幽灵方块"，也有人根据其功能称为"投影方块"。
+
+### 多方块（Multiblock）
+
+由多个方块组成的大型结构体。例如：一台大型机器可能由 3×3×4 的多个方块组成。
+
+Rebar 提供 `RebarSimpleMultiblock`（高封装，大多数场景够用）和 `RebarMultiblock`（更灵活但需手动管理）两个类。**性能特点**：几乎无性能开销，且开销随尺寸增长非常缓慢。
+
+### 多方块组件（MultiblockComponent）
+
+多方块的组成部分定义。支持匹配：原版方块、Rebar 方块、指定状态的原版方块、二选一/多选一等多种模式。通过 `getComponents()` 方法定义组件列表。
+
+### 舱口（Hatch）
+
+多方块中的专用接口组件。分为**物品舱口**（ItemInputHatch 等）和**流体舱口**（FluidInputHatch 等），用于物品或流体的输入输出。仅适用于为 Pylon 开发的附属。
+
+### WAILA
+
+**W**hat **A**m **I** **L**ooking **A**t（我在看什么）的缩写。当玩家注视某个方块时屏幕上显示的附加信息提示框。
+
+在 Pylon 中可通过语言文件的 `waila` 字段自定义文本，也可覆写 `getWaila` 方法来自定义颜色、样式、进度条和占位符。
+
+---
+
+## 数据存储
+
+### PersistentDataContainer（PDC）
+
+Paper 提供的持久化数据存储方案，结构类似 JSON 的嵌套键值对。Rebar 将其用于物品和方块的持久化存储。
+
+**关键细节**：原版 Minecraft 的方块没有 PDC，Rebar 通过底层机制（保存在区块 PDC 中）给**每个自定义方块**分配了独立的 PDC。
+
+### BlockPosition
+
+Rebar 自定义的复合数据类型，包含 X/Y/Z 坐标和世界 UUID。可用作 PDC 持久化的坐标数据类型，比原版的 `Location` 更轻量。
+
+### RebarSerializers
+
+Pylon 在 Paper 默认序列化器基础上补充的类型序列化器集合，涵盖 UUID、Vector、BlockPosition、ItemStack 等复杂类型。通过 `RebarSerializers` 类统一访问，让这些类型能正确地存入 PDC。
+
+---
+
+## 配置与注册
+
+### Settings（设置系统）
+
+Rebar 的配置系统。每个物品/方块可绑定 YAML 配置文件（文件名与 NamespacedKey 对应）。通过 `getSettings().getOrThrow(key, ConfigAdapter)` 读取配置值。首次使用时自动复制到服务器目录。
+
+### ConfigAdapter
+
+定义如何从配置文件读取值的适配器类型。如 `ConfigAdapter.INT`（整数）、`ConfigAdapter.BOOLEAN`（布尔值）、`ConfigAdapter.STRING`（字符串）等。
+
+### Schema
+
+Rebar 中定义物品/方块属性的声明式模式（如 `RebarItemSchema.builder()`）。包含 id、displayName、baseMaterial、maxStackSize 等属性的配置蓝图。
+
+---
+
+## 物品系统
+
+### RebarItem
+
+Rebar 物品的基类，所有自定义物品类必须继承它。提供注册、持久化数据存取、翻译键生成等功能。
+
+### ItemStackBuilder.rebar()
+
+创建 Rebar 物品的标准工厂方法。会自动将键写入物品的 PDC，并设置默认翻译键。
+
+> **重要**：必须使用此方法创建 Rebar 物品，不要用 Bukkit 原生的 `ItemStack` 构造方式。
+
+### 占位符（Placeholder）
+
+物品描述或 WAILA 文本中的动态替换标记（格式为 `%xxx%`）。例如 `%burn-time%` 会在显示时自动替换为实际的燃烧时间。
+
+通过覆写 `getPlaceholders()` 方法返回 `RebarArgument` 列表来实现。**最佳实践**：始终用占位符而非硬编码数值。
+
+### 放大镜（Loupe）
+
+Pylon 中的一个工具物品。使用放大镜后可以看到某些物品的隐藏信息（如"被检查的物品将被消耗"）。有 `/py resetloupedata` 命令重置其记录的数据。
+
+---
+
+## 流体系统
+
+### 流体点（Fluid Point）
+
+点击后用来放置管道的红/绿/灰方块。分三种类型：
+- **INPUT**（绿色）：输入点
+- **OUTPUT**（红色）：输出点
+- **CONNECTOR**（灰色）：连接器
+
+分为物理流体点（负责显示和交互）和虚拟流体点（核心逻辑）。
+
+### 分段（Segment）
+
+一组互相连通的流体点的集合。是流体 ticking 机制的基础——每个分段每隔几个游戏刻 tick 一次。分段合并/分裂时会自动处理流速和允许流体列表的配置继承。
+
+### mB（毫桶，millibuckets）
+
+流体容量单位。例如压榨机默认内部缓冲区容量为 1000mB。
+
+### 液压流体（Hydraulic Fluid / HYDRAULIC_FLUID）
+
+Pylon 定义的一种专用流体类型，用于前中期液压机器驱动。
+
+---
+
+## 物流系统
+
+### Cargo（货物 / 物流）
+
+Rebar/Pylon 的自动物品运输系统，自动将物品从 A 点运送至 B 点。通过 `CargoDuct`（物流管道）连接各端点。
+
+### CargoDuct（物流管道）
+
+物流传输介质。每段只连接两个端点，不支持 junction（分叉）。负责记录连接面和管理物品显示实体。
+
+### Z-fighting
+
+渲染问题：当两个面在同一像素位置时产生的闪烁现象。物流管道连接处使用 3 种不同宽度的显示实体来避免此问题。
+
+---
+
+## 解锁与研究
+
+### 研究（Research）
+
+Pylon 的解锁系统。玩家消耗**研究点数**来解锁新物品/配方。研究定义在 `resources/researches.yml` 中，包含 material（代表图标）、cost（消耗点数）、unlocks（解锁内容列表）。
+
+### 研究点数（Research Points）
+
+研究系统的货币/资源。玩家通过特定方式获得，用于解锁研究。可通过命令 `research points add/get/set/subtract` 管理。
+
+### 配方（Recipe）
+
+以 YAML 文件形式放在 `resources/recipes` 目录下。每种配方类型有固定格式。Pylon 扩展了多种配方类型（如烧制、筛子等）。
+
+---
+
+## 国际化与文本
+
+### 语言系统（Language System）
+
+让内容可翻译的方案。使用"翻译键"（如 `item.baguette.name`）代替硬编码文本，然后为每种语言建不同的 yml 文件。Rebar 会根据物品的键**自动生成翻译键**。
+
+**特殊实现**：通过向玩家的 Netty 通道注入处理器拦截数据包来做服务端翻译（不依赖客户端资源包）。
+
+### MiniMessage 标签
+
+来自 Adventure 库的文本格式化标准。Rebar 在此基础上扩展了大量自定义标签：
+
+| 标签 | 用途 | 示例 |
+|------|------|------|
+| `<insn>` | 操作指令（黄色） | "右键打开" |
+| `<attr>` | 属性值（青色） | "燃烧时间: 2秒" |
+| `<arrow>` / `<guidearrow>` | 箭头符号 | lore 中的 → |
+| `<diamond>` / `<star>` | 装饰符号 | ◆ / ★ |
+| `<unit:xxx>` | 单位格式化 | 自动选择秒/毫秒/毫升 |
+| `<item:xxx>` | 物品名称渲染 | 显示本地化物品名 |
+| `<entity:xxx>` | 实体名称渲染 | 显示本地化实体名 |
+| `<nbsp>` | 不间断空格 | 防止文本换行 |
+
+### Netty 数据包注入
+
+Rebar 国际化系统的底层实现方式。向玩家的 Netty 通道注入处理器，拦截进出数据包来做服务端物品翻译——拦截传出包做翻译，拦截传入包做反向翻译。
+
+---
+
+## 接口体系
+
+### 面向数据的接口（Data-Oriented Interfaces）
+
+Rebar 解决"Kotlin 接口不能有字段"的设计模式。用映射表（如 `IdentityHashMap`）在 companion object 中存储接口状态，并通过事件监听自动处理序列化/反序列化。
+
+典型应用：`RebarDirectionalBlock`（方向性方块）——朝向数据不存字段，而是存映射表。
+
+### postLoad / postInitialise
+
+方块加载后的回调方法。由于加载构造函数被调用时接口数据尚未加载完成，**不要在加载构造函数里调用依赖接口数据的方法**，应改用 `postLoad` 回调。
+
+### 剔除（Culling）
+
+Rebar 的渲染优化系统。通过 `RebarCulledBlock` 等接口让方块参与剔除计算，减少不必要的渲染开销。支持单独剔除和分组剔除。
+
+---
+
+## 服务端软件
+
+### Paper
+
+Pylon / Rebar **唯一支持**的服务端软件（及其分支，如 Purpur）。不兼容原版 Spigot/CraftBukkit。未来可能支持 Folia（区域化多线程分支）。
+
+### NMS（Notchian Minecraft Server）
+
+Minecraft 服务端的内部代码（通常指 `net.minecraft.server` 包）。Pylon 为防止物品被错误补全到原版配方中使用了 NMS 并通过反射覆写行为。高频调用处使用 MethodHandle 优化性能。
+
+### Geyser
+
+将 Java 版 Minecraft 服务端桥接到基岩版（Bedrock）客户端的工具。Pylon 计划最终支持通过 Geyser 的基岩版访问，但优先级很低。
+
+### Folia
+
+Paper 的一个分支，支持区域化多线程（Regionized Multithreading）。Pylon 未来可能支持。
+
+---
+
+## 性能相关
+
+### Tick
+
+Minecraft 游戏逻辑的一次完整循环。固定间隔 **0.05 秒（50ms）**。理想 TPS = 20。
+
+**红线警告**：每 tick 都执行的逻辑是头号性能杀手。
+
+### TPS（Ticks Per Second）
+
+每秒 tick 数。完美 = 20，< 15 明显卡顿，< 10 严重卡顿，→ 0 假死。
+
+公式：`TPS = 1000 / MSPT`
+
+### MSPT（Milliseconds Per Tick）
+
+每 tick 耗时毫秒数。理想 < 50ms（对应 20 TPS）。Pylon 性能预算建议单次 tick 逻辑 < 1ms。
+
+### 主线程（Main Thread）
+
+Minecraft 所有游戏逻辑的唯一执行线程。任何阻塞操作都会拖慢整个服务器 TPS。
+
+**黄金法则**：主线程上的代码必须在极短时间内完成（< 1ms）。
+
+### Spark
+
+Minecraft 服务器性能分析的**行业标准工具**（插件形式安装）。常用命令：
+
+```
+/spark tping           # 查看 TPS 和延迟
+/spark profiler         # 开启性能采样
+/spark profiler --stop  # 查看分析报告
+/spark sampler          # 查看采样报告
+```
+
+---
+
+## Vibecoding 教程概念
+
+### Vibecoding
+
+**用 AI 来写代码的一种方式**。核心理念：把自然语言需求描述转换成实际的代码。
+
+公式：**Vibecoding = 你的创意 + AI 的编码能力 + 你的审核把关**
+
+强调 AI 是结对编程伙伴而非魔法棒——你需要清晰地描述需求、验证输出结果、发现问题并反馈。
+
+### Prompt
+
+给 AI 的指令文本。Vibecoding 的核心技能之一是编写高质量 Prompt——越具体明确，AI 执行越准确。
+
+### AI 幻觉（Hallucination）
+
+AI 编造不存在 API 或方法名的现象。原因通常是训练数据中 Rebar 相关代码较少，AI 用 Bukkit/Paper API 来"脑补"。
+
+应对策略：提供参考代码库（`.trae/guide/`）+ 严格审核每一段生成的代码。
+
+### 上下文规则（Context Rules）
+
+配置给 AI IDE 的项目级规则/系统提示词，告知 AI 这是 Rebar 项目、该参考哪些源码、遵循什么编码规范。
+
+不同 IDE 存放位置不同：
+- **Trae CN**：设置 → 规则 → 项目规则
+- **Claude Code**：`.claude/CLAUDE.md`
+- **Cursor**：`.cursorrules`
+
+### 代码库（Guide Folder）
+
+放置 Rebar 和 Pylon 源码作为 AI 参考资料的目录（通常为 `.trae/guide/`）。AI IDE 的特殊文件夹功能使其可作为"参考资料"读取但不打包到项目中。
+
+**注意**：不要把整个仓库塞进去，只保留核心模块即可避免上下文窗口溢出。
+
+---
+
+## 其他
+
+### Gradle / Gradlew
+
+Rebar 附属项目的构建工具。项目使用 `build.gradle.kts`（Kotlin DSL）配置构建。`gradlew runServer` 可直接启动测试服务器。
+
+### Watt Toolkit
+
+用于加速 GitHub 访问的免费网络工具（原名 Steam++），帮助国内用户克隆 Rebar 模板仓库。
+
+### 虚影配方（Ghost Recipe）
+
+当 Pylon 物品无法参与原版配方核算时，发送到客户端的虚影（ghost）配方显示。由 `StackedItemContents#canCraft` 处理。
+
+### Debug Waxed Weathered Cut Copper Stairs
+
+一种调试物品。通过 `/pdc debug` 命令获取，右键点击方块可查看其 PDC 内容（调用 `write` 方法并序列化为可读格式显示在聊天栏）。
+
+---
+
+<Callout type="success">
+  💡 **提示**：如果在文档中遇到未收录的术语，欢迎在 [GitHub](https://github.com/mc506lw/pylon-docs-zh) 提交 Issue 或 PR 补充！
+</Callout>
