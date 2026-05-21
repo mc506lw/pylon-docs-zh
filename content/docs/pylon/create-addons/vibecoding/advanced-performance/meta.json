@@ -1,0 +1,1 @@
+{"title": "进阶性能优化", "icon": "Zap", "pages": ["introduction", "bottlenecks", "architecture", "coding-practice", "testing-monitoring", "conclusion"], "defaultOpen": false, "description": "基于真实电网系统经验的高性能附属开发教程，适合想挑战复杂项目的进阶用户。"}

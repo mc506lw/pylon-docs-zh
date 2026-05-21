@@ -1,0 +1,995 @@
+---
+title: 调试与问题解决指南
+description: 从编译错误到运行时异常，从功能 Bug 到性能问题——Vibecoding 调试全攻略。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+<Callout type="warning">
+  ⚠️ **本章完全由 AI 生成，缺乏实践经验验证**
+
+  本章内容是基于常见的 Minecraft 插件开发问题和 AI 编程经验总结而成的调试指南，作者（mc506lw）本人可能遇到过其中部分问题，但并非全部。
+
+  文章中的解决方案是**理论上的最佳实践**，实际效果可能因环境、版本、AI 模型而异。
+
+  **建议**：遇到问题时，优先查看服务器日志、使用 spark 诊断工具、在 Discord 社区求助。
+
+  如果你有实际踩坑经验并愿意分享，欢迎提 PR 补充！
+</Callout>
+
+## 调试思维导论
+
+### Vibecoding 调试 vs 传统编程调试
+
+你可能已经习惯了传统编程的调试方式：打断点、看变量、单步执行。但在 Vibecoding（AI 辅助编程）模式下，调试的思维方式需要调整：
+
+| 维度 | 传统调试 | Vibecoding 调试 |
+|------|---------|----------------|
+| 错误定位 | 自己读代码、分析逻辑 | 把错误信息丢给 AI，让它找问题 |
+| 修复方式 | 自己改代码 | 让 AI 改代码，你审查 |
+| 调试工具 | IDE 断点、日志打印 | 日志截图 + Prompt 模板 |
+| 核心技能 | 排查能力 | **描述问题的能力** |
+
+<Callout type="info" title="关键认知转变">
+  在 Vibecoding 模式下，**你最核心的能力不是写代码，而是准确地向 AI 描述问题**。错误信息越完整、上下文越清晰，AI 给出的解决方案就越靠谱。
+</Callout>
+
+### "AI 为什么会犯错"的心理学分析
+
+理解 AI 为什么会犯错，能帮你更好地预防和修复问题：
+
+1. **幻觉（Hallucination）**：AI 会"编造"不存在的 API 或方法名
+   - 原因：训练数据中 Rebar 相关代码较少，AI 用 Bukkit/Paper 的 API 来"脑补"
+   - 表现：`PlayerInteractEvent` 写成了 `PlayerClickEvent`（根本不存在）
+
+2. **上下文遗忘**：对话太长后，AI 忘记了之前的约定
+   - 表现：前面说好用 Rebar API，后面又用回了 Bukkit 原生 API
+   - 解决：每轮新对话都重新强调项目规范
+
+3. **过度自信**：AI 会用很确定的语气给出错误的方案
+   - 表现："这个方法绝对没问题" → 实际上参数类型都错了
+   - 应对：**永远不要盲目信任 AI，关键代码要自己审查**
+
+4. **模式匹配偏差**：AI 倾向于用"常见模式"解决问题
+   - 表现：明明有更简单的 Rebar API，AI 却用了复杂的 Bukkit 方式
+
+### 建立系统化的调试流程
+
+别一遇到 bug 就慌！按照这个流程走：
+
+```
+┌─────────────────────────────────────────────┐
+│  第一步：复现问题                             │
+│  - 问题能稳定复现吗？                         │
+│  - 在什么条件下触发？                         │
+└─────────────────┬───────────────────────────┘
+                  ▼
+┌─────────────────────────────────────────────┐
+│  第二步：收集信息                             │
+│  - 控制台报错信息（完整复制！）               │
+│  - 服务器日志（latest.log）                  │
+│  - 操作步骤记录                               │
+└─────────────────┬───────────────────────────┘
+                  ▼
+┌─────────────────────────────────────────────┐
+│  第三步：定位问题类型                         │
+│  - 编译错误？运行时错误？功能性 Bug？         │
+│  - 查看本章对应章节                           │
+└─────────────────┬───────────────────────────┘
+                  ▼
+┌─────────────────────────────────────────────┐
+│  第四步：使用 Prompt 模板向 AI 提问            │
+│  - 复制对应章节的模板                         │
+│  - 填入你的具体信息                           │
+└─────────────────┬───────────────────────────┘
+                  ▼
+┌─────────────────────────────────────────────┐
+│  第五步：验证修复                             │
+│  - 重新构建并测试                            │
+│  - 确认问题已解决且没有引入新问题              │
+└─────────────────────────────────────────────┘
+```
+
+---
+
+## 编译错误分类与解决
+
+编译错误是最容易解决的——因为编译器会明确告诉你哪里错了。
+
+### API 找不到错误（最常见）
+
+这是 Vibecoding 中**最高频**的错误，没有之一。
+
+#### 典型症状
+
+```
+error: unresolved reference: getRebarItem
+error: cannot find symbol: class CustomItemStack
+error: Unresolved reference: onRightClick
+```
+
+#### 常见原因及解决方案
+
+| 原因 | 示例 | 正确写法 |
+|------|------|---------|
+| AI 用了 Bukkit 原生 API | `event.getPlayer().getInventory()` | `player.inventory`（Rebar 封装） |
+| 类名拼写错误 | `PlayerIntereactEvent` | `PlayerInteractEvent` |
+| 过时的 API | `Material.DIAMOND_SWORD` | 使用 Rebar 的物品定义 |
+| 方法名编造 | `item.setCustomName("...")` | `item.displayName = ...` |
+
+#### ❌ 错误示例 vs ✅ 正确示例
+
+```kotlin
+// ❌ AI 生成的错误代码（使用了不存在的 API）
+@EventHandler
+fun onPlayerClick(event: PlayerInteractEvent) {
+    val player = event.getPlayer()  // Bukkit 风格
+    val item = event.getItem()      // 这个方法可能不存在
+    if (item.getType() == Material.DIAMOND) {
+        player.sendMessage("你拿着钻石！")
+    }
+}
+
+// ✅ 正确的 Rebar 写法
+@EventHandler
+fun onPlayerClick(event: PlayerInteractEvent) {
+    val player = event.player       // Kotlin 风格
+    val item = event.item ?: return // 安全调用
+    // 使用 Rebar 的物品系统进行判断
+}
+```
+
+#### 给 AI 的修复 Prompt
+
+```txt
+## 问题
+
+编译时报错：[粘贴完整的错误信息]
+
+## 项目背景
+
+- 这是一个 Rebar 附属项目
+- 请只使用 Rebar 提供的 API，不要使用 Bukkit/Paper 的原生 API
+- 参考代码在 .trae/guide/ 目录下
+
+## 要求
+
+1. 找出导致编译错误的代码
+2. 将其替换为正确的 Rebar API 调用
+3. 说明为什么原来的写法是错的
+4. 如果某个 API 你不确定是否存在，请明确标注出来
+```
+
+### 依赖缺失错误
+
+#### 典型症状
+
+```
+error: cannot find symbol: class RebarApi
+error: module not found: io.github.pylonmc:rebar
+Could not resolve: files-2.1/io/github/pylonmc/rebar/...
+```
+
+#### 排查清单
+
+<Callout type="danger" title="先检查这个！">
+  90% 的依赖问题都是 **Rebar 版本号写错了**或者 **Maven 仓库地址配置错误**。
+</Callout>
+
+1. **检查 `build.gradle.kts` 中的版本号**
+   ```kotlin
+   // 确保版本号与文档一致
+   implementation("io.github.pylonmc:rebar:X.Y.Z")
+   ```
+
+2. **检查 Maven 仓库配置**
+   ```kotlin
+   repositories {
+       mavenCentral()
+       maven("https://repo.pylonmc.net/releases")  // Rebar 的仓库
+   }
+   ```
+
+3. **同步 Gradle**
+   ```bash
+   ./gradlew build --refresh-dependencies
+   ```
+
+4. **检查网络连接**
+   - 国内用户可能需要配置代理或镜像源
+
+#### 依赖版本对照表
+
+| 你的 Minecraft 版本 | 推荐的 Rebar 版本 | 备注 |
+|---------------------|-------------------|------|
+| 1.20.x | 查看 Rebar 文档 | 不同 MC 版本可能需要不同 Rebar 版本 |
+| 1.21.x | 查看 Rebar 文档 | 同上 |
+
+> 💡 **提示**：具体的版本对应关系请查看 [Rebar 官方文档](https://docs.pyronmc.org) 或 Discord 公告。
+
+### 语法错误
+
+Kotlin 的语法比 Java 更严格，AI 经常在这些地方翻车：
+
+#### 常见 Kotlin 语法陷阱
+
+| 问题类型 | 错误示例 | 正确写法 | 说明 |
+|---------|---------|---------|------|
+| 空安全 | `val name: String = null` | `val name: String? = null` | 可空类型必须加 `?` |
+| 空安全 | `name.length` | `name?.length ?: 0` | 可空变量不能直接访问属性 |
+| 类型推断 | `val list = listOf(1, "2")` | `val list: List<Any> = ...` | 混合类型需要显式声明 |
+| Smart Cast | `if (x is String) x.length`（在某些场景失败） | 使用 `when` 或显式转换 | Smart Cast 有作用域限制 |
+| Lambda | `{ it > 0 }.filter(list)` | `list.filter { it > 0 }` | 扩展函数的调用顺序 |
+
+#### AI 生成代码的风格不一致问题
+
+AI 可能在一个文件里混用不同的代码风格：
+
+```kotlin
+// AI 可能生成这样的混乱代码：
+class MyAddon : JavaPlugin() {           // 继承 JavaPlugin？
+    private var config: FileConfiguration? = null  // Java 风格
+    
+    fun onLoad() {                        // 方法命名
+        config = this.config              // this 可省略
+    }
+    
+    fun onEnable(): Boolean {             // 返回值类型？
+        println("插件已启用")             // 应该用 logger
+        return true
+    }
+}
+```
+
+**统一风格建议**：
+
+```txt
+请统一使用以下代码风格：
+- 使用 Kotlin 惯用法（不要写 Java 风格的 Kotlin）
+- 省略不必要的 this 引用
+- 使用属性委托简化代码
+- 使用扩展函数而不是工具类
+- 遵循 Rebar 官方示例的命名规范
+```
+
+---
+
+## 运行时错误诊断
+
+运行时错误比编译错误难搞——它们只在特定条件下才会出现。
+
+### NullPointerException（空指针异常）
+
+NPE 是 Java/Kotlin 世界里的"老朋友"，也是**最常见的运行时错误**。
+
+#### 常见触发场景
+
+| 场景 | 代码示例 | 原因 |
+|------|---------|------|
+| 物品未初始化 | `item.displayName` | item 为 null |
+| 配置未加载 | `config.getString("key")` | config 未初始化 |
+| 事件参数为空 | `event.player` | 某些事件可能没有 player |
+| API 返回空 | `server.getPlayer(name)` | 玩家不在线 |
+
+#### 日志分析方法
+
+当出现 NPE 时，服务器日志会输出类似这样的堆栈跟踪：
+
+```
+[12:34:56 ERROR]: [MyAddon] Could not pass event PlayerInteractEvent to MyAddon v1.0
+java.lang.NullPointerException: Cannot invoke "String.length()" because "<local1>" is null
+    at com.example.myaddon.MyListener.onPlayerInteract(MyListener.kt:23)
+    at org.bukkit.plugin.java.JavaPluginLoader$1.execute(...)
+```
+
+**重点关注这几行**：
+
+1. **第 1 行**：哪个插件、哪个事件出错了
+2. **第 2 行**：哪一行代码出了问题（`MyListener.kt:23`）
+3. **第 3 行**：具体的空值是什么（`"<local1>" is null`）
+
+<Callout type="warning" title="注意">
+  `<local1>` 这种变量名是编译器生成的，不太直观。你需要结合代码上下文来判断这个变量原本代表什么。
+</Callout>
+
+#### 给 AI 的修复 Prompt 模板
+
+```txt
+## 运行时空指针异常
+
+### 错误信息
+```
+[粘贴完整的堆栈跟踪]
+```
+
+### 出错代码（第 X 行附近）
+```kotlin
+// 粘贴出错位置的代码片段
+```
+
+### 我的分析
+- 我认为可能是 [变量名] 为 null
+- 触发条件是 [描述什么时候会出现这个问题]
+
+### 请你
+1. 确认我的分析是否正确
+2. 给出修复方案（使用 Kotlin 的空安全特性）
+3. 解释为什么会发生这个 NPE
+4. 如何预防类似问题
+```
+
+### ClassCastException（类型转换异常）
+
+当你尝试把一个对象强制转换为不兼容的类型时，就会抛出这个异常。
+
+#### Rebar 中的正确类型转换方式
+
+```kotlin
+// ❌ 危险的直接强转
+val myItem = item as MyCustomItem  // 如果 item 不是 MyCustomItem 就会崩溃
+
+// ✅ 安全的类型转换
+val myItem = item as? MyCustomItem  // 转换失败返回 null
+if (myItem != null) {
+    // 安全地使用 myItem
+}
+
+// ✅ 使用 when 进行类型判断
+when (item) {
+    is MyCustomItem -> { /* 处理 */ }
+    is AnotherItem -> { /* 处理 */ }
+    else -> { /* 其他情况 */ }
+}
+```
+
+<Callout type="info" title="Rebar 特别提醒">
+  Rebar 可能有自己的类型系统和包装类。在进行类型转换前，务必查阅 Rebar 文档确认正确的转换方式。
+</Callout>
+
+### IllegalArgumentException（参数非法异常）
+
+通常是因为传入了不符合要求的参数值。
+
+#### 常见触发场景
+
+| 参数类型 | 错误值 | 正确范围 |
+|---------|--------|---------|
+| 概率/百分比 | 1.5, -0.1 | 0.0 ~ 1.0 (或 0 ~ 100) |
+| 物品数量 | -1, 1000 | 1 ~ 64 (或 1 ~ 127) |
+| 刻数(ticks) | 负数 | 通常 >= 0 |
+| 字符串 | 空字符串（某些 API） | 非空字符串 |
+
+#### 快速排查技巧
+
+```kotlin
+// 在传入参数前添加校验
+require(probability in 0.0..1.0) { "概率必须在 0~1 之间，当前值: $probability" }
+require(amount in 1..64) { "物品数量必须在 1~64 之间，当前值: $amount" }
+
+// 或者使用协程返回 Result
+fun safeCreateItem(amount: Int): Result<ItemStack> {
+    return if (amount in 1..64) {
+        Result.success(createItemInternal(amount))
+    } else {
+        Result.failure(IllegalArgumentException("无效的数量: $amount"))
+    }
+}
+```
+
+---
+
+## 功能性问题排查
+
+有时候代码能跑起来，但行为不对——这才是最让人头疼的问题！
+
+### "物品能拿到但右键没反应"
+
+这是**新手反馈最多**的功能性问题。
+
+#### 可能的原因（按可能性排序）
+
+| 排名 | 可能原因 | 可能性 | 排查难度 |
+|------|---------|--------|---------|
+| 🥇 | 事件监听器没有注册 | ⭐⭐⭐⭐⭐ | 简单 |
+| 🥈 | Action 类型判断错误 | ⭐⭐⭐⭐ | 简单 |
+| 🥉 | 物品判断条件不匹配 | ⭐⭐⭐ | 中等 |
+| 4 | 优先级被其他插件抢占 | ⭐⭐ | 中等 |
+| 5 | 取消了事件但没设置优先级 | ⭐⭐ | 中等 |
+| 6 | 服务端/客户端问题 | ⭐ | 困难 |
+
+#### 排查步骤
+
+**Step 1：确认监听器是否注册**
+
+```kotlin
+// 检查你的主类中是否有这行代码：
+server.pluginManager.registerEvents(MyListener(), this)
+//                                              ^^^^ 必须是 plugin 实例
+```
+
+**Step 2：添加调试日志**
+
+```kotlin
+@EventHandler
+fun onPlayerInteract(event: PlayerInteractEvent) {
+    // 添加这些日志来追踪问题
+    logger.info("事件触发！Action: ${event.action}, Item: ${event.item}")
+    
+    if (event.action == Action.RIGHT_CLICK_AIR || event.action == Action.RIGHT_CLICK_BLOCK) {
+        logger.info("是右键操作，继续处理...")
+        
+        val item = event.item ?: run {
+            logger.info("物品为空，跳过")
+            return
+        }
+        
+        logger.info("物品类型: ${item.type}, 名称: ${item.displayName}")
+        
+        // 你的逻辑...
+    }
+}
+```
+
+**Step 3：测试并观察日志**
+
+```
+# 期望看到的日志：
+[INFO] 事件触发！Action: RIGHT_CLICK_AIR, Item: ItemStack{...}
+[INFO] 是右键操作，继续处理...
+[INFO] 物品类型: xxx, 名称: 我的自定义物品
+
+# 如果只看到第一行，说明 Action 判断有问题
+# 如果看到"物品为空"，说明 item 获取方式有问题
+# 如果都正常但还是没反应，说明是你的业务逻辑有问题
+```
+
+#### 给 AI 的诊断 Prompt
+
+```txt
+## 功能性 Bug：右键无反应
+
+### 问题描述
+玩家手持自定义物品右键时，没有任何反应（预期应该触发 XXX 效果）
+
+### 已确认的信息
+- ✅ 物品可以正常获取和使用
+- ✅ 插件已成功加载（无加载错误）
+- ❓ 事件是否被触发：未知
+
+### 当前的事件监听代码
+```kotlin
+// 粘贴你的事件监听代码
+```
+
+### 监听器注册代码
+```kotlin
+// 粘贴监听器注册的代码
+```
+
+### 请帮我
+1. 检查事件监听是否正确注册
+2. 检查事件处理逻辑是否有问题
+3. 添加必要的调试日志帮助定位问题
+4. 列出所有可能导致"右键没反应"的原因
+```
+
+### "概率不对，总是出同一个东西"
+
+#### 可能的原因
+
+1. **随机种子固定**：每次启动使用相同的 Random 实例
+2. **概率计算错误**：累积概率算法写错了
+3. **配置读取错误**：概率值读成了默认值
+4. **缓存问题**：结果被缓存了，没有重新计算
+
+#### 排查步骤
+
+```kotlin
+// 检查 1：Random 实例是否正确创建
+private val random = Random(System.currentTimeMillis())  // ✅ 基于时间
+// private val random = Random(12345)                     // ❌ 固定种子
+
+// 检查 2：概率算法是否正确
+fun rollItem(): String {
+    val roll = random.nextDouble()
+    var cumulative = 0.0
+    for ((item, prob) in dropTable) {
+        cumulative += prob
+        if (roll <= cumulative) {
+            return item
+        }
+    }
+    return dropTable.last().first  // 兜底
+}
+
+// 添加日志验证
+logger.info("Roll: $roll, 结果: ${rollItem()}")
+```
+
+### "长按时间不准确"
+
+#### 可能的原因
+
+1. **使用 wrong tick 计算**：服务端 tick 和实际时间不完全一致
+2. **事件触发频率问题**：某些事件不是每个 tick 都触发
+3. **开始/结束时间点记录错误**
+
+#### 解决方案
+
+```kotlin
+// 使用 System.currentTimeMillis() 而不是 tick 计数
+var startTime: Long = 0
+
+@EventHandler
+fun onPlayerInteract(event: PlayerInteractEvent) {
+    when (event.action) {
+        Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK -> {
+            if (!isHolding) {
+                startTime = System.currentTimeMillis()
+                isHolding = true
+                logger.info("开始长按: $startTime")
+            }
+        }
+        else -> {
+            if (isHolding) {
+                val duration = System.currentTimeMillis() - startTime
+                logger.info("长按结束，持续时间: ${duration}ms")
+                // 处理长按结果...
+                isHolding = false
+            }
+        }
+    }
+}
+```
+
+### "配置文件修改后不生效"
+
+#### 可能的原因
+
+| 原因 | 解决方案 |
+|------|---------|
+| 只修改了磁盘文件，没有 reload | 使用 `/reload` 命令或重启服务器 |
+| 配置被缓存到内存 | 清除缓存后重载 |
+| 修改了错误的文件 | 确认修改的是 plugins/YourAddon/config.yml |
+| 配置格式错误（YAML 缩进） | 使用 YAML 验证器检查 |
+| 配置保存路径错误 | 检查 `saveDefaultConfig()` 和 `getConfig()` 的使用 |
+
+#### 排查命令
+
+```bash
+# 1. 重载配置
+/reload
+# 或者如果插件支持的话
+/myaddon reload
+
+# 2. 查看当前加载的配置（需要在代码中添加调试命令）
+/myaddon debug config
+
+# 3. 检查配置文件位置
+ls -la plugins/YourAddon/
+cat plugins/YourAddon/config.yml
+```
+
+---
+
+## 性能问题快速检测
+
+大多数个人附属不会遇到性能问题，但了解如何检测还是很有用的。
+
+### 使用 spark 进行诊断
+
+spark 是 Minecraft 服务器性能分析的**标准工具**。
+
+#### 安装
+
+将 spark 插件放入 `plugins/` 目录，重启服务器即可。
+
+#### 基础命令
+
+| 命令 | 作用 | 使用场景 |
+|------|------|---------|
+| `/spark tps` | 查看 TPS（每秒 tick 数） | 日常监控 |
+| `/spark profiler --thread server` | 开始性能采样 | 定位卡顿原因 |
+| `/spark sampler` | 查看采样报告 | 分析热点方法 |
+| `/spark health` | 服务器健康状态概览 | 快速体检 |
+
+#### TPS 监控方法
+
+```
+/spark tps
+
+# 输出示例：
+# ┃ TPS (m=19.97, t=20.00) MSPT (m=42.91, p99=48.21)
+#
+# 解读：
+# - m=19.97: 平均 TPS（20 为完美）
+# - t=20.00: 目标 TPS
+# - m=42.91: 平均每 tick 毫秒数（50ms 为正常）
+# - p99=48.21: 99% 分位的毫秒数
+```
+
+#### 什么时候该担心性能？
+
+| TPS 范围 | 状态 | 建议 |
+|---------|------|------|
+| 19.5 ~ 20.0 | ✅ 完美 | 无需担心 |
+| 18.0 ~ 19.5 | ⚠️ 轻微卡顿 | 可以接受，留意观察 |
+| 15.0 ~ 18.0 | 🔶 明显卡顿 | 需要优化 |
+| < 15.0 | 🔴 严重卡顿 | **立即处理** |
+
+<Callout type="info" title="个人附属一般不需要担心性能">
+ 除非你在每个 tick 都做复杂计算（比如遍历所有玩家、大量 IO 操作），否则简单的附属不太可能造成性能问题。
+  
+  **过早优化是万恶之源**——先把功能做对，再考虑性能。
+</Callout>
+
+### 常见性能杀手
+
+| 操作 | 危险等级 | 替代方案 |
+|------|---------|---------|
+| 在主线程进行文件读写 | 🔴🔴🔴 | 异步任务 + 回调主线程 |
+| 在每个 tick 遍历所有实体 | 🔴🔴 | 缓存 + 增量更新 |
+| 大量创建临时对象 | 🔴🔴 | 对象池 / 复用 |
+| 复杂的正则表达式 | 🔴🔴 | 预编译 / 简化模式 |
+| 数据库查询（同步） | 🔴🔴🔴 | 异步查询 |
+| NMS/Obc 直接调用 | 🔴 | 使用 API 抽象层 |
+
+---
+
+## AI 协作技巧
+
+这一章教你怎么和 AI "高效吵架"——哦不，高效协作。
+
+### 如何有效地向 AI 描述 bug
+
+#### ✅ 好的 Bug 描述
+
+```txt
+## Bug 描述
+
+**现象**：玩家使用自定义筛子右键泥土时，应该有 30% 概率掉落钻石，
+但实际上 100 次测试中没有一次掉落钻石。
+
+**重现步骤**：
+1. 给玩家自定义筛子 x1
+2. 手持筛子，对着泥土方块右键
+3. 观察掉落物
+
+**预期行为**：30% 概率掉落钻石
+**实际行为**：从未掉落过钻石（0/100）
+
+**环境**：
+- Minecraft 1.20.4
+- Paper build 123
+- Rebar x.y.z
+- 我的附属 v0.1
+
+**相关代码**：
+[粘贴关键的代码片段]
+
+**日志**：
+[粘贴相关的日志输出]
+```
+
+#### ❌ 差的 Bug 描述
+
+```txt
+我的插件坏了，概率不对，帮忙看看
+```
+
+<Callout type="danger" title="记住这个公式">
+  **好的 Bug 描述 = 现象 + 重现步骤 + 预期 vs 实际 + 环境 + 代码 + 日志**
+  
+  信息越完整，AI 一次性解决问题的概率越高。
+</Callout>
+
+### 错误日志的截取技巧
+
+#### 要包含的部分
+
+```
+✅ 完整的异常类型和消息
+✅ 堆栈跟踪中与你代码相关的行
+✅ 异常发生的时间戳
+✅ 异常发生前的相关日志
+✅ 插件版本和服务器版本
+```
+
+#### 不要包含的部分
+
+```
+❌ 与你的插件无关的其他插件报错
+❌ 几百行的重复日志
+❌ 包含敏感信息的日志（IP、token 等）
+❌ 截图中的日志（无法搜索和复制）
+```
+
+#### 日志截取模板
+
+```txt
+## 服务器日志
+
+### 时间范围
+从 [开始时间] 到 [结束时间]
+
+### 关键日志
+```
+[只保留与问题相关的 20-50 行]
+```
+
+### 完整异常
+```
+[如果有异常，完整粘贴]
+```
+```
+
+### 多轮对话的策略
+
+#### 什么时候该换模型？
+
+| 情况 | 建议 |
+|------|------|
+| 连续 3 轮都无法解决问题 | 🔄 换一个模型试试 |
+| AI 反复犯同样的错误 | 🔄 新对话 + 强调之前的错误 |
+| 需要创造性解决方案 | 🧠 用更强的模型（GPT-4、Claude 等） |
+| 简单的语法修正 | ⚡ 用轻量模型就够了 |
+| AI 开始"胡说八道" | 🛑 停下来，自己查文档 |
+
+#### 对话管理技巧
+
+1. **保持上下文精简**
+   - 每 5-10 轮开一个新对话
+   - 新对话开头总结之前的关键结论
+
+2. **使用"角色设定"稳定输出**
+   ```txt
+   你是一个 Minecraft Rebar 插件开发专家。
+   你熟悉 Rebar API、Kotlin 语言、Gradle 构建系统。
+   回答问题时，优先参考 .trae/guide/ 下的代码示例。
+   如果你不确定某个 API 是否存在，请明确说明。
+   ```
+
+3. **分而治之**
+   - 不要把整个项目丢给 AI
+   - 一次只解决一个问题
+   - 复杂问题拆分成多个小任务
+
+### 何时该放弃 AI 自己查文档
+
+<Callout type="warning" title="诚实的时候">
+  AI 不是万能的。以下情况，**查文档比问 AI 更有效**：
+  
+  - API 的确切签名和参数含义
+  - 某个功能的官方推荐实现方式
+  - 版本变更和废弃通知
+  - 已知的 bug 和 workaround
+</Callout>
+
+**推荐查阅的资源**：
+
+| 资源 | 地址 | 适用场景 |
+|------|------|---------|
+| Rebar 官方文档 | docs.pyronmc.org | API 参考、教程 |
+| Pylon GitHub | github.com/pylonmc/pylon | 代码示例 |
+| Rebar GitHub | github.com/pylonmc/rebar | 源码、Issues |
+| Pylon Discord | （邀请链接） | 社区求助 |
+
+---
+
+## 社区资源与求助渠道
+
+当你实在搞不定的时候，该去哪里求助？
+
+### Pylon Discord 的正确提问方式
+
+Discord 社区是最好的求助渠道，但**提问的质量决定了回答的质量**。
+
+#### ✅ 好的 Discord 提问
+
+```
+【求助】自定义物品右键事件未触发
+
+**环境**：MC 1.20.4 / Paper build 123 / Rebar 1.2.3
+
+**问题描述**：
+我创建了一个自定义筛子物品，希望玩家右键时触发筛选效果。
+目前物品可以正常获取，但右键没有任何反应。
+
+**已尝试**：
+✅ 确认监听器已注册（server.pluginManager.registerEvents）
+✅ 确认使用的是 RIGHT_CLICK_AIR 和 RIGHT_CLICK_BLOCK
+❓ 添加了调试日志但未看到任何输出（怀疑事件未被触发）
+
+**代码链接**：（如果是公开仓库可以贴链接，否则贴代码片段）
+
+**日志**：（粘贴关键日志）
+```
+
+#### ❌ 差的 Discord 提问
+
+```
+有人帮我看看吗，插件不工作 😭
+```
+
+<Callout type="info" title="Discord 提问黄金法则">
+  1. **标题要具体**：包含关键词，方便后人搜索
+  2. **环境要完整**：版本号一个都不能少
+  3. **已尝试要列出**：证明你不是伸手党
+  4. **代码要可运行**：最小复现代码最佳
+  5. **态度要友善**：大家都是义务帮忙的
+</Callout>
+
+### GitHub Issues 模板
+
+如果你发现的是 Rebar 或 Pylon 本身的 bug，应该在 GitHub 提 Issue：
+
+```yaml
+## Bug 描述
+清晰描述这个 bug 是什么
+
+## 重现步骤
+1. 去 '...'
+2. 点击 '....'
+3. 向下滑动 '...'
+4. 看到错误
+
+## 期望行为
+描述你认为应该发生什么
+
+## 截图
+如果适用，添加截图来解释问题
+
+## 环境
+- OS: [e.g. Ubuntu 22.04]
+- Minecraft version: [e.g. 1.20.4]
+- Server software: [e.g. Paper build 123]
+- Rebar version: [e.g. 1.2.3]
+
+## 附加信息
+这里可以添加其他相关信息
+```
+
+### 保留哪些信息有助于他人帮你
+
+在求助时，准备好以下信息能大大提高效率：
+
+| 信息类别 | 具体内容 | 如何获取 |
+|---------|---------|---------|
+| 服务器环境 | MC 版本、服务端类型和版本 | 启动日志或 `/version` |
+| 插件环境 | Rebar 版本、你的附属版本 | `/plugins` 或文件名 |
+| 代码状态 | 最小复现代码或 GitHub 链接 | 自己整理 |
+| 日志信息 | 报错日志、调试日志 | `logs/latest.log` |
+| 配置信息 | 相关的配置文件内容 | `plugins/你的插件/` |
+| 复现步骤 | 详细的一步一步操作 | 自己记录 |
+
+<Callout type="success" title="终极技巧">
+  **提供一个最小可复现项目（Minimal Reproducible Project）**能让别人最快地帮你解决问题。
+  
+  这意味着：
+  - 只包含能复现 bug 的最少代码
+  - 能独立运行（或清楚地说明依赖）
+  - 附带清晰的 README 说明如何复现
+  
+  虽然准备这个需要时间，但这通常是**最快得到解决方案**的方式。
+</Callout>
+
+---
+
+## 调试工具箱
+
+工欲善其事，必先利其器。以下是推荐的调试工具和资源。
+
+### 必装插件列表
+
+| 插件 | 用途 | 安装方式 |
+|------|------|---------|
+| **spark** | 性能分析、TPS 监控 | 放入 plugins/ 目录 |
+| **debugger**（或类似插件） | 实时调试、查看实体/方块信息 | 放入 plugins/ 目录 |
+| **PlugMan** | 热加载/卸载插件（开发用） | 放入 plugins/ 目录 |
+| **CoreProtect** | 日志回溯（排查数据问题） | 放入 plugins/ 目录 |
+
+<Callout type="warning" title="生产环境警告">
+  PlugMan 等热加载插件**只适合开发环境**，不要在生产服务器上使用！热加载可能导致数据丢失或内存泄漏。
+</Callout>
+
+### 有用的服务器命令
+
+| 命令 | 作用 | 备注 |
+|------|------|------|
+| `/reload` | 重载插件和配置 | 开发时常用 |
+| `/version` | 查看服务器版本 | 提供环境信息必备 |
+| `/plugins` | 查看已安装插件列表 | 确认插件是否加载 |
+| `/gc` | 手动触发垃圾回收 | 内存问题排查 |
+| `/tick`（Paper）| 查看详细的 TPS 信息 | 比 spark tps 更详细 |
+| `/myaddon:debug` | 自定义调试命令 | 需要在代码中实现 |
+
+### 日志文件位置和格式说明
+
+#### 日志文件位置
+
+```
+你的服务器目录/
+├── logs/
+│   ├── latest.log          # 最新的日志（实时更新）
+│   ├── YYYY-MM-DD-x.log.gz # 历史日志（压缩存档）
+│   └── debug.log           # 调试日志（如果启用）
+└── ...
+```
+
+#### 日志格式解读
+
+```
+[12:34:56 INFO]: [MyAddon] 插件已启用 v1.0.0
+[12:34:57 WARN]: [MyAddon] 配置文件未找到，使用默认配置
+[12:34:58 ERROR]: [MyAddon] 发生错误: java.lang.NullPointerException
+ │           ├─ 时间戳     │  ├─ 日志级别    │  ├─ 来源      │  ├─ 消息内容
+```
+
+**日志级别说明**：
+
+| 级别 | 含义 | 何时关注 |
+|------|------|---------|
+| `INFO` | 一般信息 | 正常运行信息 |
+| `WARN` | 警告 | 可能有问题，但不影响运行 |
+| `ERROR` | 错误 | **必须关注**，表示出现了问题 |
+| `DEBUG` | 调试信息 | 开发阶段关注 |
+
+#### 实用的日志查看命令
+
+```bash
+# 实时查看最新日志（推荐）
+tail -f logs/latest.log
+
+# 搜索特定插件的日志
+grep "\[MyAddon\]" logs/latest.log
+
+# 搜索错误日志
+grep "ERROR" logs/latest.log
+
+# 查看最近 100 行
+tail -n 100 logs/latest.log
+```
+
+### 开发环境推荐配置
+
+<Callout type="info" title="IDE 设置建议">
+  为了更好的开发体验，建议在 IDE 中配置以下内容：
+  
+  1. **Kotlin 插件**：确保 IDE 支持 Kotlin 语法高亮和智能提示
+  2. **Gradle 集成**：让 IDE 能识别 Gradle 依赖
+  3. **代码格式化**：统一代码风格（ktlint 或 ktlint-intellij）
+  4. **Git 集成**：方便版本控制和 diff 查看
+</Callout>
+
+---
+
+## 总结
+
+调试是开发过程中不可避免的一部分，而在 Vibecoding 模式下，调试的核心技能从"发现问题"转变为**"准确描述问题"**。
+
+### 核心要点回顾
+
+1. **建立系统化流程**：复现 → 收集信息 → 定位 → 修复 → 验证
+2. **善用 Prompt 模板**：本章提供的模板可以直接复制使用
+3. **区分错误类型**：编译错误、运行时错误、功能性 Bug 有不同的处理方式
+4. **知道何时求助**：AI 搞不定就去查文档、去 Discord 问社区
+5. **保留完整信息**：好的问题描述 = 快速的解决方案
+
+### 下一步
+
+恭喜你完成了 Vibecoding 教程的全部内容！现在你应该能够：
+
+- ✅ 选择合适的 AI 模型
+- ✅ 建立 Rebar 项目的代码库和上下文
+- ✅ 让 AI 生成符合规范的 Rebar 代码
+- ✅ 系统地调试和解决问题
+
+去吧，创造属于你的 Rebar 附属！如果在路上遇到了坑，记得回来补充这篇教程，帮助后来人绕过同样的坑 🎉
+
+<Callout type="success" title="最后的建议">
+  **踩过的坑都是经验，解决的问题都是成长。**
+  
+  即使是 AI 辅助编程，真正让你进步的还是那些亲手解决过的 bug、那些反复调试的夜晚、那些在 Discord 上热心解答你问题的陌生人。
+  
+  欢迎把你的实战经验贡献给社区——提 PR 补充这篇教程，或者在 Discord 分享你的故事！
+</Callout>
