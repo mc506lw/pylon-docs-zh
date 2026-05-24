@@ -1,0 +1,377 @@
+---
+title: 工作原理
+description: 深入了解 Jade2Rebar 的内部工作机制和数据流
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+本章将详细介绍 Jade2Rebar 的内部架构、数据流和核心机制，帮助你理解这个插件是如何将 Rebar 的 WAILA 系统桥接到 Jade 客户端模组的。
+
+## 🏗️ 整体架构
+
+Jade2Rebar 采用模块化设计，主要包含以下核心组件：
+
+<Mermaid chart="graph TB
+    subgraph Core[核心层]
+        A[主插件类]
+        B[资源管理器]
+        C[消息管理器]
+        D[命令处理器]
+    end
+
+    subgraph Processing[处理层]
+        E[WAILA监听器]
+        F[数据转换器]
+        G[数据包发送器]
+    end
+
+    subgraph Transport[传输层]
+        H[插件通道 PMC]
+    end
+
+    subgraph Client[客户端]
+        I[Jade 客户端模组]
+    end
+
+    A <--> B
+    B <--> C
+    A --> D
+    A --> E
+    E --> F
+    F --> G
+    G --> H
+    H --> I" />
+
+## 🔄 完整数据流
+
+让我们跟踪一个完整的 WAILA 数据展示流程：
+
+### 第一阶段：玩家加入与检测
+
+<Mermaid chart="graph TD
+    A[1. 玩家加入服务器] --> B[2. Jade2Rebar 监听 PlayerJoinEvent]
+    B --> C[3. 等待 40 tick<br/>约 2 秒]
+    C --> D[4. 通过 jade2rebar:server_handshake<br/>发送握手请求]
+    
+    D --> E{5. 客户端是否响应?}
+    
+    E -->|是: 安装了 Jade| F[客户端通过 client_handshake 响应<br/>包含版本信息]
+    F --> G[5a. 添加到 jadePlayers 集合<br/>标记为已检测的 Jade 用户]
+    
+    E -->|否或超时<br/>默认 5000ms| H[5b. 标记为非 Jade 用户<br/>继续显示原生 Rebar WAILA]" />
+
+### 第二阶段：WAILA 事件触发
+
+<Mermaid chart="graph TD
+    A[6. 玩家看向方块或实体] --> B[7. Rebar 触发 WAILA 事件<br/>RebarWailaEvent]
+    B --> C[8. WailaEventListener 捕获事件]
+    C --> D{9. 玩家是否在 jadePlayers 集合?}
+    
+    D -->|是: Jade 用户| E[10a. 进入数据处理流程<br/>第三阶段]
+    
+    D -->|否: 非 Jade 用户| F[10b. 忽略此事件<br/>Rebar 正常处理并显示原生 WAILA<br/>Jade2Rebar 不干预]" />
+
+### 第三阶段：数据处理与转换
+
+<Mermaid chart="graph TD
+    A[11. 提取原始数据] --> B[12. 格式转换]
+    B --> B1[配置处理]
+    B1 --> B2[颜色代码]
+    B1 --> B3[进度条格式]
+    B1 --> B4[文本截断]
+    B2 --> B5[Jade 格式转换]
+    B3 --> B5
+    B4 --> B5
+    B5 --> C[13. 生成数据包]" />
+
+### 第四阶段：数据传输
+
+<Mermaid chart="graph TD
+    A[14. 接收转换数据] --> B[15. 节流检查]
+    B --> C{&lt; 100ms?}
+    C -->|是| D[等待/排队]
+    C -->|否| E[继续发送]
+    E --> F[16. PMC 发送数据]
+    F --> G{发送成功?}
+    G -->|是| H[18. 成功 ✅]
+    G -->|否| I{重试 &lt; 3次?}
+    I -->|是| J[等待后重试] --> F
+    I -->|否| K[记录日志<br/>放弃发送]" />
+
+### 第五阶段：客户端渲染
+
+<Mermaid chart="graph TD
+    A[19. Jade 客户端模组接收数据<br/>通过 jade2rebar:receive_data 通道] --> B[20. Jade 解析数据并在 HUD 中渲染]
+    
+    subgraph B [增强的 WAILA 信息]
+        B1[自定义布局]
+        B2[高级样式]
+        B3[额外信息<br/>取决于 Jade 配置]
+    end
+    
+    B --> C[21. 玩家看到增强的 WAILA 显示! ✨]" />
+
+## 🔌 插件消息通道详解
+
+Jade2Rebar 使用 Minecraft 的**插件消息通道 (Plugin Messaging Channels)** 系统实现服务端与客户端模组的通信。
+
+### 什么是插件消息通道？
+
+插件消息通道允许服务端插件和客户端模组之间通过自定义通道名称发送和接收数据。这是一种安全且高效的通信方式。
+
+### Jade2Rebar 注册的通道
+
+| 通道名 | 方向 | 用途 | 数据格式 |
+| :--- | :--- | :--- | :--- |
+| `jade2rebar:server_handshake` | Server → Client | 服务端发起握手请求 | 协议版本、服务器信息 |
+| `jade2rebar:client_handshake` | Client → Server | 客户端响应握手 | Jade 版本、模组列表 |
+| `jade2rebar:receive_data` | Server → Client | 推送 WAILA 数据 | 方块/实体信息 |
+| `jade2rebar:request_block` | Client → Server | 请求方块数据 | 方块坐标 |
+| `jade2rebar:request_entity` | Client → Server | 请求数据数据 | 实体 ID |
+
+### 通道注册时机
+
+```kotlin
+// 在插件启用时注册所有通道 (Jade2Rebar.kt)
+override fun onEnable() {
+    // 注册服务端出站通道
+    server.messenger.registerOutgoingPluginChannel(
+        this, 
+        "jade2rebar:server_handshake"
+    )
+    server.messenger.registerOutgoingPluginChannel(
+        this, 
+        "jade2rebar:receive_data"
+    )
+    
+    // 注册服务端入站通道
+    server.messenger.registerIncomingPluginChannel(
+        this,
+        "jade2rebar:client_handshake",
+        ::handleClientHandshake  // 处理函数
+    )
+    server.messenger.registerIncomingPluginChannel(
+        this,
+        "jade2rebar:request_block",
+        ::handleBlockRequest
+    )
+    server.messenger.registerIncomingPluginChannel(
+        this,
+        "jade2rebar:request_entity",
+        ::handleEntityRequest
+    )
+}
+```
+
+## 👥 双轨并行系统
+
+Jade2Rebar 的一个重要设计理念是**双轨并行**：
+
+### 轨道 A：Jade 用户
+
+<Mermaid chart="graph TD
+    A[Jade 用户] --> B[WAILA 事件]
+    B --> C[拦截转换]
+    C --> D[PMC 发送]
+    D --> E[增强显示 ✨]" />
+
+### 轨道 B：非 Jade 用户
+
+<Mermaid chart="graph TD
+    A[非 Jade 用户] --> B[WAILA 事件]
+    B --> C[检测非 Jade]
+    C --> D[忽略事件]
+    D --> E[原生 WAILA ✓]" />
+
+<Callout type="info">
+  这种设计确保了：
+  - **兼容性**: 非 Jade 玩家不受任何影响
+  - **性能**: 只对 Jade 用户进行额外的数据处理
+  - **优雅降级**: 即使 Jade2Rebar 出现问题，Rebar 原生 WAILA 仍然可用
+</Callout>
+
+## 🛡️ 错误处理与容错机制
+
+Jade2Rebar 在各个层面都有完善的错误处理：
+
+### 1. 检测阶段容错
+
+<Mermaid chart="graph LR
+    A[握手超时] --> B[标记为非 Jade 用户]
+    B --> C[继续正常游戏]
+    
+    D[握手失败] --> E[记录警告日志]
+    E --> F[不影响其他玩家]
+    
+    G[客户端断开] --> H[从 jadePlayers 移除]
+    H --> I[下次加入时重新检测]" />
+
+### 2. 数据转换容错
+
+<Mermaid chart="graph LR
+    A[数据格式异常] --> B[使用默认值]
+    B --> C[记录错误日志]
+    
+    D[文本过长] --> E[截断]
+    E --> F[继续发送]
+    
+    G[颜色代码无效] --> H[移除或替换]
+    H --> I[保持文本可读]" />
+
+### 3. 网络传输容错
+
+<Mermaid chart="graph LR
+    A[发送失败] --> B{重试次数 &lt; N?}
+    B -->|是| C[自动重试]
+    C --> D[放弃并记录]
+    
+    E[通道未注册] --> F[跳过发送]
+    F --> G[提示管理员检查配置]
+    
+    H[玩家离线] --> I[停止发送]
+    I --> J[清理资源]" />
+
+### 4. 全局保护机制
+
+```kotlin
+// 所有关键操作都包裹在 try-catch 中
+try {
+    // 执行操作
+} catch (e: Exception) {
+    if (debug) {
+        logger.severe("详细错误: ${e.stackTraceToString()}")
+    } else {
+        logger.warning("操作失败: ${e.message}")
+    }
+    
+    // 从不崩溃！总是优雅降级
+}
+```
+
+## ⚡ 性能优化策略
+
+Jade2Rebar 采用了多种性能优化策略：
+
+### 1. 延迟检测
+
+不在玩家加入的同一 tick 立即检测，而是等待 40 tick：
+- 避免在玩家加载高峰期造成卡顿
+- 确保客户端完全就绪
+
+### 2. 智能节流
+
+<Mermaid chart="graph TD
+    T1[Tick 1: 触发 → 发送 ✓]
+    T2[Tick 2: 触发 → 跳过 ○]
+    T3[Tick 3: 触发 → 跳过 ○]
+    TN[Tick N: &gt;100ms → 发送 ✓]" />
+
+### 3. 懒惰初始化
+
+只在真正需要时才初始化资源：
+- 消息管理器：首次发送消息时加载语言文件
+- 转换器：首次转换时初始化
+
+### 4. 内存优化
+
+```kotlin
+// 使用轻量级数据结构存储玩家状态
+private val jadePlayers = ConcurrentHashMap<UUID, JadePlayerInfo>()
+
+// 而不是存储完整的 Player 对象
+data class JadePlayerInfo(
+    val uuid: UUID,
+    val name: String,
+    val detectedAt: Long,
+    val clientVersion: String?
+)
+```
+
+### 5. 异步友好设计
+
+虽然当前版本是同步的，但代码结构支持未来异步化：
+- 数据转换逻辑可以轻松移到异步线程
+- 数据包发送已经考虑了并发安全
+
+## 🔍 调试与监控
+
+### 日志级别
+
+| 级别 | 场景 | 示例 |
+| :--- | :--- | :--- |
+| `INFO` | 重要生命周期事件 | 插件启用/禁用、配置重载 |
+| `WARNING` | 可恢复的错误 | 检测超时、单次发送失败 |
+| `SEVERE` | 严重错误 (仅在 debug 模式) | 完整异常堆栈 |
+| `FINEST` | 详细调试 (仅在 debug 模式) | 每个数据包内容、握手细节 |
+
+### 状态监控
+
+使用 `/jade2rebar status` 可以实时查看：
+
+- 各组件运行状态
+- 在线/检测统计
+- 系统健康指标
+
+### Debug 模式输出示例
+
+```
+[Jade2Rebar] [DEBUG] [Handshake] Sending handshake to player Steve (uuid: ...)
+[Jade2Rebar] [DEBUG] [Handshake] Response received from Steve: version=1.0.0, mods=[Jade]
+[Jade2Rebar] [DEBUG] [Detection] Steve added to jadePlayers (total: 3)
+[Jade2Rebar] [DEBUG] [WAILA] Event fired for BLOCK at [123, 64, -456]
+[Jade2Rebar] [DEBUG] [Converter] Input: "§6熔炉 §7(25%)"
+[Jade2Rebar] [DEBUG] [Converter] Output: {"text":"熔炉","color":"gold","extra":[{"text":" (25%)","color":"gray"}]}
+[Jade2Rebar] [DEBUG] [Packet] Sending data to Steve (size: 128 bytes)
+[Jade2Rebar] [DEBUG] [Packet] Send successful to Steve
+```
+
+## 📊 数据流图解
+
+<Mermaid chart="sequenceDiagram
+    participant P as 玩家
+    participant S as Jade2Rebar 服务端
+    participant J as Jade 客户端
+
+    Note over P,S: 阶段1: 玩家加入与检测
+    P->>S: 加入服务器
+    S-->>S: 等待 40 tick
+    S->>J: 握手请求
+    alt 安装了 Jade
+        J->>S: 握手响应
+        S-->>S: 标记为 Jade 用户
+    else 未安装/超时
+        S-->>S: 标记为非 Jade 用户
+    end
+
+    Note over P,S: 阶段2-5: WAILA 数据流 (循环)
+    loop 查看方块/实体
+        P->>S: 查看目标
+        S->>S: 触发 WAILA 事件
+        alt Jade 用户
+            S->>S: 拦截并转换数据
+            S->>J: PMC 发送数据
+            J->>J: 渲染增强 WAILA ✨
+        else 非 Jade 用户
+            S-->>S: 忽略事件
+            Note over P: 显示原生 WAILA
+        end
+    end" />
+
+## 🎯 设计哲学总结
+
+Jade2Rebar 的设计遵循以下原则：
+
+1. **透明性**: 对非 Jade 用户完全不可见
+2. **可靠性**: 任何组件失败都不会导致崩溃
+3. **可配置性**: 几乎所有行为都可调整
+4. **可观测性**: 丰富的日志和状态命令
+5. **性能优先**: 节流、懒加载、轻量数据结构
+6. **向前兼容**: 为未来的异步化和功能扩展预留接口
+
+<Callout type="success">
+  理解了 Jade2Rebar 的工作原理后，你可以更好地：
+  - 排查问题和调试
+  - 优化配置以适应你的服务器
+  - 为项目贡献代码或报告 Bug
+  - 向其他服务器管理员解释其优势
+</Callout>

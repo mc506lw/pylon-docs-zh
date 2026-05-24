@@ -4,10 +4,12 @@ import type { MDXComponents } from 'mdx/types';
 import * as TabsComponents from 'fumadocs-ui/components/tabs';
 import { CollapsibleSection } from './collapsible';
 import { LaoWanSays } from './lao-wan-says';
+import { Mermaid } from '@/components/mdx/mermaid';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
     ...defaultMdxComponents,
+    Mermaid,
     img: (props) => <ImageZoom {...(props as any)} />,
     ...components,
     ...TabsComponents,

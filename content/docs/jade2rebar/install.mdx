@@ -1,0 +1,150 @@
+---
+title: 安装 Jade2Rebar
+description: 安装 Jade2Rebar 并开始使用
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+<Callout type="warning">
+  在安装前，请确保你的服务器已经正确安装并运行了 **Rebar v0.39.0+**。Jade2Rebar 依赖 Rebar 的 WAILA 事件系统，没有 Rebar 将无法正常工作。
+</Callout>
+
+## 📋 前置要求
+
+| 组件 | 版本要求 | 说明 |
+| :--- | :--- | :--- |
+| **Java** | Zulu JDK 26+ | 运行时环境 |
+| **Minecraft 服务端** | Paper 26.1.x | 必须是 Paper 或其分支（不支持原版 Spigot） |
+| **Rebar** | v0.39.0+ | 核心依赖，必须先安装 |
+
+## 📦 方法一：从 Release 下载（推荐）
+
+1. 前往 [Jade2Rebar Releases 页面](https://github.com/mc506lw/Jade2Rebar/releases/latest)
+2. 下载最新版本的 `Jade2Rebar-*.jar` 文件
+3. 将 `.jar` 文件放入服务器的 `plugins` 文件夹
+4. **重启服务器**（不要使用 `/reload`）
+5. 完成！
+
+## 🔧 方法二：从源码构建
+
+如果你需要自定义修改或想获取最新开发版本，可以从源码构建：
+
+### 克隆项目
+
+```bash
+git clone https://github.com/mc506lw/Jade2Rebar.git
+cd Jade2Rebar
+```
+
+### 准备依赖
+
+<Callout type="info">
+  你需要将 Rebar 的 jar 文件放置在项目的 `libs/` 目录下。从 [Rebar Releases](https://github.com/pylonmc/rebar/releases/latest) 下载 `rebar-0.39.0.jar`（或更新版本）。
+</Callout>
+
+```bash
+# 创建 libs 目录（如果不存在）
+mkdir libs
+
+# 将 rebar-0.39.0.jar 放入 libs/
+# 例如：copy rebar-0.39.0.jar libs/
+```
+
+### 构建项目
+
+```bash
+# 使用 Gradle 构建（确保已安装 Gradle 9.4.0+）
+D:\gradle-9.4.0\bin\gradle.bat build
+
+# 或者如果你配置了 gradlew
+./gradlew build
+```
+
+构建成功后，你会在 `build/libs/` 目录找到 `Jade2Rebar-1.0.0.jar`。
+
+### 部署到服务器
+
+```bash
+# 方法 A：使用 Gradle 任务自动复制（如果配置了）
+gradle copyToServer
+
+# 方法 B：手动复制
+cp build/libs/Jade2Rebar-1.0.0.jar /path/to/server/plugins/
+```
+
+## ✅ 安装验证
+
+安装完成后，可以通过以下方式验证插件是否正常运行：
+
+### 检查控制台日志
+
+服务器启动时应该能看到类似以下的日志：
+
+```
+[Jade2Rebar] Jade2Rebar v1.0.0 已启用
+[Jade2Rebar] 已注册插件消息通道: jade2rebar:*
+[Jade2Rebar] 语言文件加载完成: zh_CN
+```
+
+### 使用命令检查
+
+在游戏中执行：
+
+```bash
+/jade2rebar status
+```
+
+如果看到版本信息和状态显示，说明插件运行正常。
+
+## 🎮 客户端设置（玩家侧）
+
+<Callout type="info">
+  Jade2Rebar 是服务端插件，但玩家需要安装 **Jade 客户端模组** 才能享受增强的 WAILA 显示。非 Jade 玩家将正常看到 Rebar 原生的 WAILA 信息。
+</Callout>
+
+对于想要使用增强 WAILA 功能的玩家：
+
+1. 安装 [Jade](https://moulberry.github.io/jade/) 客户端模组（支持 Forge/Fabric/NeoForge）
+2. 加入服务器
+3. 插件会自动检测并建立连接
+4. 查看方块或实体时即可看到增强的 WAILA 信息
+
+## ⚙️ 安装后配置
+
+首次安装后，建议检查和调整配置文件：
+
+1. 打开 `plugins/Jade2Rebar/config.yml`
+2. 根据[配置说明](configuration)调整参数
+3. 使用 `/jade2rebar reload` 重载配置（或重启服务器）
+
+## 🔍 常见问题
+
+### Q: 插件无法启动？
+
+**A:** 检查以下几点：
+- 是否安装了 Rebar v0.39.0+
+- Java 版本是否为 26+
+- 是否使用了 Paper 服务端（不是 Spigot）
+- 查看 `logs/latest.log` 中的错误信息
+
+### Q: 玩家看不到增强的 WAILA 信息？
+
+**A:** 
+- 确认玩家安装了 Jade 客户端模组
+- 使用 `/jade2rebar status` 检查该玩家是否被检测为 Jade 用户
+- 检查 `config.yml` 中是否启用了插件 (`enabled: true`)
+
+### Q: 可以和其他 WAILA 插件一起使用吗？
+
+**A:** 可以。Jade2Rebar 只转发 Rebar 的 WAILA 数据，不会与其他插件冲突。非 Jade 玩家仍然看到正常的 Rebar WAILA 显示。
+
+### Q: 如何卸载 Jade2Rebar？
+
+**A:** 
+1. 从 `plugins` 文件夹删除 `Jade2Rebar-*.jar`
+2. 重启服务器
+3. （可选）删除 `plugins/Jade2Rebar/` 配置文件夹
+
+<Callout type="success">
+  安装完成后，查看[命令和权限](commands-permissions)了解如何管理插件，或查看[配置说明](configuration)进行高级设置。
+</Callout>

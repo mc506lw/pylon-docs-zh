@@ -16,6 +16,11 @@ export default function Layout({ children }: LayoutProps<'/docs'>) {
           url: '/docs/monolithlib',
           description: '多方块巨构库',
         },
+        {
+          title: 'Jade2Rebar',
+          url: '/docs/jade2rebar',
+          description: 'Jade适配',
+        }
       ],
     }}  >
       {children}

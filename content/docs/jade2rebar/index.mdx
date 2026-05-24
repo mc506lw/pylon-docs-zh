@@ -1,0 +1,113 @@
+---
+title: 什么是 Jade2Rebar?
+description: 了解 Jade2Rebar 是什么，以及它如何将 Rebar 的 WAILA 系统桥接到 Jade 客户端模组
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Jade2Rebar 是一个 Minecraft 插件，用于将 **Rebar** 的 WAILA（What Am I Looking At）系统无缝桥接到 **Jade** 客户端模组。
+
+<Callout type="info">
+  **WAILA** 是 "What Am I Looking At" 的缩写，是一种在游戏中显示方块和实体信息的 HUD 系统。Rebar 内置了 WAILA 系统，而 Jade 是一个流行的客户端模组，提供了更丰富的信息显示功能。
+</Callout>
+
+通过 Jade2Rebar，使用 Jade 模组的玩家可以享受到 Rebar 方块和实体的详细 WAILA 信息，同时保持与原版 Rebar WAILA 系统的完全兼容性。
+
+[🐙 在 GitHub 上找到我们 →](https://github.com/mc506lw/Jade2Rebar)  
+[📦 安装 Jade2Rebar →](install)
+
+继续往下看。
+
+---
+
+## ✨ 核心功能特性
+
+| 状态 | 功能 | 说明 |
+| :----- | :------ | :------ |
+| ✅ | **WAILA 桥接** | 无缝将 Rebar WAILA 数据转发给 Jade 客户端模组用户 |
+| ✅ | **客户端检测** | 通过自定义握手协议自动检测玩家是否安装了 Jade 模组 |
+| ✅ | **数据包系统** | 使用自定义插件消息通道进行可靠的数据传输 |
+| ✅ | **多语言支持** | 内置简体中文 (zh_CN) 和英文 (en_US) 支持 |
+| ✅ | **高度可配置** | 细粒度控制检测超时、节流间隔、重试次数等参数 |
+| ✅ | **优雅降级** | 非 Jade 玩家正常看到 Rebar 原生 WAILA 显示 |
+| ✅ | **状态监控命令** | 实时查看已连接的 Jade 客户端和系统健康状态 |
+| ✅ | **热重载** | `/jade2rebar reload` — 无需重启即可应用配置更改 |
+
+## 🎯 适用场景
+
+- 你的服务器使用了 **Rebar** 及其附属插件（如 Pylon）
+- 你希望为安装了 **Jade** 模组的玩家提供更好的游戏体验
+- 你需要在不影响非 Jade 玩家的情况下增强 WAILA 显示
+- 你想要一个稳定、高性能的桥接解决方案
+
+## 🔄 工作流程概览
+
+<Mermaid chart="graph TD
+    A[玩家加入服务器] --> B[等待 40 tick 延迟]
+    B --> C[发送握手请求给客户端]
+    
+    C --> D{客户端是否安装 Jade?}
+    
+    D -->|是| E[客户端响应握手]
+    E --> F[添加到 jadePlayers 集合<br/>标记为 Jade 用户]
+    
+    D -->|否或超时| G[标记为非 Jade 用户]
+    
+    F --> H{玩家查看方块或实体}
+    G --> I[继续正常游戏<br/>显示原生 Rebar WAILA]
+    
+    H --> J[Rebar 触发 WAILA 事件]
+    J --> K[Jade2Rebar 拦截事件]
+    K --> L[转换数据格式为 Jade 格式]
+    L --> M[通过插件消息通道发送<br/>给 Jade 客户端模组]
+    M --> N[Jade 渲染增强的 WAILA 显示 ✨]" />
+
+## 📊 技术规格
+
+| 项目 | 规格 |
+| :----- | :------ |
+| **编程语言** | Kotlin 2.3.0+ |
+| **目标平台** | Paper 26.1.x |
+| **依赖要求** | Rebar v0.39.0+ |
+| **运行环境** | Java 26+ (Zulu JDK) |
+| **许可证** | MIT License |
+| **当前版本** | v1.0.0 |
+
+## 🏗️ 核心组件架构
+
+| 组件 | 文件 | 说明 |
+| :--- | :--- | :--- |
+| **主插件类** | [Jade2Rebar.kt](https://github.com/mc506lw/Jade2Rebar/blob/main/src/main/kotlin/top/mc506lw/rebar/Jade2Rebar/Jade2Rebar.kt) | 入口点、生命周期管理、通道注册 |
+| **WAILA 监听器** | [WailaEventListener.kt](https://github.com/mc506lw/Jade2Rebar/blob/main/src/main/kotlin/top/mc506lw/rebar/Jade2Rebar/WailaEventListener.kt) | 拦截 Rebar WAILA 事件并转发给 Jade |
+| **数据转换器** | [WailaDataConverter.kt](https://github.com/mc506lw/Jade2Rebar/blob/main/src/main/kotlin/top/mc506lw/rebar/Jade2Rebar/WailaDataConverter.kt) | 将 Rebar WAILA 格式转换为 Jade 数据格式 |
+| **数据包发送器** | [PacketEventSender.kt](https://github.com/mc506lw/Jade2Rebar/blob/main/src/main/kotlin/top/mc506lw/rebar/Jade2Rebar/PacketEventSender.kt) | 处理插件消息通道通信 |
+| **命令处理器** | [Jade2RebarCommand.kt](https://github.com/mc506lw/Jade2Rebar/blob/main/src/main/kotlin/top/mc506lw/rebar/Jade2Rebar/Jade2RebarCommand.kt) | 处理 `/jade2rebar` 命令 |
+| **Tab 补全器** | [Jade2RebarTabCompleter.kt](https://github.com/mc506lw/Jade2Rebar/blob/main/src/main/kotlin/top/mc506lw/rebar/Jade2Rebar/Jade2RebarTabCompleter.kt) | 命令自动补全 |
+| **消息管理器** | [MessageManager.kt](https://github.com/mc506lw/Jade2Rebar/blob/main/src/main/kotlin/top/mc506lw/rebar/Jade2Rebar/MessageManager.kt) | i18n 消息加载和格式化 |
+| **资源管理器** | [ResourceManger.kt](https://github.com/mc506lw/Jade2Rebar/blob/main/src/main/kotlin/top/mc506lw/rebar/Jade2Rebar/ResourceManger.kt) | 配置文件和语言文件管理 |
+
+## 🔌 插件消息通道
+
+| 通道名称 | 方向 | 用途 |
+| :--- | :--- | :--- |
+| `jade2rebar:server_handshake` | 服务端 → 客户端 | 服务器发起握手 |
+| `jade2rebar:client_handshake` | 客户端 → 服务端 | 客户端响应版本信息 |
+| `jade2rebar:receive_data` | 服务端 → 客户端 | 发送方块/实体 WAILA 数据 |
+| `jade2rebar:request_block` | 客户端 → 服务端 | 请求方块数据 |
+| `jade2rebar:request_entity` | 客户端 → 服务端 | 请求数据数据 |
+
+## 👥 致谢
+
+Jade2Rebar 由 [mc506lw](https://github.com/mc506lw) 开发和维护，基于 MIT 许可证发布。
+
+特别感谢：
+- **[Rebar 团队](https://github.com/pylonmc/Rebar)** - 提供强大的 WAILA 事件系统
+- **[Jade 团队](https://moulberry.github.io/jade/)** - 提供优秀的客户端信息显示模组
+
+如果这个项目对你的服务器有帮助，欢迎在 GitHub 上给我们一个 ⭐！
+
+---
+
+## 📖 快速开始
+
+准备好尝试了吗？查看我们的[安装指南](install)开始设置 Jade2Rebar！

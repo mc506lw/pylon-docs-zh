@@ -1,0 +1,414 @@
+---
+title: 配置说明
+description: 了解 Jade2Rebar 的配置选项和自定义设置
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Jade2Rebar 的所有配置都通过 `plugins/Jade2Rebar/config.yml` 文件管理。插件首次启动时会自动生成默认配置文件。
+
+## 📁 配置文件位置
+
+```
+plugins/
+└── Jade2Rebar/
+    ├── config.yml          # 主配置文件
+    ├── messages_zh_CN.yml  # 中文语言文件
+    └── messages_en_US.yml  # 英文语言文件
+```
+
+## ⚙️ 完整配置参考
+
+以下是 `config.yml` 的完整配置项及其说明：
+
+```yaml
+# ============================================
+# Jade2Rebar 配置文件
+# 版本: 1.0.0
+# 文档: https://github.com/mc506lw/Jade2Rebar
+# ============================================
+
+settings:
+  # 是否启用插件
+  # 设为 false 可完全禁用所有功能（不影响 Rebar 原生 WAILA）
+  enabled: true
+
+  # 调试模式
+  # 开启后会输出详细的调试日志到控制台
+  # 生产环境建议关闭，会产生大量日志
+  debug: false
+
+  # 启动时自动检测在线玩家
+  # 如果服务器启动时已有玩家在线，是否立即进行 Jade 检测
+  auto-detect-on-startup: true
+
+# 语言设置
+language:
+  # 界面语言
+  # 可选值: "zh_CN" (简体中文), "en_US" (英文)
+  locale: "zh_CN"
+
+# 检测相关设置
+detection:
+  # 检测超时时间（毫秒）
+  # 发送握手请求后等待客户端响应的最长时间
+  # 超时后该玩家将被标记为非 Jade 用户
+  timeout-ms: 5000
+
+  # 是否使用自定义握手协议
+  # 开启后使用 jade2rebar 专用的握手通道进行检测
+  # 关闭后将依赖其他方式检测（可能不准确）
+  use-custom-handshake: true
+
+  # 检测间隔（tick，-1 表示仅检测一次）
+  # -1: 玩家加入时检测一次，之后不再重复检测
+  # 正数: 每隔指定 tick 数重新检测（可用于检测玩家是否卸载了模组）
+  detection-interval: -1
+
+# 数据包发送设置
+packet-sending:
+  # 发送节流间隔（毫秒）
+  # 连续发送两个数据包之间的最小间隔
+  # 防止短时间内大量数据包导致网络拥塞
+  throttle-interval-ms: 100
+
+  # 最大重试次数
+  # 发送失败后的最大重试次数
+  max-retries: 3
+
+  # 重试延迟（毫秒）
+  # 每次重试之间的等待时间
+  retry-delay-ms: 10
+
+# WAILA 数据转换设置
+waila-conversion:
+  # 是否保留原始颜色代码
+  # Rebar 使用 § 颜色代码，Jade 也支持类似格式
+  # 开启后会尽量保留原始颜色
+  preserve-colors: true
+
+  # 是否转换进度条格式
+  # 将 Rebar 的进度条转换为 Jade 兼容的格式
+  convert-progress-bar: true
+
+  # 最大文本长度
+  # 超过此长度的文本将被截断，防止显示异常
+  max-text-length: 256
+```
+
+## 🔧 详细配置说明
+
+### settings 部分
+
+#### `enabled` - 启用/禁用插件
+
+| 类型 | 默认值 | 可选值 |
+| :--- | :--- | :--- |
+| Boolean | `true` | `true`, `false` |
+
+**说明：**
+- `true`: 插件正常运行，桥接功能启用
+- `false`: 插件禁用，所有 Jade2Rebar 功能停止工作，但 **Rebar 原生 WAILA 不受影响**
+
+**使用场景：**
+- 临时排查问题时快速禁用
+- 在维护期间暂停桥接功能
+- 测试原生 Rebar WAILA 表现时
+
+<Callout type="info">
+  即使设为 `enabled: false`，插件仍会加载并注册命令。你可以随时使用 `/jade2rebar status` 查看状态。
+</Callout>
+
+#### `debug` - 调试模式
+
+| 类型 | 默认值 | 可选值 |
+| :--- | :--- | :--- |
+| Boolean | `false` | `true`, `false` |
+
+**说明：**
+开启后会输出详细的调试信息，包括：
+- 每个玩家的握手过程详情
+- 发送的每个数据包内容
+- 数据转换前后的对比
+- 错误和异常的完整堆栈
+
+**使用场景：**
+- 排查特定玩家无法使用的问题
+- 向开发者报告 Bug 时提供日志
+- 理解内部工作机制
+
+#### `auto-detect-on-startup` - 启动时自动检测
+
+| 类型 | 默认值 | 可选值 |
+| :--- | :--- | :--- |
+| Boolean | `true` | `true`, `false` |
+
+**说明：**
+如果服务器重启时有玩家在线（例如使用了保持在线的插件），此选项控制是否对这些玩家立即进行 Jade 检测。
+
+### language 部分
+
+#### `locale` - 界面语言
+
+| 类型 | 默认值 | 可选值 |
+| :--- | :--- | :--- |
+| String | `"zh_CN"` | `"zh_CN"`, `"en_US"` |
+
+**说明：**
+控制命令反馈消息、状态输出等的语言。
+
+**示例：**
+
+中文 (zh_CN):
+```
+§a[Jade2Rebar] §f配置重载成功！
+```
+
+英文 (en_US):
+```
+§a[Jade2Rebar] §fConfiguration reloaded successfully!
+```
+
+### detection 部分
+
+#### `timeout-ms` - 检测超时
+
+| 类型 | 默认值 | 单位 |
+| :--- | :--- | :--- |
+| Integer | `5000` | 毫秒 |
+
+**说明：**
+从发送握手请求到等待客户端响应的最大时间。
+
+**调优建议：**
+- 网络延迟较高的服务器：可增加到 `8000-10000`
+- 局域网或低延迟服务器：可减少到 `3000`
+- 过短可能导致误判（将 Jade 用户标记为非用户）
+
+#### `use-custom-handshake` - 自定义握手协议
+
+| 类型 | 默认值 | 可选值 |
+| :--- | :--- | :--- |
+| Boolean | `true` | `true`, `false` |
+
+**说明：**
+是否使用 Jade2Rebar 专用的握手通道进行客户端检测。这是推荐的方式，准确率更高。
+
+#### `detection-interval` - 检测间隔
+
+| 类型 | 默认值 | 单位 |
+| :--- | :--- | :--- |
+| Integer | `-1` | Minecraft tick (50ms) |
+
+**说明：**
+控制是否以及如何定期重新检测玩家：
+
+| 值 | 行为 |
+| :--- | :--- |
+| `-1` | 仅在玩家加入时检测一次（默认，推荐） |
+| `0` | 每个 tick 都检测（**不推荐**，性能影响大） |
+| `正数` | 每隔 N 个 tick 重新检测一次 |
+
+**使用场景：**
+- 如果你需要检测玩家是否在游戏过程中卸载了 Jade 模组
+- 如果握手偶尔失败需要重试
+
+<Callout type="warning">
+  设置过小的检测间隔会显著增加服务器负载。除非有特殊需求，否则建议保持 `-1`（仅检测一次）。
+</Callout>
+
+### packet-sending 部分
+
+这部分控制数据包发送的网络行为。
+
+#### `throttle-interval-ms` - 节流间隔
+
+| 类型 | 默认值 | 单位 |
+| :--- | :--- | :--- |
+| Integer | `100` | 毫秒 |
+
+**说明：**
+当短时间内需要发送多个数据包时（例如玩家快速扫视多个方块），此设置限制发送频率以避免网络拥塞。
+
+**调优建议：**
+- 玩家反映 WAILA 更新慢：可减少到 `50`
+- 服务器网络带宽有限：可增加到 `200`
+
+#### `max-retries` 和 `retry-delay-ms` - 重试机制
+
+| 参数 | 默认值 | 说明 |
+| :--- | :--- | :--- |
+| `max-retries` | `3` | 发送失败后的最大重试次数 |
+| `retry-delay-ms` | `10` | 重试之间的等待时间（毫秒） |
+
+**说明：**
+由于 Minecraft 网络的不稳定性，数据包可能偶尔丢失。这些参数控制重试行为。
+
+### waila-conversion 部分
+
+这部分控制 Rebar WAILA 数据转换到 Jade 格式的细节。
+
+#### `preserve-colors` - 保留颜色代码
+
+| 类型 | 默认值 | 可选值 |
+| :--- | :--- | :--- |
+| Boolean | `true` | `true`, `false` |
+
+**说明：**
+是否保留 Rebar 原始的颜色代码格式。
+
+#### `convert-progress-bar` - 转换进度条
+
+| 类型 | 默认值 | 可选值 |
+| :--- | :--- | :--- |
+| Boolean | `true` | `true`, `false` |
+
+**说明：**
+某些 Rebar 方块可能包含进度条（如机器处理进度）。此选项控制是否将其转换为 Jade 兼容的格式。
+
+#### `max-text-length` - 最大文本长度
+
+| 类型 | 默认值 | 单位 |
+| :--- | :--- | :--- |
+| Integer | `256` | 字符数 |
+
+**说明：**
+超过此长度的文本会被截断，防止过长文本导致显示异常或客户端崩溃。
+
+## 🌐 语言文件配置
+
+除了主配置文件，你还可以编辑语言文件来自定义消息。
+
+### messages_zh_CN.yml 示例
+
+```yaml
+# Jade2Rebar 中文语言文件
+# Catppuccin Mocha 主题配色
+
+prefix: "&6&lJade2Rebar &r&7"
+success: "&a"
+error: "&c"
+warning: "&e"
+info: "&f"
+
+messages:
+  plugin-enabled: "v{version} 已启用"
+  plugin-disabled: "已禁用"
+  config-reloaded: "配置重载成功！"
+  config-reload-failed: "配置重载失败: {error}"
+  
+  player-detected: "玩家 &f{player} &7已检测为 Jade 用户"
+  player-not-jade: "玩家 &f{player} &7未检测到 Jade"
+  player-timeout: "玩家 &f{player} &7检测超时"
+  
+  handshake-sent: "已向 &f{player} &7发送握手请求"
+  handshake-received: "收到 &f{player} &7的握手响应 (版本: {version})"
+  
+  packet-sent: "已向 &f{player} &7发送数据包 (类型: {type})"
+  packet-send-failed: "发送数据包给 &f{player} &7失败: {error}"
+  
+  debug-mode-enabled: "调试模式已开启"
+  debug-mode-disabled: "调试模式已关闭"
+  
+commands:
+  help-header: "{prefix}\n&7一个用于桥接 Rebar WAILA 到 Jade 客户端模组的插件\n"
+  help-commands: "&e命令:\n"
+  help-command-item: " &f{command} &7- {description}\n"
+  help-footer: "\n&q 退出帮助"
+  
+  reload-success: "{success}[Jade2Rebar] &f{config-reloaded}"
+  reload-detail-language: "  - 语言: {locale}"
+  reload-detail-enabled: "  - 启用状态: {status}"
+  reload-detail-debug: "  - 调试模式: {status}"
+  
+  no-permission: "{error}你没有权限执行此命令！"
+  player-not-found: "{error}未找到玩家: {player}"
+  console-only: "{error}此命令只能在控制台执行！"
+  
+status:
+  header: "&6&l Jade2Rebar 系统状态&r"
+  version: "&e版本: &f{version}"
+  enabled: "&e启用状态: {status}"
+  debug: "&e调试模式: {status}"
+  language: "&e语言设置: &f{locale}"
+  online-players: "&e在线玩家: &f{count}"
+  jade-users: "&e已检测的 Jade 用户: &f{count}"
+  non-jade-players: "&e未检测的玩家: &f{count}"
+  channels: "&e插件消息通道: {status} (&f{count}&7个)"
+  converter: "&e数据转换器: {status}"
+  listener: "&eWAILA 监听器: {status}"
+  
+  status-enabled: "&a✓ 已启用"
+  status-disabled: "&c✗ 已关闭"
+  status-running: "&a✓ 运行中"
+  status-stopped: "&c✗ 已停止"
+```
+
+## 💡 推荐配置方案
+
+### 方案一：默认配置（适合大多数服务器）
+
+使用默认配置即可满足大多数需求。无需修改任何设置。
+
+### 方案二：高性能服务器（低延迟、高带宽）
+
+```yaml
+detection:
+  timeout-ms: 3000  # 减少超时时间
+  
+packet-sending:
+  throttle-interval-ms: 50  # 更快的更新速度
+```
+
+### 方案三：高延迟服务器（跨区域、网络不稳定）
+
+```yaml
+detection:
+  timeout-ms: 8000  # 增加超时时间
+  
+packet-sending:
+  max-retries: 5     # 更多重试次数
+  retry-delay-ms: 20 # 更长的重试间隔
+  throttle-interval-ms: 150  # 更保守的节流
+```
+
+### 方案四：调试/开发环境
+
+```yaml
+settings:
+  debug: true  # 开启详细日志
+  
+detection:
+  timeout-ms: 10000  # 给足响应时间
+  detection-interval: 6000  # 每5分钟重新检测（用于测试）
+```
+
+## 🔄 应用配置更改
+
+修改配置文件后，有两种方式应用更改：
+
+### 方法一：热重载（推荐）
+
+```bash
+/jade2rebar reload
+```
+
+优点：无需踢出玩家或重启服务器
+
+缺点：某些底层更改可能需要完全重启才能生效
+
+### 方法二：重启服务器
+
+完全停止并启动服务器，确保所有配置都被正确加载。
+
+## ⚠️ 注意事项
+
+1. **备份配置**：在大幅修改配置前，建议备份原始 `config.yml`
+2. **YAML 格式**：确保 YAML 缩进正确（使用空格，不要用 Tab）
+3. **编码问题**：编辑语言文件时确保保存为 UTF-8 编码
+4. **测试更改**：每次修改配置后使用 `/jade2rebar reload` 并测试效果
+5. **查看日志**：如果遇到问题，查看 `logs/latest.log` 中 `[Jade2Rebar]` 相关的日志
+
+<Callout type="success">
+  配置完成后，查看[工作原理](how-it-works)了解 Jade2Rebar 内部是如何工作的，这有助于更好地理解各项配置的作用。
+</Callout>
