@@ -38,7 +38,7 @@ export function AddonCard({ addon }: AddonCardProps) {
 
         <div className="flex-1 p-5 sm:p-6">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-2 h-8 flex-wrap">
+            <div className="flex items-center gap-3 h-8 flex-wrap">
               <p className="text-xl font-semibold text-neutral-900 dark:text-neutral-50">
                 {addon.name}
               </p>
@@ -61,7 +61,7 @@ export function AddonCard({ addon }: AddonCardProps) {
             )}
           </div>
 
-          <p className="mt-4 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+          <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
             {addon.description}
           </p>
 
