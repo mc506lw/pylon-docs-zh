@@ -8,23 +8,22 @@ interface AddonCardProps {
   addon: AddonData;
 }
 
-function StatusBadge({ status }: { status: AddonData["status"] }) {
+function StatusTag({ tag }: { tag: string }) {
+  const styles = {
+    "开源": "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400",
+    "已发布": "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400",
+    "开发中": "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400",
+    "未发布": "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
+  };
+
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md px-2.5 text-[11px] font-medium",
-        status === "released"
-          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400"
-          : "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400"
+        "inline-flex items-center rounded-md px-2 text-[11px] font-medium",
+        styles[tag as keyof typeof styles]
       )}
     >
-      <span
-        className={cn(
-          "h-1.5 w-1.5 rounded-full",
-          status === "released" ? "bg-emerald-500" : "bg-amber-500"
-        )}
-      />
-      {status === "released" ? "已发布" : "开发中"}
+      {tag}
     </span>
   );
 }
@@ -39,11 +38,15 @@ export function AddonCard({ addon }: AddonCardProps) {
 
         <div className="flex-1 p-5 sm:p-6">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-2 h-8">
+            <div className="flex items-center gap-2 h-8 flex-wrap">
               <p className="text-xl font-semibold text-neutral-900 dark:text-neutral-50">
                 {addon.name}
               </p>
-              <StatusBadge status={addon.status} />
+              <div className="flex gap-1.5">
+                {addon.statusTags.map((tag) => (
+                  <StatusTag key={tag} tag={tag} />
+                ))}
+              </div>
             </div>
             {addon.downloadUrl && (
               <a

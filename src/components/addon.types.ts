@@ -4,7 +4,7 @@ export interface AddonData {
     author: string;
     icon: string;
     description: string;
-    status: "released" | "dev";
+    statusTags: ("开源" | "已发布" | "未发布" | "开发中")[];
     downloadUrl?: string;
     features?: string[];
     tags?: string[];

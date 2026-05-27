@@ -10,7 +10,7 @@ const addons: AddonData[] = [
         author: "Pylon 团队",
         icon: "⚡",
         description: "添加所有基础的 Pylon 内容。大多数附属组件运行所必需的核心模块。",
-        status: "released",
+        statusTags: ["开源", "已发布"],
         downloadUrl: "https://github.com/pylonmc/pylon/releases",
         features: [
             "电力系统与能量网络",
@@ -28,7 +28,7 @@ const addons: AddonData[] = [
         author: "mc506lw",
         icon: "🔗",
         description: "桥接 Rebar 的 WAILA 与 Jade MOD。",
-        status: "released",
+        statusTags: ["开源", "已发布"],
         downloadUrl: "https://github.com/mc506lw/Jade2Rebar/releases",
         features: [
             "客户端握手",
@@ -43,7 +43,7 @@ const addons: AddonData[] = [
         author: "mc506lw",
         icon: "🏗️",
         description: "添加巨型多方块机器和精密展示实体的支持库。",
-        status: "released",
+        statusTags: ["开源", "已发布"],
         downloadUrl: "https://github.com/mc506lw/monolithlib/releases",
         features: [
             "巨型多方块结构",
@@ -59,7 +59,7 @@ const addons: AddonData[] = [
         author: "mc506lw",
         icon: "🏭",
         description: "添加明日方舟·终末地风格的集成工业系统。",
-        status: "released",
+        statusTags: ["开源", "已发布"],
         downloadUrl: "https://github.com/mc506lw/endfield-industry/releases",
         features: [
             "终末地风格工业",
@@ -75,7 +75,7 @@ const addons: AddonData[] = [
         author: "KevinWoodWL",
         icon: "🔥",
         description: "扩展锅炉、 压力控制、蒸汽输送和蒸汽驱动机器。",
-        status: "released",
+        statusTags: ["开源", "已发布"],
         downloadUrl: "https://github.com/KevinWoodWL/steamwork/releases",
         features: [
             "锅炉",
@@ -90,8 +90,8 @@ const addons: AddonData[] = [
         author: "mmmjjkx",
         icon: "🍖",
         description: "添加农夫乐事风格的食物和物品。",
-        status: "released",
-        downloadUrl: "https://github.com/lijinhong11/pylon-delight/releases",
+        statusTags: ["开源", "开发中"],
+        downloadUrl: "https://github.com/lijinhong11/pylon-delight",
         features: [
             "美食系统扩展",
             "农夫乐事风格",
@@ -106,8 +106,8 @@ const addons: AddonData[] = [
         author: "ybw0014",
         icon: "🎒",
         description: "添加实体捕捉系统，可将实体作为物品伙伴。",
-        status: "released",
-        downloadUrl: "https://github.com/GuizhanCraft/RebarMobs/releases",
+        statusTags: ["开源", "开发中"],
+        downloadUrl: "https://github.com/GuizhanCraft/RebarMobs",
         features: [
             "实体捕捉机制",
             "伙伴系统",
@@ -122,7 +122,7 @@ const addons: AddonData[] = [
         author: "balugaq",
         icon: "🪄",
         description: "添加建筑之杖，方便玩家快速建造和挖掘。",
-        status: "released",
+        statusTags: ["开源", "已发布"],
         downloadUrl: "https://github.com/balugaq/construction-wand/releases",
         features: [
             "快速建造工具",
@@ -138,8 +138,8 @@ const addons: AddonData[] = [
         author: "Intybyte",
         icon: "🤖",
         description: "添加可编程机器人，使用 PISA 指令执行任务。",
-        status: "released",
-        downloadUrl: "https://github.com/Intybyte/PylonDroid/releases",
+        statusTags: ["开源", "开发中"],
+        downloadUrl: "https://github.com/Intybyte/PylonDroid",
         features: [
             "可编程机器人",
             "PISA 指令集",
@@ -154,7 +154,7 @@ const addons: AddonData[] = [
         author: "JustAHuman",
         icon: "👹",
         description: "添加恶魔、仪式、牺牲等黑暗元素。",
-        status: "dev",
+        statusTags: ["未发布"],
         features: [
             "黑暗魔法系统",
             "仪式与献祭",
@@ -169,7 +169,7 @@ const addons: AddonData[] = [
         author: "Idra",
         icon: "📊",
         description: "添加基于 Pylon 物品的升级系统。",
-        status: "dev",
+        statusTags: ["未发布"],
         features: [
             "等级系统",
             "物品升级",
@@ -184,7 +184,7 @@ const addons: AddonData[] = [
         author: "JustAHuman",
         icon: "📈",
         description: "添加服务器方块放置/破坏统计。",
-        status: "dev",
+        statusTags: ["未发布"],
         features: [
             "数据统计",
             "方块追踪",
@@ -199,7 +199,7 @@ const addons: AddonData[] = [
         author: "glomdom",
         icon: "🔧",
         description: "添加与 Pylon 并行的进度体系，专注于复杂配方链。",
-        status: "dev",
+        statusTags: ["未发布"],
         features: [
             "并行进度系统",
             "复杂配方链",
@@ -214,7 +214,7 @@ const addons: AddonData[] = [
         author: "Seggan",
         icon: "🚀",
         description: "添加火箭、行星探索和天文学研究功能。",
-        status: "dev",
+        statusTags: ["未发布"],
         features: [
             "航天系统",
             "行星探索",
@@ -229,7 +229,7 @@ const addons: AddonData[] = [
         author: "JustAHuman",
         icon: "🗺️",
         description: "添加自动映射图册、三维地图、路径点信标等地图功能。",
-        status: "dev",
+        statusTags: ["未发布"],
         features: [
             "自动地图生成",
             "三维地图视图",
@@ -244,7 +244,7 @@ const addons: AddonData[] = [
         author: "TagDL",
         icon: "✨",
         description: "添加终局阶段的高级效果系统，引入粒子技术与稳定化机制。",
-        status: "released",
+        statusTags: ["开源", "已发布"],
         downloadUrl: "https://github.com/TagDL/RebarTranscEndence/releases",
         features: [
             "粒子生产与冷凝系统",
@@ -256,35 +256,11 @@ const addons: AddonData[] = [
     }
 ];
 
-function SectionHeader({ title, count }: { title: string; count: number }) {
-    return (
-        <div className="mb-4 flex items-center gap-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-                {title}
-            </span>
-            <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-[10px] font-medium text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
-                {count}
-            </span>
-        </div>
-    );
-}
-
 export function AddonPreview() {
-    const released = addons.filter((a) => a.status === "released");
-    const dev = addons.filter((a) => a.status === "dev");
-
     return (
         <div className="w-full max-w-5xl mx-auto space-y-8">
-            <SectionHeader title="已发布" count={released.length} />
             <div className="grid gap-4 grid-cols-1">
-                {released.map((addon) => (
-                    <AddonCard key={addon.id} addon={addon} />
-                ))}
-            </div>
-
-            <SectionHeader title="开发中" count={dev.length} />
-            <div className="grid gap-4 grid-cols-1">
-                {dev.map((addon) => (
+                {addons.map((addon) => (
                     <AddonCard key={addon.id} addon={addon} />
                 ))}
             </div>
