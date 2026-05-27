@@ -61,7 +61,7 @@ export function AddonCard({ addon }: AddonCardProps) {
             )}
           </div>
 
-          <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+          <p className="mt-4 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
             {addon.description}
           </p>
 
