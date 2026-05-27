@@ -237,6 +237,22 @@ const addons: AddonData[] = [
             "导航辅助"
         ],
         tags: ["地图", "探索", "导航"]
+    },
+    {
+        id: "rebar-transcendence",
+        name: "Rebar TranscEndence",
+        author: "TagDL",
+        icon: "✨",
+        description: "添加终局阶段的高级效果系统，引入粒子技术与稳定化机制。",
+        status: "released",
+        downloadUrl: "https://github.com/TagDL/RebarTranscEndence/releases",
+        features: [
+            "粒子生产与冷凝系统",
+            "稳定锭块获取机制",
+            "终局内容扩展",
+            "高级效果与视觉增强"
+        ],
+        tags: ["终局", "魔法", "粒子"]
     }
 ];
 
