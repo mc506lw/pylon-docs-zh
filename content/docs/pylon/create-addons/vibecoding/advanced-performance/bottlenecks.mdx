@@ -3,6 +3,21 @@ title: 认识性能瓶颈
 description: 系统讲解 Minecraft 的 Tick 执行模型和四大性能杀手（CPU 密集计算、内存分配压力、I/O 阻塞、锁竞争）。
 ---
 
+import { Callout } from 'fumadocs-ui/components/callout';
+
+<Callout type="warning">
+  **本章完全由 AI 生成，缺乏实践经验验证**
+
+  本章内容是基于 Vibecoding 理论推导出来的编码实战指南，作者（mc506lw）本人尚未完整实践过这个流程。
+
+  文章中的代码示例、AI 对话记录、调试步骤等都是**模拟的**，可能存在极大问题。
+
+  **建议**：将本章作为参考框架，而不是照搬的步骤。在实际操作时，保持灵活应变。
+
+  如果你在实践中发现了错误或有更好的方法，欢迎提 PR 修正！
+  同时，请期待mc506lw的更新。
+</Callout>
+
 # 认识你的敌人 —— Minecraft 性能瓶颈详解
 
 在开发 Pylon 电网系统的过程中，我们踩过无数性能坑。本文将基于真实开发经验，系统性地讲解 Minecraft 的性能模型、常见瓶颈以及解决方案。
