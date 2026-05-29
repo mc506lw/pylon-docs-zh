@@ -56,6 +56,22 @@ const addons: AddonData[] = [
         tags: ["库", "基础依赖"]
     },
     {
+        id: "iron-furnaces",
+        name: "Iron Furnaces",
+        author: "mc506lw",
+        icon: "🔥",
+        description: "高级熔炉系统，复刻经典模组。9种等级熔炉从铜到下界合金，支持升级组件与精美 GUI。",
+        statusTags: ["开源", "已发布"],
+        downloadUrl: "https://github.com/mc506lw/Iron-Furnaces/releases",
+        features: [
+            "9种熔炉等级",
+            "6种升级组件",
+            "彩虹/水晶特殊熔炉",
+            "智能进度条与燃料可视化"
+        ],
+        tags: ["工业", "工具"]
+    },
+    {
         id: "endfield-industry",
         name: "Endfield-Industry",
         author: "mc506lw",
