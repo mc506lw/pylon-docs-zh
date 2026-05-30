@@ -1,0 +1,16 @@
+{
+    "title": "资源包文档",
+    "icon": "PackagePlus",
+    "pages": [
+        "home",
+        "setup",
+        "getting-started",
+        "adding-assets",
+        "adding-custom-item-models",
+        "adding-custom-block-models",
+        "adding-custom-armor-textures",
+        "migrating-resource-packs",
+        "pack-generation"
+    ],
+    "defaultOpen": false
+}

@@ -1,4 +1,4 @@
 {
-  "pages": ["(home)", "documentation", "create-addons"],
+  "pages": ["(home)", "documentation", "create-addons", "resourcepack"],
   "root": true
 }

@@ -1,0 +1,216 @@
+---
+title: 添加自定义物品模型
+description: 如何为 Rebar 物品添加自定义模型和纹理
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+<Callout type="important">
+  在继续之前，请确保已完成[快速入门](getting-started)！
+  从此页面开始的所有内容都涉及编辑你自己的资源包仓库和资源。
+</Callout>
+
+## 理解 Rebar 物品
+
+所有使用 rebar 的自定义物品都有一个自定义 id，例如 pylon 的青铜锭的 id 是 `pylon:bronze_ingot`，就像所有 Minecraft 物品都有诸如 `minecraft:iron_ingot` 这样的 id 一样。Rebar 物品将始终有一个带有其自定义 id 的 [自定义模型数据字符串]。资源包可以检查自定义模型数据字符串，并使用它来更改渲染的模型，例如使铜锭使用我们自己的自定义青铜锭模型。
+
+类似地，许多 rebar 的 GUI 物品也会这样做，它们包含一个自定义模型数据字符串来标识自己。
+
+更复杂的物品可能有额外的自定义模型数据，但目前我们只关注简单的物品模型。
+
+## 子文件夹
+
+你可以假设如果它说要将 `<something>.json` 放在 `input/assets/<addon>/<some_folder>` 下，你也可以将文件放在 `<some_folder>/` 的子文件夹下。
+
+## Rebar 物品定义
+
+任何时候你想给 rebar 物品一个自定义模型/纹理，第一步就是创建 rebar 物品定义。
+Rebar 物品定义是一个 `.json` 文件，存储有关你要为其添加自定义模型的 rebar 物品的数据。
+
+在[快速入门](getting-started)中你应该在 `input/assets/<addon>/` 下创建了一个文件夹，所有 rebar 物品定义都位于 `input/assets/<addon>/items/` 下。
+
+1. 在 `input/assets/<addon>/items/<id>.json` 为你的 rebar 物品创建定义文件，例如 pylon 的青铜锭应该是 `input/assets/pylon/items/bronze_ingot.json`。
+
+2. 将下面的 json 复制并粘贴到你新创建的文件中，所有定义的内容都会不同，但它们都从同一个地方开始。
+
+<CollapsibleSection title="点击展开/折叠基础模板">
+
+```json
+{
+    "author": "AUTHORS_NAME",
+    "vanilla": "minecraft:<item_id>"
+}
+```
+
+</CollapsibleSection>
+
+`"author"` 是一个可选字段，你可以在此处归功于制作该物品模型/纹理的人。
+`"vanilla"` 是一个**必需的**字段，应该设置为 pylon 物品使用的原版物品模型。
+
+<Callout type="info">
+  如果你不知道 rebar 物品的原版物品模型是什么，关闭所有资源包
+  然后查看 rebar 物品。你看到的任何原版物品就是原版物品模型。
+  如果你看到钻石，id 就是 `"minecraft:diamond"`，如果你不确定物品的 id 是什么，
+  使用[高级工具提示]并查看**原版**物品，**不是** rebar 物品。
+  会有一行小的灰色文字格式像 `"minecraft:<id>"`，那就是你的原版物品模型
+</Callout>
+
+<CollapsibleSection title="例如 pylon 的青铜锭看起来像这样（点击展开/折叠）">
+
+```json
+{
+    "author": "Pandicka",
+    "vanilla": "minecraft:copper_ingot"
+}
+```
+
+</CollapsibleSection>
+
+<Callout type="info">
+  如果由于某种原因你不能用物品的 id 来命名文件
+  那么你可以在定义 json 内部手动定义 id
+  使用 `"id": "<whatever-the-id-is>"`。如果它包含文件名不支持的字符，
+  或者由于某种原因存在 id 冲突，你可能需要这样做。
+</Callout>
+
+在你创建并设置了 rebar 物品定义的前两部分后，你将设置模型。
+如果你不确定你在使用什么类型的模型，请先查看[生成的 2D 模型]。
+- [生成的 2D 模型](#生成的-2d-模型)
+- [简单模型](#简单模型)
+- [方块物品模型](#方块物品模型)
+- [高级模型](#高级模型)
+
+<Callout type="info">
+  如果你在制作/使用原版风格的 2D 护甲物品纹理，
+  你还应该查看[自定义护甲纹理](adding-custom-armor-textures)
+</Callout>
+
+## 生成的 2D 模型
+
+大多数 pylon 物品不需要比简单的单独纹理更多的东西。
+如果这就是你所需要的，这里是如何做到的。
+
+1. 首你需要实际获取你的纹理，无论是你自己制作的、朋友制作的还是其他方式，你只需要实际获取你的物品纹理，特别是 `.png` 格式的。如果不是 `.png`，有很多在线转换器可以使用来将其转换。
+2. 获取纹理后，你需要将其放在物品纹理文件夹 `input/assets/<addon>/textures/item/` 下，文件名与你的 rebar 物品定义**相同**。
+    a. 如果你的定义在任何子文件夹下，建议将纹理放在相同的文件夹下，但这不是必需的。
+    b. 这是你通常放置物品纹理的地方，重要的是它与你的 rebar 物品定义同名。
+
+> 例如 `input/assets/pylon/items/bronze_ingot.json` 处的定义将在 `input/assets/pylon/textures/item/bronze_ingot.png` 处有纹理
+
+就这样，不需要创建专门的模型文件或在定义中定义其他任何东西，只要你有与物品定义同名的纹理 `.png`，生成器会为你完成其余的工作。
+
+接下来你可能想要继续[添加资源](adding-assets)或进入[资源包生成](pack-generation)
+
+## 简单模型
+
+一些 pylon 物品你可能想要一个自定义模型文件，比如 3D 物品、可染色物品等。基本上任何需要超过单一纹理模型但不需要自定义模型逻辑的东西都属于简单模型类别。如果你需要做任何与[物品模型定义]相关的事情，请参见[高级模型](#高级模型)，否则这里是如何做到的。
+
+1. 首先，创建你的[物品模型]和任何你需要的纹理，[Blockbench] 是 Minecraft 创建者制作的一个可以帮助你做到这一点的工具。
+这应该是一个 `.json` 文件和 `.png` 纹理（如果需要的话）。
+    a. 制作模型时确保将任何纹理保存在 `inputs/assets/<addon>/textures/item/` 文件夹下的某个位置
+2. 将物品模型放在 `input/assets/<addon>/models/item/` 下
+    a. 你可以将模型命名为任何名称，但建议将其命名为与你的 rebar 物品定义相同的名称
+
+如果你的模型具有与 rebar 物品定义相同的 id/名称，你不需要做任何进一步的操作，生成器会检测到模型存在并将其用于 rebar 物品定义。
+
+> 例如 `input/assets/pylon/items/bronze_cannon.json` 处的定义和 `input/assets/pylon/models/item/bronze_cannon.json` 处的模型
+
+如果你的模型**不**具有与定义相同的 id/名称，那么你需要向你的 rebar 物品定义添加一个显式引用 `"model": "<addon>:item/<model_path>"`
+
+> 例如 `input/assets/pylon/items/bronze_cannon.json` 处的定义，模型在 `input/assets/pylon/models/item/my_bronze_cannon.json`
+> 应该看起来像这样：
+>
+> ```json
+> {
+>     "author": "AnAuthorsName",
+>     "vanilla": "minecraft:copper_horse_armor",
+>     "model": "pylon:item/my_bronze_cannon"
+> }
+> ```
+
+向你的定义添加模型引用后（如果需要），你就完成了！
+接下来你可能想要继续[添加资源](adding-assets)或进入[资源包生成](pack-generation)
+
+## 方块物品模型
+
+如果你需要一个也有方块模型的物品的物品模型，你可能可以直接使用方块模型作为物品模型。
+如果你已经有一个在与你的 rebar 物品定义相同 id/名称下定义的方块模型，那么生成器会自动将其用于物品。无需额外工作。
+
+## 高级模型
+
+对于更复杂的物品，比如有使用动画的物品（想想弩、望远镜等），你可能想要/需要使用利用[物品模型定义]的高级模型。对于使用此功能的真实物品示例，请参见 pylon 的[彩纸礼炮]。
+
+1. 首先实际创建 rebar 物品所需的任何模型、纹理和[物品模型定义]，并将模型和纹理文件移动到 input 文件夹下和正常的资源包文件夹结构中。（`input/assets/<addon>/models/item/` 和 `input/assets/<addon>/textures/item/`
+2. 然后回到你的 rebar 物品定义并在 `"model"` 下添加一个新的空 json 对象。它应该看起来像这样：
+
+<CollapsibleSection title="点击展开/折叠基础结构">
+
+```json
+{
+    "author": "AnAuthorsName",
+    "vanilla": "minecraft:<vanilla_item_model>",
+    "model": {
+
+    }
+}
+```
+
+</CollapsibleSection>
+
+3. 最后只需将你的原版[物品模型定义]粘贴到那里，例如彩纸礼炮看起来像这样：
+
+<CollapsibleSection title="彩纸礼炮 Rebar 物品定义（点击展开/折叠）">
+
+```json
+{
+  "author": "Pandicka",
+  "vanilla": "minecraft:firework_rocket",
+  "model": {
+    "type": "condition",
+    "property": "using_item",
+    "on_false": {
+      "type": "model",
+      "model": "pylonbase:item/tools/confetti_popper"
+    },
+    "on_true": {
+      "type": "select",
+      "property": "display_context",
+      "cases": [
+        {
+          "model": {
+            "type": "model",
+            "model": "pylonbase:item/tools/confetti_popper"
+          },
+          "when": ["gui", "ground", "fixed"]
+        }
+      ],
+      "fallback": {
+        "type": "model",
+        "model": "pylonbase:item/tools/confetti_popper_charged"
+      }
+    },
+    "fallback": {
+      "type": "model",
+      "model": "pylonbase:item/tools/confetti_popper"
+    }
+  }
+}
+```
+
+</CollapsibleSection>
+
+生成器会自动为你的 rebar 物品使用指定的[物品模型定义]。
+
+接下来你可能想要继续[添加资源](adding-assets)或进入[资源包生成](pack-generation)
+
+[物品模型定义]: https://minecraft.wiki/w/Items_model_definition
+
+[物品模型]: https://minecraft.wiki/w/Model#Item_models
+
+[自定义模型数据]: https://minecraft.wiki/w/Data_component_format#custom_model_data
+
+[高级工具提示]: https://minecraft.wiki/w/Debug_hotkey#List_of_debug_hotkeys
+
+[彩纸礼炮]: https://github.com/pylonmc/pylon-resource-pack/tree/input/assets/pylon/items/tools/confetti_popper.json
+
+[Blockbench]: https://www.blockbench.net/

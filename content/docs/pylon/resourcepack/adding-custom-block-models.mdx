@@ -1,0 +1,625 @@
+---
+title: 添加自定义方块模型
+description: 如何为 Rebar 方块添加自定义模型
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+<Callout type="important">
+  在继续之前，请确保已完成[快速入门](getting-started)！
+  从此页面开始的所有内容都涉及编辑你自己的资源包仓库和资源。
+  你还应该对[原版方块状态定义]有很好的理解
+  特别是如果你要为使用方块状态的 rebar 方块制作资源
+</Callout>
+
+<Callout type="info">
+  我还建议在开始之前先阅读[添加自定义物品模型]
+</Callout>
+
+## 理解 Rebar 方块纹理
+
+就像 rebar 物品一样，所有 rebar 方块都有一个自定义 id，格式为 `<namespace:key>`，可能看起来像 `pylon:hydraulic_press`，就像你在给 rebar 物品添加自定义纹理时一样，你可以在物品的自定义模型数据中读取这个 id。
+
+现在，有两种方法可以为 rebar 方块提供自定义方块模型，使用哪种方法取决于你要为其提供模型/纹理的 rebar 方块：
+
+1. 空气物品展示 + 自定义模型数据 - Rebar 方块状态定义
+    a. 大多数 rebar 方块只是用一个原版方块来表示它们
+    b. 所有方块默认都有一个绑定到它们的[物品展示]，它使用空气物品模型，使其渲染为不可见（某些方块可能会禁用此实体，对于这些方块你可能需要使用方法 2）
+    c. [物品展示]还具有带有 rebar 方块 id 和方块状态属性（如果适用）的自定义模型数据
+    d. 要给它一个自定义模型，资源包只需基于该自定义模型数据添加一个模型覆盖，使没有资源包的人什么也看不到，而有资源包的人看到自定义模型
+    e. 物品展示被完美缩放以包裹原版方块并隐藏它，只显示自定义模型
+
+2. 方块特定的物品展示 + 自定义模型数据 - 待定
+    a. 一些 rebar 方块不使用原版方块，而是使用不可见方块和展示实体
+    b. 这些展示实体然后使用实际物品（不是空气），这些物品也可能有唯一的自定义模型数据，允许你以这种方式为其提供纹理
+
+**并非所有 rebar 附属组件都支持复杂的自定义纹理**，rebar 添加了基本默认支持，如方法 #1，但如果附属组件采用方法 #2，它们可能不会给实体添加自定义模型数据，这意味着你根本无法给它一个自定义模型。如果你不确定能否或不能做到，请与附属组件开发者沟通！
+
+## 子文件夹
+
+你可以假设如果它说要将 `<something>.json` 放在 `input/assets/<addon>/<some_folder>` 下，你也可以将文件放在 `<some_folder>/` 的子文件夹下。
+
+# 方法 1 - Rebar 方块状态定义
+
+## 目的何在
+
+你可能想知道为什么要使用这个系统，为什么不自己做呢。主要有 3 个原因：
+1. 工作量
+    a. 如果你试图为 rebar 方块支持方块状态，比如一个拉杆，手动完成需要巨大的工作量。
+2. 可维护性
+    a. 即使你克服了创建所需的所有模型定义条件的初始障碍，当你需要进行任何更改时，又是另一场挣扎。
+3. 组织性
+    a. 因为自定义方块模型是使用空气物品模型完成的，**所有**使用该系统的 rebar 方块都将在**单个** json 文件中定义
+    b. 你可以想象这个文件会非常快速地变得非常大
+
+你可能仍然怀疑手动完成实际上需要多少工作量，所以让我们看一个真实示例。
+在 [pylon] 中，有一个叫做"手动核心钻机拉杆"的方块，这只是一个用于多方块结构的拉杆方块。
+如果你想支持给它一个自定义模型**并**支持它的方块状态。这是你必须添加到原版空气 [物品模型定义]中的条目：
+
+<CollapsibleSection title="点击展开/折叠">
+
+```json
+{
+  "when": "pylonbase:manual_core_drill_lever",
+  "model": {
+    "type": "minecraft:select",
+    "property": "custom_model_data",
+    "index": 1,
+    "cases": [
+      {
+        "when": "facing=east",
+        "model": {
+          "type": "minecraft:select",
+          "property": "custom_model_data",
+          "index": 2,
+          "cases": [
+            {
+              "when": "face=ceiling",
+              "model": {
+                "type": "minecraft:select",
+                "property": "custom_model_data",
+                "index": 3,
+                "cases": [
+                  {
+                    "when": "powered=false",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_x180_y270"
+                    }
+                  },
+                  {
+                    "when": "powered=true",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on_x180_y270"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "when": "face=floor",
+              "model": {
+                "type": "minecraft:select",
+                "property": "custom_model_data",
+                "index": 3,
+                "cases": [
+                  {
+                    "when": "powered=false",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_y90"
+                    }
+                  },
+                  {
+                    "when": "powered=true",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on_y90"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "when": "face=wall",
+              "model": {
+                "type": "minecraft:select",
+                "property": "custom_model_data",
+                "index": 3,
+                "cases": [
+                  {
+                    "when": "powered=false",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_x90_y90"
+                    }
+                  },
+                  {
+                    "when": "powered=true",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on_x90_y90"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "when": "facing=north",
+        "model": {
+          "type": "minecraft:select",
+          "property": "custom_model_data",
+          "index": 2,
+          "cases": [
+            {
+              "when": "face=ceiling",
+              "model": {
+                "type": "minecraft:select",
+                "property": "custom_model_data",
+                "index": 3,
+                "cases": [
+                  {
+                    "when": "powered=false",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_x180_y180"
+                    }
+                  },
+                  {
+                    "when": "powered=true",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on_x180_y180"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "when": "face=floor",
+              "model": {
+                "type": "minecraft:select",
+                "property": "custom_model_data",
+                "index": 3,
+                "cases": [
+                  {
+                    "when": "powered=false",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever"
+                    }
+                  },
+                  {
+                    "when": "powered=true",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "when": "face=wall",
+              "model": {
+                "type": "minecraft:select",
+                "property": "custom_model_data",
+                "index": 3,
+                "cases": [
+                  {
+                    "when": "powered=false",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_x90"
+                    }
+                  },
+                  {
+                    "when": "powered=true",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on_x90"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "when": "facing=south",
+        "model": {
+          "type": "minecraft:select",
+          "property": "custom_model_data",
+          "index": 2,
+          "cases": [
+            {
+              "when": "face=ceiling",
+              "model": {
+                "type": "minecraft:select",
+                "property": "custom_model_data",
+                "index": 3,
+                "cases": [
+                  {
+                    "when": "powered=false",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_x180"
+                    }
+                  },
+                  {
+                    "when": "powered=true",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on_x180"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "when": "face=floor",
+              "model": {
+                "type": "minecraft:select",
+                "property": "custom_model_data",
+                "index": 3,
+                "cases": [
+                  {
+                    "when": "powered=false",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_y180"
+                    }
+                  },
+                  {
+                    "when": "powered=true",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on_y180"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "when": "face=wall",
+              "model": {
+                "type": "minecraft:select",
+                "property": "custom_model_data",
+                "index": 3,
+                "cases": [
+                  {
+                    "when": "powered=false",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_x90_y180"
+                    }
+                  },
+                  {
+                    "when": "powered=true",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on_x90_y180"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "when": "facing=west",
+        "model": {
+          "type": "minecraft:select",
+          "property": "custom_model_data",
+          "index": 2,
+          "cases": [
+            {
+              "when": "face=ceiling",
+              "model": {
+                "type": "minecraft:select",
+                "property": "custom_model_data",
+                "index": 3,
+                "cases": [
+                  {
+                    "when": "powered=false",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_x180_y90"
+                    }
+                  },
+                  {
+                    "when": "powered=true",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on_x180_y90"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "when": "face=floor",
+              "model": {
+                "type": "minecraft:select",
+                "property": "custom_model_data",
+                "index": 3,
+                "cases": [
+                  {
+                    "when": "powered=false",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_y270"
+                    }
+                  },
+                  {
+                    "when": "powered=true",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on_y270"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "when": "face=wall",
+              "model": {
+                "type": "minecraft:select",
+                "property": "custom_model_data",
+                "index": 3,
+                "cases": [
+                  {
+                    "when": "powered=false",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_x90_y270"
+                    }
+                  },
+                  {
+                    "when": "powered=true",
+                    "model": {
+                      "type": "minecraft:model",
+                      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on_x90_y270"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+</CollapsibleSection>
+
+正如你所见，它是**巨大的**。你可能还会注意到不同的旋转需要很多不同的模型，
+你必须自己创建所有这些模型变体。
+
+现在如果你将它与你会使用的 rebar 方块状态定义进行比较：
+
+<CollapsibleSection title="点击展开/折叠">
+
+```json
+{
+  "author": "Pandicka",
+  "properties": ["facing", "face", "powered"],
+  "variants": {
+    "face=ceiling,facing=east,powered=false": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever",
+      "x": 180,
+      "y": 270
+    },
+    "face=ceiling,facing=east,powered=true": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on",
+      "x": 180,
+      "y": 270
+    },
+    "face=ceiling,facing=north,powered=false": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever",
+      "x": 180,
+      "y": 180
+    },
+    "face=ceiling,facing=north,powered=true": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on",
+      "x": 180,
+      "y": 180
+    },
+    "face=ceiling,facing=south,powered=false": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever",
+      "x": 180
+    },
+    "face=ceiling,facing=south,powered=true": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on",
+      "x": 180
+    },
+    "face=ceiling,facing=west,powered=false": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever",
+      "x": 180,
+      "y": 90
+    },
+    "face=ceiling,facing=west,powered=true": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on",
+      "x": 180,
+      "y": 90
+    },
+    "face=floor,facing=east,powered=false": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever",
+      "y": 90
+    },
+    "face=floor,facing=east,powered=true": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on",
+      "y": 90
+    },
+    "face=floor,facing=north,powered=false": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever"
+    },
+    "face=floor,facing=north,powered=true": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on"
+    },
+    "face=floor,facing=south,powered=false": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever",
+      "y": 180
+    },
+    "face=floor,facing=south,powered=true": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on",
+      "y": 180
+    },
+    "face=floor,facing=west,powered=false": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever",
+      "y": 270
+    },
+    "face=floor,facing=west,powered=true": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on",
+      "y": 270
+    },
+    "face=wall,facing=east,powered=false": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever",
+      "x": 90,
+      "y": 90
+    },
+    "face=wall,facing=east,powered=true": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on",
+      "x": 90,
+      "y": 90
+    },
+    "face=wall,facing=north,powered=false": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever",
+      "x": 90
+    },
+    "face=wall,facing=north,powered=true": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on",
+      "x": 90
+    },
+    "face=wall,facing=south,powered=false": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever",
+      "x": 90,
+      "y": 180
+    },
+    "face=wall,facing=south,powered=true": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on",
+      "x": 90,
+      "y": 180
+    },
+    "face=wall,facing=west,powered=false": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever",
+      "x": 90,
+      "y": 270
+    },
+    "face=wall,facing=west,powered=true": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on",
+      "x": 90,
+      "y": 270
+    }
+  }
+}
+```
+
+</CollapsibleSection>
+
+你可以看出区别，rebar 方块状态定义将生成所有许多嵌套的情况和可能性，并根据你在其中提供的旋转自动创建模型所需的任何变体。
+
+## 使用 Rebar 方块状态定义
+
+就像 [rebar 物品定义]一样，对于方块模型你需要一个 rebar 方块状态定义，这是一个 `.json` 文件，定义了如何设置方块模型。
+所有 rebar 方块状态定义都位于 `input/assets/<addon>/blocks` 文件夹下。
+
+1. 在 `input/assets/<addon>/blocks/<id>.json` 为你的 rebar 物品创建定义文件，例如 pylon 的青铜方块应该是 `input/assets/pylon/blocks/bronze_block.json`。
+
+2. 将下面的 json 复制并粘贴到你新创建的文件中，所有定义的内容都会不同，但它们都从同一个地方开始。
+
+<CollapsibleSection title="点击展开/折叠基础模板">
+
+```json
+{
+    "author": "AUTHORS_NAME"
+}
+```
+
+</CollapsibleSection>
+
+`"author"` 是一个可选字段，你可以在此处归功于制作该物品模型/纹理的人。
+
+<Callout type="info">
+  如果你不确定原版物品模型的物品 id 是什么，关闭所有资源包
+  然后查看 rebar 物品。你看到的任何原版物品就是原版物品模型。
+  如果你看到钻石，id 就是 `"minecraft:diamond"`，如果你不确定物品的 id 是什么，
+  使用[高级工具提示]并查看**原版**物品，**不是** rebar 物品。
+  会有一行小的灰色文字格式像 `"minecraft:<id>"`，那就是你的原版物品模型
+</Callout>
+
+> 如果由于某种原因你不能用物品的 id 来命名文件
+> 那么你可以在定义 json 内部手动定义 id
+> 使用 `"id": "<whatever-the-id-is>"`。如果它包含文件名不支持的字符，
+> 或者由于某种原因存在 id 冲突，你可能需要这样做。
+
+## 添加属性
+
+接下来你需要添加方块使用的属性，例如拉杆有 `facing`、`face`、`powered` 属性。
+只需将它们添加到定义 json 的 `"properties"` 数组中。
+
+<CollapsibleSection title="点击展开/折叠示例">
+
+```json
+{
+    "author": "Pandicka",
+    "properties": ["facing", "face", "powered"]
+}
+```
+
+</CollapsibleSection>
+
+## 添加变体
+
+最后一步是添加变体，变体是属性的组合及其应该显示的模型。
+只需将它们添加到定义 json 的 `"variants"` 对象中，键是属性组合，值是模型信息。
+模型信息可以包含：
+- `model`: 模型的路径（必需）
+- `x`: X 轴旋转（可选）
+- `y`: Y 轴旋转（可选）
+- `z`: Z 轴旋转（可选）
+
+<CollapsibleSection title="点击展开/折叠完整示例">
+
+```json
+{
+  "author": "Pandicka",
+  "properties": ["facing", "face", "powered"],
+  "variants": {
+    "face=ceiling,facing=east,powered=false": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever",
+      "x": 180,
+      "y": 270
+    },
+    "face=ceiling,facing=east,powered=true": {
+      "model": "pylonbase:block/machines/simple_machines/manual_core_drill_lever_on",
+      "x": 180,
+      "y": 270
+    }
+  }
+}
+```
+
+</CollapsibleSection>
+
+就是这样！生成器会处理其余的工作。
+
+接下来你可能想要继续[添加资源](adding-assets)或进入[资源包生成](pack-generation)
+
+[原版方块状态定义]: https://minecraft.wiki/w/Block_state
+
+[添加自定义物品模型]: adding-custom-item-models
+
+[rebar 物品定义]: adding-custom-item-models#rebar-物品定义
+
+[高级工具提示]: https://minecraft.wiki/w/Debug_hotkey#List_of_debug_hotkeys
+
+[Blockbench]: https://www.blockbench.net/

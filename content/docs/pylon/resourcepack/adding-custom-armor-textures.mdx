@@ -1,0 +1,33 @@
+---
+title: 添加自定义护甲纹理
+description: 如何为护甲物品添加自定义纹理
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+目前你需要放入原版资源，不过我们有一个工具可以自动创建护甲装饰物品纹理的资源！
+目前它只是覆盖原版的装饰叠加纹理，所以如果你在做 3D 图标或与原版差异很大的 2D 形状，你可能需要手动完成。但如果你在做原版风格的纹理，它应该能完美工作！
+
+> 后续版本将提供定义自己的叠加层的方式，以允许更大的灵活性而无需手动完成所有工作
+
+在护甲物品的 [Rebar 物品定义]中，只需在定义中添加 `"create_trims": "<piece>"` 即可。
+    - `<piece>` 应该是 `helmet`（头盔）、`chestplate`（胸甲）、`leggings`（护腿）、`boots`（靴子）之一
+生成器会自动为其创建物品资源和模型条件。
+
+例如你可能有一个文件：`input/assets/pylon/items/armor/bronze_boots.json`，内容如下：
+
+<CollapsibleSection title="点击展开/折叠示例">
+
+```json
+{
+    "author": "Pandicka",
+    "vanilla": "minecraft:copper_boots",
+    "create_trims": "boots"
+}
+```
+
+</CollapsibleSection>
+
+这将自动创建用于在物品上显示装饰的模型和模型条件。
+
+[Rebar 物品定义]: adding-custom-item-models#rebar-物品定义
