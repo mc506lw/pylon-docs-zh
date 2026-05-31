@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   },
   description: 'Pylon 非官方文档站 - 基于 Rebar 框架的 Minecraft 技术模组，覆盖电力、流体、物流、多方块等全部能力模块。',
   icons: {
-    icon: '/icon.png',
+    icon: '/icon.webp',
   },
 };
 

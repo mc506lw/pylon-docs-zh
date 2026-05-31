@@ -41,7 +41,7 @@ function extractFilename(url: string): string {
 
     const dots = filename.split('.');
 
-    // 如果有超过2个点（如 fluid-setup.0.png），取第一个和最后一个
+    // 如果有超过2个点（如 fluid-setup.0.webp），取第一个和最后一个
     if (dots.length > 2) {
       return `${dots[0]}.${dots[dots.length - 1]}`;
     }
@@ -104,7 +104,7 @@ function CustomZoomContent({ img, buttonUnzoom, onUnzoom, originalSrc }: {
 
   const handleDownload = useCallback(async () => {
     const downloadUrl = originalSrc || imgSrc;
-    const filename = extractFilename(downloadUrl) || 'image.png';
+    const filename = extractFilename(downloadUrl) || 'image.webp';
 
     try {
       const response = await fetch(downloadUrl);

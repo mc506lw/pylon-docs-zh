@@ -9,9 +9,9 @@ import {
 } from 'fumadocs-ui/layouts/home/navbar';
 import Link from 'fumadocs-core/link';
 import Image from 'next/image';
-import Preview from './img/banner.png';
-import MonolithLibImg from './img/monolithlib.png';
-import Jade2RebarImg from './img/jade2rebar.png';
+import Preview from './img/banner.webp';
+import MonolithLibImg from './img/monolithlib.webp';
+import Jade2RebarImg from './img/jade2rebar.webp';
 import {
   Download,
   Package,

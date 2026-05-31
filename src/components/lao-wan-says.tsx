@@ -15,7 +15,7 @@ export const LaoWanSays = ({ date, children, className }: LaoWanSaysProps) => {
       )}
     >
       <img
-        src="/img/老万大头.png"
+        src="/img/老万大头.webp"
         alt="老万头像"
         className="mt-0.5 size-10 shrink-0 rounded-lg object-cover"
       />
