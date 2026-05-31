@@ -271,6 +271,39 @@ const addons: AddonData[] = [
             "高级效果与视觉增强"
         ],
         tags: ["终局", "魔法", "粒子"]
+    },
+    {
+        id: "dora-machines",
+        name: "Dora Machines",
+        author: "TagDL",
+        icon: "🔧",
+        description: "哆啦科技，添加范围挖掘工具、工业矿机、滤网、不可破坏符文等机器与工具。",
+        statusTags: ["开源", "已发布"],
+        downloadUrl: "https://github.com/TagDL/DoraMachines/releases",
+        features: [
+            "5x5x5/3x3x3 范围挖掘工具",
+            "含水状态粉尘滤网",
+            "Slimefun 风格工业矿机",
+            "不可破坏符文",
+            "便携式背包"
+        ],
+        tags: ["工业", "工具", "机器"]
+    },
+    {
+        id: "rebar-wrench",
+        name: "RebarWrench",
+        author: "lijinhong11",
+        icon: "🔩",
+        description: "为 Rebar 附属提供的扳手工具，用于配置和修改方块属性。",
+        statusTags: ["开源", "开发中"],
+        downloadUrl: "https://github.com/lijinhong11/RebarWrench",
+        features: [
+            "方块属性配置工具",
+            "开发者 API 支持",
+            "属性值切换功能",
+            "可视化配置界面"
+        ],
+        tags: ["工具", "开发", "API"]
     }
 ];
 
