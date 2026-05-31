@@ -1,0 +1,129 @@
+---
+title: 插件 API
+description: 了解 RebarWrench 的 API 以及如何将它集成到你的 Rebar 附属中
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+## 🧑‍💻 快速开始
+
+RebarWrench 为附属开发者提供了一套简洁的 API，让你的 Rebar 方块支持扳手交互。
+
+### 添加依赖
+
+将 RebarWrench 添加到你的 `build.gradle.kts` 中：
+
+```kotlin
+dependencies {
+    compileOnly("io.github.lijinhong11:RebarWrench:VERSION")
+}
+```
+
+将 `VERSION` 替换为[最新 Release 版本](https://github.com/lijinhong11/RebarWrench/releases/latest)。
+
+### 基本集成
+
+要让一个 Rebar 方块支持扳手，只需实现 `Wrenchable` 接口并在加载时注册：
+
+```java title="MyMachine.java"
+public class MyMachine extends RebarBlock {
+    public static final Wrenchable WRENCHABLE = Wrenchable.builder()
+            .addProperty("color", Property.builder(NamedTextColor.class)
+                    .defaultIndex(0)
+                    .possibleValues(NamedTextColor.BLUE, NamedTextColor.GREEN, NamedTextColor.RED)
+                    .onValueChange((machine, oldColor, newColor) -> {
+                        Block block = machine.getBlock();
+                        block.setType(newColor == NamedTextColor.BLUE
+                            ? Material.BLUE_WOOL
+                            : newColor == NamedTextColor.GREEN
+                                ? Material.GREEN_WOOL
+                                : Material.RED_WOOL);
+                    })
+                    .build()
+            )
+            .addProperty("mode", Property.builder(int.class)
+                    .defaultIndex(0)
+                    .possibleValues(0, 1, 2, 3)
+                    .onValueChange((machine, oldMode, newMode) -> {
+                        ((MyMachine) machine).mode = newMode;
+                    })
+                    .build()
+            )
+            .build();
+
+    private int mode = 0;
+
+    // 在你的附属加载时注册
+    public static void register() {
+        RebarWrench.registerWrenchable(MyMachine.class, WRENCHABLE);
+    }
+}
+```
+
+## 🔧 API 参考
+
+### Wrenchable
+
+核心接口，用于定义可被扳手交互的行为。
+
+```java title="Wrenchable.java"
+public interface Wrenchable {
+    @NotNull PropertiesMap properties();
+
+    static @NotNull Builder builder() {
+        return new WrenchBuilder();
+    }
+}
+```
+
+### Wrenchable.Builder
+
+使用构造器模式构建 `Wrenchable` 实例。
+
+| 方法 | 说明 |
+| :--- | :--- |
+| `addProperty(String key, Property<?> property)` | 添加一个命名属性 |
+| `build()` | 创建不可变的 `Wrenchable` 实例 |
+
+### Property
+
+带有一组可能值和可选变更回调的强类型属性。
+
+```java title="Property.java"
+Property.builder(Class<T> type)
+    .possibleValues(T... values)
+    .defaultIndex(int index)
+    .onValueChange(TriConsumer<RebarBlock, T, T> onChange)
+    .build();
+```
+
+| 参数 | 说明 |
+| :--- | :--- |
+| `type` | 属性值的 Java 类型（例如 `NamedTextColor.class`、`int.class`） |
+| `possibleValues` | 属性可循环切换的值列表 |
+| `defaultIndex` | `possibleValues` 中的起始索引 |
+| `onValueChange` | 值变更时的回调，接收 `(block, oldValue, newValue)` |
+
+### 注册与获取
+
+在你的附属启用阶段注册 `Wrenchable`：
+
+```java
+@Override
+public void onEnable() {
+    MyMachine.register();
+}
+```
+
+你也可以在运行时获取已注册的 `Wrenchable`：
+
+```java
+Wrenchable wrenchable = RebarWrench.getWrenchable(MyMachine.class);
+```
+
+## 📝 最佳实践
+
+- 属性键尽量简短且表意清晰，例如 `color`、`mode`、`speed`
+- `possibleValues` 优先使用枚举或常量，避免魔法数字
+- 所有状态变更都应在 `onValueChange` 中处理，保证方块状态一致
+- 避免在 `onValueChange` 中执行耗时操作，因为它运行在主线程上

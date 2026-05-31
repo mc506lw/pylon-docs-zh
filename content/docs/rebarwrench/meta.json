@@ -1,0 +1,7 @@
+{
+  "title": "RebarWrench",
+  "icon": "Wrench",
+  "pages": ["(home)", "developer"],
+  "defaultOpen": true,
+  "root": true
+}

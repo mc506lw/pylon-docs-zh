@@ -3,6 +3,10 @@
 @import 'fumadocs-ui/css/preset.css';
 @import '../styles/image-zoom.css';
 
+@theme {
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
 html {
   scrollbar-gutter: stable;
 }

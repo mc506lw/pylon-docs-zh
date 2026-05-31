@@ -20,6 +20,11 @@ export default function Layout({ children }: LayoutProps<'/docs'>) {
           title: 'Jade2Rebar',
           url: '/docs/jade2rebar',
           description: 'Jade适配',
+        },
+        {
+          title: 'RebarWrench',
+          url: '/docs/rebarwrench',
+          description: '扳手前置库',
         }
       ],
     }}  >

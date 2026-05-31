@@ -1,0 +1,76 @@
+---
+title: 什么是 RebarWrench?
+description: 了解 RebarWrench 是什么，以及它如何为 Rebar 附属提供扳手交互能力
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+RebarWrench 是一个 Minecraft 插件，它为 **Rebar 附属** 提供了一个强大的**扳手工具**。玩家可以使用扳手与 Rebar 方块进行直观交互，而开发者也可以通过简洁的 API 定义可自定义的方块属性。
+
+[🐙 在 GitHub 上找到我们 →](https://github.com/lijinhong11/RebarWrench)  
+[📦 安装 RebarWrench →](install)
+
+继续往下看。
+
+---
+
+## ✨ 功能特性
+
+| 状态 | 功能 | 说明 |
+| :----- | :------ | :------ |
+| ✅ | **扳手工具** | 以 Minecraft 刷子为底材的自定义扳手物品，支持切换方块属性而不破坏方块 |
+| ✅ | **属性系统** | 开发者可以定义带可能值和变更回调的强类型属性 |
+| ✅ | **快速破坏** | 左键点击方块可瞬间破坏（需启用该选项） |
+| ✅ | **配置项切换** | 按住 Shift + 右键可在同一方块的不同属性键之间循环切换 |
+| ✅ | **属性值切换** | 右键点击可在当前属性的可能值之间循环切换 |
+| ✅ | **持久化状态** | 属性索引和当前激活键按区块持久化存储 |
+| ✅ | **多语言支持** | 内置英语、简体中文、繁体中文 |
+| ✅ | **Rebar 附属** | 作为标准 Rebar 附属集成，依赖 Rebar 和 Pylon |
+
+## 🎮 工作原理
+
+RebarWrench 使用 Minecraft 的**刷子物品**作为底材。当玩家右键点击一个 Rebar 方块时：
+
+1. 扳手会检查该方块是否实现了 `Wrenchable`
+2. 如果是，则根据操作切换当前属性值，或切换当前激活的属性键
+3. 属性变更会触发附属开发者定义的 `onValueChange` 回调
+
+左键点击方块时会尝试瞬间破坏它（当启用快速破坏时）。
+
+## 🏗️ 核心架构
+
+| 组件 | 文件 | 说明 |
+| :--- | :--- | :--- |
+| **主插件** | [RebarWrench.java](https://github.com/lijinhong11/RebarWrench/blob/main/src/main/java/io/github/lijinhong11/rebarwrench/RebarWrench.java) | 入口点、Rebar 附属注册、可扳手化注册表 |
+| **扳手物品** | [TheWrenchItem.java](https://github.com/lijinhong11/RebarWrench/blob/main/src/main/java/io/github/lijinhong11/rebarwrench/wrenches/TheWrenchItem.java) | 扳手行为、属性切换逻辑 |
+| **刷子监听器** | [BrushListener.java](https://github.com/lijinhong11/RebarWrench/blob/main/src/main/java/io/github/lijinhong11/rebarwrench/listeners/BrushListener.java) | 使用扳手破坏方块时防止掉落物生成 |
+| **Wrenchable API** | [Wrenchable.java](https://github.com/lijinhong11/RebarWrench/blob/main/src/main/java/io/github/lijinhong11/rebarwrench/api/Wrenchable.java) | 支持扳手交互的方块接口 |
+| **WrenchBuilder** | [WrenchBuilder.java](https://github.com/lijinhong11/RebarWrench/blob/main/src/main/java/io/github/lijinhong11/rebarwrench/api/WrenchBuilder.java) | 用于构建 Wrenchable 实例的构造器 |
+| **Property API** | [Property.java](https://github.com/lijinhong11/RebarWrench/blob/main/src/main/java/io/github/lijinhong11/rebarwrench/api/properties/Property.java) | 带可能值和回调的强类型属性定义 |
+| **PropertiesMap** | [PropertiesMap.java](https://github.com/lijinhong11/RebarWrench/blob/main/src/main/java/io/github/lijinhong11/rebarwrench/api/properties/PropertiesMap.java) | 多个属性的容器 |
+
+## 📋 技术规格
+
+| 项目 | 规格 |
+| :----- | :------ |
+| **编程语言** | Java |
+| **目标平台** | Paper / Pylon / Rebar |
+| **依赖要求** | Rebar（作为 Rebar 附属运行） |
+| **扳手物品** | 刷子 |
+| **存储方式** | 持久化数据容器（按区块） |
+| **许可证** | MIT License |
+
+## 👥 致谢
+
+RebarWrench 由 [lijinhong11](https://github.com/lijinhong11) 开发和维护。
+
+特别感谢：
+- **[Rebar / Pylon 团队](https://github.com/pylonmc)** - 提供了优秀的 Rebar 框架和附属系统
+
+如果这个项目对你的服务器有帮助，欢迎在 GitHub 上给我们一个 ⭐！
+
+---
+
+## 📖 快速开始
+
+准备好尝试了吗？查看我们的[安装指南](install)开始使用 RebarWrench！

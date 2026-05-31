@@ -1,0 +1,68 @@
+---
+title: 安装 RebarWrench
+description: 安装 RebarWrench 并开始使用扳手工具
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+<Callout type="info">
+  RebarWrench 是一个 **Rebar 附属**。在添加 RebarWrench 之前，你必须已经在服务器上正确安装并运行了 **Rebar** 和 **Pylon**。
+</Callout>
+
+## 📋 前置要求
+
+| 组件 | 版本要求 | 说明 |
+| :--- | :--- | :--- |
+| **Java** | Java 21+ | 运行时环境 |
+| **Minecraft 服务端** | Paper 或其分支 | RebarWrench 依赖 Rebar，而 Rebar 要求 Paper |
+| **Rebar** | 最新版本 | 从 [Rebar GitHub](https://github.com/pylonmc/rebar/releases/latest) 下载 |
+| **Pylon** | 最新版本 | 从 [Pylon GitHub](https://github.com/pylonmc/pylon/releases/latest) 下载 |
+
+## 📦 方法一：从 Release 下载（推荐）
+
+1. 前往 [RebarWrench Releases 页面](https://github.com/lijinhong11/RebarWrench/releases/latest)
+2. 下载最新的 `RebarWrench-*.jar` 文件
+3. 将 `.jar` 文件放入服务器的 `plugins` 文件夹
+4. **重启服务器**（不要使用 `/reload`）
+5. 完成！
+
+## 🔧 方法二：从源码构建
+
+如果你需要自定义修改或想获取最新开发版本：
+
+### 克隆项目
+
+```bash
+git clone https://github.com/lijinhong11/RebarWrench.git
+cd RebarWrench
+```
+
+### 构建项目
+
+```bash
+# 使用 Gradle wrapper（推荐）
+./gradlew build
+
+# 或者在 Windows 上
+gradlew.bat build
+```
+
+### 部署到服务器
+
+构建完成后，将 `build/libs/` 目录下生成的 JAR 复制到服务器的 `plugins` 文件夹，然后重启服务器。
+
+## ✅ 安装验证
+
+安装完成后，检查服务器控制台日志，应该能看到类似以下信息：
+
+```
+[RebarWrench] RebarWrench is enabled!
+```
+
+如果看到这条消息，说明插件已成功加载。
+
+## ⚙️ 安装后说明
+
+RebarWrench 目前使用默认配置即可正常工作。扳手物品会自动出现在 Pylon 指南的工具分类中。
+
+如果你希望调整行为，可以在首次运行后修改配置文件。关于如何将 RebarWrench 集成到你自己的附属中，请查看[开发者指南](developer)。
