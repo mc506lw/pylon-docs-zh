@@ -52,8 +52,6 @@ function extractFilename(url: string): string {
   }
 }
 
-let globalId = 0;
-
 function CustomZoomContent({ img, buttonUnzoom, onUnzoom, originalSrc }: {
   img: ReactElement | null;
   buttonUnzoom: ReactElement<HTMLButtonElement>;
@@ -62,9 +60,8 @@ function CustomZoomContent({ img, buttonUnzoom, onUnzoom, originalSrc }: {
 }) {
   const [copied, setCopied] = useState(false);
   const [showToolbar, setShowToolbar] = useState(false);
-  const [toolbarKey, setToolbarKey] = useState(0);
+  const [forceHide, setForceHide] = useState(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const isClosingRef = useRef(false);
 
   const imgSrc = (img?.props as { src?: string } | undefined)?.src || '';
   const displayName = extractFilename(originalSrc) || extractFilename(imgSrc);
@@ -72,33 +69,32 @@ function CustomZoomContent({ img, buttonUnzoom, onUnzoom, originalSrc }: {
   useEffect(() => {
     if (!img) {
       // 关闭状态
-      isClosingRef.current = true;
-
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
 
-      // 强制隐藏
+      setForceHide(true);
       setShowToolbar(false);
-      setToolbarKey(prev => prev + 1); // 强制重新挂载，清除动画
 
       return;
     }
 
-    // 打开状态
-    isClosingRef.current = false;
-    setShowToolbar(false); // 先重置
+    // 打开状态 - 先强制隐藏
+    setForceHide(true);
+    setShowToolbar(false);
 
-    // 延迟显示
+    // 延迟解除隐藏并显示
     timerRef.current = setTimeout(() => {
-      if (!isClosingRef.current) {
+      setForceHide(false);
+
+      // 再延迟一点显示工具栏（让 CSS 动画生效）
+      setTimeout(() => {
         setShowToolbar(true);
-      }
-    }, 400);
+      }, 50);
+    }, 250);
 
     return () => {
-      isClosingRef.current = true;
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
@@ -127,14 +123,19 @@ function CustomZoomContent({ img, buttonUnzoom, onUnzoom, originalSrc }: {
     }
   }, [imgSrc, originalSrc]);
 
-  const handleCopyLink = useCallback(async () => {
-    const copyUrl = originalSrc || imgSrc;
+  const handleCopyImage = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(copyUrl);
+      const response = await fetch(originalSrc || imgSrc);
+      const blob = await response.blob();
+
+      await navigator.clipboard.write([
+        new ClipboardItem({ [blob.type]: blob })
+      ]);
+
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('Copy failed:', error);
+      console.error('Copy image failed:', error);
     }
   }, [imgSrc, originalSrc]);
 
@@ -146,58 +147,60 @@ function CustomZoomContent({ img, buttonUnzoom, onUnzoom, originalSrc }: {
         </div>
       </div>
       {buttonUnzoom}
-      <div className={`rmiz-toolbar ${showToolbar ? 'visible' : ''}`} key={`toolbar-${toolbarKey}`}>
-        <span className={`rmiz-toolbar-title ${!displayName ? 'loading' : ''}`} title={originalSrc || imgSrc}>
-          {displayName || '加载中...'}
-        </span>
-        <div className="rmiz-toolbar-actions">
-          <button
-            className="rmiz-toolbar-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCopyLink();
-            }}
-            title={copied ? '已复制!' : '复制链接'}
-          >
-            {copied ? (
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            ) : (
+      {!forceHide && (
+        <div className={`rmiz-toolbar ${showToolbar ? 'visible' : ''}`}>
+          <span className={`rmiz-toolbar-title ${!displayName ? 'loading' : ''}`} title={originalSrc || imgSrc}>
+            {displayName || '加载中...'}
+          </span>
+          <div className="rmiz-toolbar-actions">
+            <button
+              className="rmiz-toolbar-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCopyImage();
+              }}
+              title={copied ? '已复制!' : '复制图片'}
+            >
+              {copied ? (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              ) : (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                </svg>
+              )}
+            </button>
+            <button
+              className="rmiz-toolbar-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownload();
+              }}
+              title="下载图片"
+            >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
               </svg>
-            )}
-          </button>
-          <button
-            className="rmiz-toolbar-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDownload();
-            }}
-            title="下载图片"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
-            </svg>
-          </button>
-          <div className="rmiz-toolbar-divider" />
-          <button
-            className="rmiz-toolbar-btn rmiz-toolbar-close"
-            onClick={(e) => {
-              e.stopPropagation();
-              onUnzoom();
-            }}
-            title="关闭"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+            </button>
+            <div className="rmiz-toolbar-divider" />
+            <button
+              className="rmiz-toolbar-btn rmiz-toolbar-close"
+              onClick={(e) => {
+                e.stopPropagation();
+                onUnzoom();
+              }}
+              title="关闭"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

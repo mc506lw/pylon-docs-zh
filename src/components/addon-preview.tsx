@@ -15,12 +15,12 @@ const addons: AddonData[] = [
         statusTags: ["开源", "已发布"],
         downloadUrl: "https://github.com/pylonmc/pylon/releases",
         features: [
-            "电力系统与能量网络",
-            "流体管道与存储",
-            "物流传输与过滤",
-            "多方块机器结构",
-            "研究解锁系统",
-            "国际化 (i18n) 支持"
+            "电力系统",
+            "流体管道",
+            "物流传输",
+            "多方块机器",
+            "研究系统",
+            "国际化支持"
         ],
         tags: ["核心", "Kotlin", "必备"]
     },
@@ -34,7 +34,7 @@ const addons: AddonData[] = [
         downloadUrl: "https://github.com/mc506lw/Jade2Rebar/releases",
         features: [
             "客户端握手",
-            "自动隐藏 WAILA",
+            "WAILA 集成",
             "数据同步"
         ],
         tags: ["连接", "适配"]
@@ -64,10 +64,10 @@ const addons: AddonData[] = [
         statusTags: ["开源", "已发布"],
         downloadUrl: "https://github.com/mc506lw/Iron-Furnaces/releases",
         features: [
-            "9种熔炉等级",
-            "6种升级组件",
-            "彩虹/水晶特殊熔炉",
-            "智能进度条与燃料可视化"
+            "多等级熔炉",
+            "升级组件",
+            "特殊熔炉",
+            "智能界面"
         ],
         tags: ["工业", "工具"]
     },
@@ -80,10 +80,10 @@ const addons: AddonData[] = [
         statusTags: ["开源", "已发布"],
         downloadUrl: "https://github.com/mc506lw/endfield-industry/releases",
         features: [
-            "终末地风格工业",
-            "自动化生产线",
-            "资源处理链",
-            "独特视觉风格"
+            "终末地风格",
+            "自动化生产",
+            "资源处理",
+            "视觉主题"
         ],
         tags: ["工业", "主题", "Modpack"]
     },
@@ -96,7 +96,7 @@ const addons: AddonData[] = [
         statusTags: ["开源", "已发布"],
         downloadUrl: "https://github.com/KevinWoodWL/steamwork/releases",
         features: [
-            "锅炉",
+            "锅炉系统",
             "压力控制",
             "蒸汽驱动"
         ],
@@ -111,9 +111,8 @@ const addons: AddonData[] = [
         statusTags: ["开源", "开发中"],
         downloadUrl: "https://github.com/lijinhong11/pylon-delight",
         features: [
-            "美食系统扩展",
-            "农夫乐事风格",
-            "新食物与作物",
+            "美食扩展",
+            "新食物作物",
             "烹饪配方"
         ],
         tags: ["食物", "生活"]
@@ -127,10 +126,9 @@ const addons: AddonData[] = [
         statusTags: ["开源", "开发中"],
         downloadUrl: "https://github.com/GuizhanCraft/RebarMobs",
         features: [
-            "实体捕捉机制",
+            "实体捕捉",
             "伙伴系统",
-            "实体物品化",
-            "互动功能"
+            "物品化"
         ],
         tags: ["生物", "玩法"]
     },
@@ -143,10 +141,9 @@ const addons: AddonData[] = [
         statusTags: ["开源", "已发布"],
         downloadUrl: "https://github.com/balugaq/construction-wand/releases",
         features: [
-            "快速建造工具",
-            "批量放置方块",
-            "挖掘加速",
-            "建筑辅助"
+            "快速建造",
+            "批量放置",
+            "挖掘加速"
         ],
         tags: ["工具", "建筑"]
     },
@@ -161,8 +158,7 @@ const addons: AddonData[] = [
         features: [
             "可编程机器人",
             "PISA 指令集",
-            "自动化任务",
-            "自定义行为"
+            "自动化任务"
         ],
         tags: ["编程", "自动化", "机器人"]
     },
@@ -174,10 +170,9 @@ const addons: AddonData[] = [
         description: "添加恶魔、仪式、牺牲等黑暗元素。",
         statusTags: ["未发布"],
         features: [
-            "黑暗魔法系统",
-            "仪式与献祭",
-            "恶魔召唤",
-            "神秘学内容"
+            "黑暗魔法",
+            "仪式献祭",
+            "恶魔召唤"
         ],
         tags: ["魔法", "RPG", "黑暗"]
     },
@@ -191,8 +186,7 @@ const addons: AddonData[] = [
         features: [
             "等级系统",
             "物品升级",
-            "进度追踪",
-            "成就系统"
+            "进度追踪"
         ],
         tags: ["RPG", "进度"]
     },
@@ -206,7 +200,6 @@ const addons: AddonData[] = [
         features: [
             "数据统计",
             "方块追踪",
-            "服务器分析",
             "可视化报表"
         ],
         tags: ["统计", "管理"]
@@ -219,10 +212,9 @@ const addons: AddonData[] = [
         description: "添加与 Pylon 并行的进度体系，专注于复杂配方链。",
         statusTags: ["未发布"],
         features: [
-            "并行进度系统",
-            "复杂配方链",
-            "技术树扩展",
-            "模块化解锁"
+            "并行进度",
+            "复杂配方",
+            "技术树扩展"
         ],
         tags: ["进度", "技术"]
     },
@@ -236,8 +228,7 @@ const addons: AddonData[] = [
         features: [
             "航天系统",
             "行星探索",
-            "天文研究",
-            "太空科技"
+            "天文研究"
         ],
         tags: ["太空", "探索", "科幻"]
     },
@@ -249,10 +240,9 @@ const addons: AddonData[] = [
         description: "添加自动映射图册、三维地图、路径点信标等地图功能。",
         statusTags: ["未发布"],
         features: [
-            "自动地图生成",
-            "三维地图视图",
-            "路径点系统",
-            "导航辅助"
+            "自动地图",
+            "三维视图",
+            "路径点系统"
         ],
         tags: ["地图", "探索", "导航"]
     },
@@ -265,10 +255,9 @@ const addons: AddonData[] = [
         statusTags: ["开源", "已发布"],
         downloadUrl: "https://github.com/TagDL/RebarTranscEndence/releases",
         features: [
-            "粒子生产与冷凝系统",
-            "稳定锭块获取机制",
-            "终局内容扩展",
-            "高级效果与视觉增强"
+            "粒子系统",
+            "稳定化机制",
+            "终局内容"
         ],
         tags: ["终局", "魔法", "粒子"]
     },
@@ -281,11 +270,10 @@ const addons: AddonData[] = [
         statusTags: ["开源", "已发布"],
         downloadUrl: "https://github.com/TagDL/DoraMachines/releases",
         features: [
-            "5x5x5/3x3x3 范围挖掘工具",
-            "含水状态粉尘滤网",
-            "Slimefun 风格工业矿机",
-            "不可破坏符文",
-            "便携式背包"
+            "范围挖掘",
+            "工业矿机",
+            "粉尘滤网",
+            "不可破坏符文"
         ],
         tags: ["工业", "工具", "机器"]
     },
@@ -298,10 +286,9 @@ const addons: AddonData[] = [
         statusTags: ["开源", "开发中"],
         downloadUrl: "https://github.com/lijinhong11/RebarWrench",
         features: [
-            "方块属性配置工具",
-            "开发者 API 支持",
-            "属性值切换功能",
-            "可视化配置界面"
+            "属性配置",
+            "开发者API",
+            "值切换功能"
         ],
         tags: ["工具", "开发", "API"]
     }
