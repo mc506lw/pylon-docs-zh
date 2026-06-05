@@ -60,6 +60,36 @@ public class MyMachine extends RebarBlock {
 }
 ```
 
+### 使用自定义显示名称
+
+你可以为属性键和属性值指定自定义显示名称，让玩家看到更友好的界面文本：
+
+```java title="MyFurnace.java"
+public class MyFurnace extends RebarBlock {
+    public static final Wrenchable WRENCHABLE = Wrenchable.builder()
+            // 为属性键指定自定义显示名称
+            .addProperty("speed", Component.text("运行速度"), Property.builder(int.class)
+                    // 使用 Entry 指定每个值的显示名称
+                    .entries(
+                            Property.entry(1, Component.text("慢速", NamedTextColor.GRAY)),
+                            Property.entry(2, Component.text("中速", NamedTextColor.YELLOW)),
+                            Property.entry(3, Component.text("快速", NamedTextColor.RED))
+                    )
+                    .onValueChange((furnace, oldSpeed, newSpeed) -> {
+                        // 处理速度变更
+                    })
+                    .build()
+            )
+            // 禁用此方块的快速破坏功能
+            .rejectFastBreaking(true)
+            .build();
+
+    public static void register() {
+        RebarWrench.registerWrenchable(MyFurnace.class, WRENCHABLE);
+    }
+}
+```
+
 ## 🔧 API 参考
 
 ### Wrenchable
@@ -70,11 +100,20 @@ public class MyMachine extends RebarBlock {
 public interface Wrenchable {
     @NotNull PropertiesMap properties();
 
+    default boolean rejectFastBreaking() {
+        return false;
+    }
+
     static @NotNull Builder builder() {
         return new WrenchBuilder();
     }
 }
 ```
+
+| 方法 | 返回值 | 说明 |
+| :--- | :--- | :--- |
+| `properties()` | `PropertiesMap` | 返回该方块的所有属性定义 |
+| `rejectFastBreaking()` | `boolean` | 是否拒绝快速破坏（默认 `false`） |
 
 ### Wrenchable.Builder
 
@@ -82,7 +121,9 @@ public interface Wrenchable {
 
 | 方法 | 说明 |
 | :--- | :--- |
-| `addProperty(String key, Property<?> property)` | 添加一个命名属性 |
+| `addProperty(String key, Property<?> property)` | 添加一个命名属性（使用键名作为显示名称） |
+| `addProperty(String key, Component displayName, Property<?> property)` | 添加一个带有自定义显示名称的属性 |
+| `rejectFastBreaking(boolean reject)` | 设置是否禁用快速破坏功能 |
 | `build()` | 创建不可变的 `Wrenchable` 实例 |
 
 ### Property
@@ -91,18 +132,61 @@ public interface Wrenchable {
 
 ```java title="Property.java"
 Property.builder(Class<T> type)
-    .possibleValues(T... values)
+    .possibleValues(T... values)        // 使用值本身生成默认显示名称
+    .entries(Entry<T>... entries)       // 使用带自定义名称的条目
     .defaultIndex(int index)
     .onValueChange(TriConsumer<RebarBlock, T, T> onChange)
     .build();
 ```
 
+#### 创建 Entry
+
+使用静态工厂方法创建带自定义显示名称的条目：
+
+```java
+// 创建单个 Entry
+Property.entry(T value, Component displayName)
+
+// 示例
+Property.entry(NamedTextColor.RED, Component.text("红色"))
+Property.entry(3, Component.text("高速模式", NamedTextColor.GOLD))
+```
+
 | 参数 | 说明 |
 | :--- | :--- |
 | `type` | 属性值的 Java 类型（例如 `NamedTextColor.class`、`int.class`） |
-| `possibleValues` | 属性可循环切换的值列表 |
-| `defaultIndex` | `possibleValues` 中的起始索引 |
+| `possibleValues` | 属性可循环切换的值列表（自动生成显示名称） |
+| `entries` | 带有自定义显示名称的属性条目列表 |
+| `defaultIndex` | 条目列表中的起始索引 |
 | `onValueChange` | 值变更时的回调，接收 `(block, oldValue, newValue)` |
+
+#### Property 实例方法
+
+| 方法 | 返回值 | 说明 |
+| :--- | :--- | :--- |
+| `typeClass()` | `Class<T>` | 属性值的 Java 类型 |
+| `possibleValues()` | `List<T>` | 所有可能值的列表 |
+| `entries()` | `List<Entry<T>>` | 所有条目（含显示名称）的列表 |
+| `defaultIndex()` | `int` | 默认索引 |
+| `displayName(int index)` | `Component` | 获取指定索引处值的显示名称 |
+| `triggerOnChange(machine, oldValue, newValue)` | `void` | 手动触发变更回调 |
+
+### PropertiesMap
+
+多个属性的容器，管理属性的当前状态。
+
+| 方法 | 说明 |
+| :--- | :--- |
+| `addProperty(key, displayName, property)` | 添加一个属性 |
+| `getProperty(key)` | 获取指定键的属性 |
+| `hasProperty(key)` | 检查是否存在某属性 |
+| `getProperties()` | 获取所有属性的不可变映射 |
+| `getCurrentIndex(key)` | 获取当前属性值的索引 |
+| `setCurrentIndex(machine, key, index)` | 设置当前属性值索引（触发回调） |
+| `getCurrentValue(key)` | 获取当前属性值 |
+| `cycleNext(machine, key)` | 循环到下一个值 |
+| `cyclePrevious(machine, key)` | 循环到上一个值 |
+| `reset(key)` | 重置为默认值 |
 
 ### 注册与获取
 
@@ -124,6 +208,8 @@ Wrenchable wrenchable = RebarWrench.getWrenchable(MyMachine.class);
 ## 📝 最佳实践
 
 - 属性键尽量简短且表意清晰，例如 `color`、`mode`、`speed`
+- 使用 `Entry` 为属性值提供友好的显示名称，提升用户体验
 - `possibleValues` 优先使用枚举或常量，避免魔法数字
+- 对于不应被快速破坏的方块（如核心机器），设置 `.rejectFastBreaking(true)`
 - 所有状态变更都应在 `onValueChange` 中处理，保证方块状态一致
 - 避免在 `onValueChange` 中执行耗时操作，因为它运行在主线程上

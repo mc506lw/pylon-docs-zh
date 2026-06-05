@@ -13,8 +13,8 @@ import { Callout } from 'fumadocs-ui/components/callout';
 
 | 组件 | 版本要求 | 说明 |
 | :--- | :--- | :--- |
-| **Java** | Java 21+ | 运行时环境 |
-| **Minecraft 服务端** | Paper 或其分支 | RebarWrench 依赖 Rebar，而 Rebar 要求 Paper |
+| **Java** | Java 25+ | 运行时环境 |
+| **Minecraft 服务端** | Paper 26.1+ 或其分支 | RebarWrench 依赖 Rebar，而 Rebar 要求 Paper |
 | **Rebar** | 最新版本 | 从 [Rebar GitHub](https://github.com/pylonmc/rebar/releases/latest) 下载 |
 | **Pylon** | 最新版本 | 从 [Pylon GitHub](https://github.com/pylonmc/pylon/releases/latest) 下载 |
 
@@ -65,4 +65,16 @@ gradlew.bat build
 
 RebarWrench 目前使用默认配置即可正常工作。扳手物品会自动出现在 Pylon 指南的工具分类中。
 
-如果你希望调整行为，可以在首次运行后修改配置文件。关于如何将 RebarWrench 集成到你自己的附属中，请查看[开发者指南](developer)。
+### 配置选项
+
+首次运行后，会在 `plugins/RebarWrench/settings/wrench.yml` 生成配置文件：
+
+```yaml
+enableFastBreaking: true
+```
+
+| 配置项 | 类型 | 默认值 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `enableFastBreaking` | boolean | `true` | 是否启用左键快速破坏方块功能 |
+
+如果你希望调整行为，可以修改此配置文件。关于如何将 RebarWrench 集成到你自己的附属中，请查看[开发者指南](developer)。
