@@ -5,6 +5,13 @@ description: 了解 RebarWrench 的 API 以及如何将它集成到你的 Rebar 
 
 import { Callout } from 'fumadocs-ui/components/callout';
 
+<Callout type="warning">
+  RebarWrench **1.0.2** 版本对 API 进行了重大重构。如果你从旧版本升级，请注意以下变更：
+  <br /><br />
+  - 旧的 `Property` / `PropertiesMap` 属性系统已被移除
+  - 新的 API 基于事件回调模式，使用 `WrenchAction` 和 `WrenchResult` 枚举
+</Callout>
+
 ## 🧑‍💻 快速开始
 
 RebarWrench 为附属开发者提供了一套简洁的 API，让你的 Rebar 方块支持扳手交互。
@@ -15,43 +22,83 @@ RebarWrench 为附属开发者提供了一套简洁的 API，让你的 Rebar 方
 
 ```kotlin
 dependencies {
-    compileOnly("io.github.lijinhong11:RebarWrench:VERSION")
+    compileOnly("io.github.lijinhong11:RebarWrench:1.0.2")
 }
 ```
 
-将 `VERSION` 替换为[最新 Release 版本](https://github.com/lijinhong11/RebarWrench/releases/latest)。
+也可以通过 [Maven Central](https://central.sonatype.com/artifact/io.github.lijinhong11/RebarWrench) 获取最新版本。
 
 ### 基本集成
 
-要让一个 Rebar 方块支持扳手，只需实现 `Wrenchable` 接口并在加载时注册：
+要让一个 Rebar 方块支持扳手，只需通过 `Wrenchable.builder()` 构建一个 `Wrenchable` 实例，并在加载时注册：
 
 ```java title="MyMachine.java"
-public class MyMachine extends RebarBlock {
+import io.github.lijinhong11.rebarwrench.RebarWrench;
+import io.github.lijinhong11.rebarwrench.api.WrenchAction;
+import io.github.lijinhong11.rebarwrench.api.WrenchResult;
+import io.github.lijinhong11.rebarwrench.api.Wrenchable;
+import io.github.pylonmc.rebar.block.RebarBlock;
+import io.github.pylonmc.rebar.block.base.RebarInteractBlock;
+import io.github.pylonmc.rebar.block.context.BlockCreateContext;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.NamespacedKey;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
+import org.jspecify.annotations.NonNull;
+
+public class MyMachine extends RebarBlock implements RebarInteractBlock {
+    private final NamespacedKey INT = new NamespacedKey(PLUGIN_INSTANCE, "ivalue");
+    private int colorIndex = 0;
+    private int value = 0;
+    private final NamedTextColor[] COLORS = {NamedTextColor.BLUE, NamedTextColor.GREEN};
+
     public static final Wrenchable WRENCHABLE = Wrenchable.builder()
-            .addProperty("color", Property.builder(NamedTextColor.class)
-                    .defaultIndex(0)
-                    .possibleValues(NamedTextColor.BLUE, NamedTextColor.GREEN, NamedTextColor.RED)
-                    .onValueChange((machine, oldColor, newColor) -> {
-                        Block block = machine.getBlock();
-                        block.setType(newColor == NamedTextColor.BLUE
-                            ? Material.BLUE_WOOL
-                            : newColor == NamedTextColor.GREEN
-                                ? Material.GREEN_WOOL
-                                : Material.RED_WOOL);
-                    })
-                    .build()
-            )
-            .addProperty("mode", Property.builder(int.class)
-                    .defaultIndex(0)
-                    .possibleValues(0, 1, 2, 3)
-                    .onValueChange((machine, oldMode, newMode) -> {
-                        ((MyMachine) machine).mode = newMode;
-                    })
-                    .build()
-            )
+            .interactFunction((Player player, RebarBlock block, WrenchAction action) -> {
+                MyMachine machine = (MyMachine) block;
+                return switch (action) {
+                    case CONFIGURE -> {
+                        // 右键：切换颜色
+                        machine.colorIndex = (machine.colorIndex + 1) % machine.COLORS.length;
+                        player.sendActionBar(Component.text("Color: " + machine.COLORS[machine.colorIndex].toString()));
+                        yield WrenchResult.SUCCESS;
+                    }
+                    case ROTATE -> {
+                        // Shift + 右键：旋转数值
+                        machine.value = (machine.value + 1) % 6;
+                        player.sendActionBar(Component.text("Value: " + machine.value));
+                        yield WrenchResult.SUCCESS;
+                    }
+                    case FAST_BREAK -> {
+                        // Shift + 左键：允许快速拆解
+                        yield WrenchResult.SUCCESS;
+                    }
+                };
+            })
             .build();
 
-    private int mode = 0;
+    public MyMachine(@NonNull Block block, @NonNull BlockCreateContext context) {
+        super(block, context);
+    }
+
+    public MyMachine(@NonNull Block block, @NonNull PersistentDataContainer pdc) {
+        super(block, pdc);
+    }
+
+    @Override
+    public void onInteract(@NonNull PlayerInteractEvent e, @NonNull EventPriority priority) {
+        if (!e.getAction().isRightClick()) return;
+        e.getPlayer().sendMessage("The int value is " + value);
+    }
+
+    @Override
+    public void write(@NonNull PersistentDataContainer pdc) {
+        pdc.set(INT, PersistentDataType.INTEGER, value);
+    }
 
     // 在你的附属加载时注册
     public static void register() {
@@ -60,51 +107,17 @@ public class MyMachine extends RebarBlock {
 }
 ```
 
-### 使用自定义显示名称
-
-你可以为属性键和属性值指定自定义显示名称，让玩家看到更友好的界面文本：
-
-```java title="MyFurnace.java"
-public class MyFurnace extends RebarBlock {
-    public static final Wrenchable WRENCHABLE = Wrenchable.builder()
-            // 为属性键指定自定义显示名称
-            .addProperty("speed", Component.text("运行速度"), Property.builder(int.class)
-                    // 使用 Entry 指定每个值的显示名称
-                    .entries(
-                            Property.entry(1, Component.text("慢速", NamedTextColor.GRAY)),
-                            Property.entry(2, Component.text("中速", NamedTextColor.YELLOW)),
-                            Property.entry(3, Component.text("快速", NamedTextColor.RED))
-                    )
-                    .onValueChange((furnace, oldSpeed, newSpeed) -> {
-                        // 处理速度变更
-                    })
-                    .build()
-            )
-            // 禁用此方块的快速破坏功能
-            .rejectFastBreaking(true)
-            .build();
-
-    public static void register() {
-        RebarWrench.registerWrenchable(MyFurnace.class, WRENCHABLE);
-    }
-}
-```
-
 ## 🔧 API 参考
 
 ### Wrenchable
 
-核心接口，用于定义可被扳手交互的行为。
+核心接口，定义方块被扳手交互时的行为。
 
 ```java title="Wrenchable.java"
 public interface Wrenchable {
-    @NotNull PropertiesMap properties();
+    WrenchResult onWrenchInteract(Player player, RebarBlock block, WrenchAction action);
 
-    default boolean rejectFastBreaking() {
-        return false;
-    }
-
-    static @NotNull Builder builder() {
+    static Builder builder() {
         return new WrenchBuilder();
     }
 }
@@ -112,8 +125,44 @@ public interface Wrenchable {
 
 | 方法 | 返回值 | 说明 |
 | :--- | :--- | :--- |
-| `properties()` | `PropertiesMap` | 返回该方块的所有属性定义 |
-| `rejectFastBreaking()` | `boolean` | 是否拒绝快速破坏（默认 `false`） |
+| `onWrenchInteract(Player, RebarBlock, WrenchAction)` | `WrenchResult` | 处理扳手交互，根据动作类型执行对应逻辑并返回结果 |
+| `builder()` | `Builder` | 获取构造器实例 |
+
+### WrenchAction
+
+操作类型枚举，表示玩家使用扳手触发的具体操作。
+
+```java title="WrenchAction.java"
+public enum WrenchAction {
+    FAST_BREAK,   // Shift + 左键：快速拆解
+    CONFIGURE,    // 右键：配置
+    ROTATE        // Shift + 右键：旋转
+}
+```
+
+| 枚举值 | 触发方式 | 典型用途 |
+| :--- | :--- | :--- |
+| `CONFIGURE` | 右键点击方块 | 切换配置选项（如颜色、模式） |
+| `ROTATE` | 按住 Shift + 右键点击方块 | 旋转或循环数值（如朝向、档位） |
+| `FAST_BREAK` | 按住 Shift + 左键点击方块 | 快速拆解方块（需在配置中启用） |
+
+### WrenchResult
+
+操作结果枚举，告知扳手本次交互的处理结果。
+
+```java title="WrenchResult.java"
+public enum WrenchResult {
+    SUCCESS,     // 操作成功执行
+    FAILED,      // 操作失败（玩家会收到"此操作不支持"提示）
+    UNSUPPORTED  // 该操作不被支持（等同于默认行为）
+}
+```
+
+| 枚举值 | 说明 |
+| :--- | :--- |
+| `SUCCESS` | 操作成功完成。对于 `FAST_BREAK`，返回此值将触发方块破坏 |
+| `FAILED` | 操作失败，玩家会收到错误提示消息 |
+| `UNSUPPORTED` | 不支持该操作（默认值），无特殊效果 |
 
 ### Wrenchable.Builder
 
@@ -121,72 +170,27 @@ public interface Wrenchable {
 
 | 方法 | 说明 |
 | :--- | :--- |
-| `addProperty(String key, Property<?> property)` | 添加一个命名属性（使用键名作为显示名称） |
-| `addProperty(String key, Component displayName, Property<?> property)` | 添加一个带有自定义显示名称的属性 |
-| `rejectFastBreaking(boolean reject)` | 设置是否禁用快速破坏功能 |
+| `interactFunction(InteractHandler function)` | 设置交互回调函数，接收 `(Player, RebarBlock, WrenchAction)` 并返回 `WrenchResult` |
 | `build()` | 创建不可变的 `Wrenchable` 实例 |
 
-### Property
-
-带有一组可能值和可选变更回调的强类型属性。
-
-```java title="Property.java"
-Property.builder(Class<T> type)
-    .possibleValues(T... values)        // 使用值本身生成默认显示名称
-    .entries(Entry<T>... entries)       // 使用带自定义名称的条目
-    .defaultIndex(int index)
-    .onValueChange(TriConsumer<RebarBlock, T, T> onChange)
-    .build();
-```
-
-#### 创建 Entry
-
-使用静态工厂方法创建带自定义显示名称的条目：
+#### InteractHandler 函数签名
 
 ```java
-// 创建单个 Entry
-Property.entry(T value, Component displayName)
-
-// 示例
-Property.entry(NamedTextColor.RED, Component.text("红色"))
-Property.entry(3, Component.text("高速模式", NamedTextColor.GOLD))
+// InteractHandler 是一个函数式接口
+WrenchResult handle(Player player, RebarBlock block, WrenchAction action);
 ```
 
-| 参数 | 说明 |
-| :--- | :--- |
-| `type` | 属性值的 Java 类型（例如 `NamedTextColor.class`、`int.class`） |
-| `possibleValues` | 属性可循环切换的值列表（自动生成显示名称） |
-| `entries` | 带有自定义显示名称的属性条目列表 |
-| `defaultIndex` | 条目列表中的起始索引 |
-| `onValueChange` | 值变更时的回调，接收 `(block, oldValue, newValue)` |
+推荐使用 Java 的 switch 表达式来处理不同的 `WrenchAction`：
 
-#### Property 实例方法
-
-| 方法 | 返回值 | 说明 |
-| :--- | :--- | :--- |
-| `typeClass()` | `Class<T>` | 属性值的 Java 类型 |
-| `possibleValues()` | `List<T>` | 所有可能值的列表 |
-| `entries()` | `List<Entry<T>>` | 所有条目（含显示名称）的列表 |
-| `defaultIndex()` | `int` | 默认索引 |
-| `displayName(int index)` | `Component` | 获取指定索引处值的显示名称 |
-| `triggerOnChange(machine, oldValue, newValue)` | `void` | 手动触发变更回调 |
-
-### PropertiesMap
-
-多个属性的容器，管理属性的当前状态。
-
-| 方法 | 说明 |
-| :--- | :--- |
-| `addProperty(key, displayName, property)` | 添加一个属性 |
-| `getProperty(key)` | 获取指定键的属性 |
-| `hasProperty(key)` | 检查是否存在某属性 |
-| `getProperties()` | 获取所有属性的不可变映射 |
-| `getCurrentIndex(key)` | 获取当前属性值的索引 |
-| `setCurrentIndex(machine, key, index)` | 设置当前属性值索引（触发回调） |
-| `getCurrentValue(key)` | 获取当前属性值 |
-| `cycleNext(machine, key)` | 循环到下一个值 |
-| `cyclePrevious(machine, key)` | 循环到上一个值 |
-| `reset(key)` | 重置为默认值 |
+```java
+.interactFunction((player, block, action) -> {
+    return switch (action) {
+        case CONFIGURE -> { /* 处理配置逻辑 */ yield WrenchResult.SUCCESS; }
+        case ROTATE -> { /* 处理旋转逻辑 */ yield WrenchResult.SUCCESS; }
+        case FAST_BREAK -> WrenchResult.SUCCESS; // 或 WrenchResult.FAILED 以拒绝快速拆解
+    };
+})
+```
 
 ### 注册与获取
 
@@ -205,11 +209,16 @@ public void onEnable() {
 Wrenchable wrenchable = RebarWrench.getWrenchable(MyMachine.class);
 ```
 
+| 方法 | 说明 |
+| :--- | :--- |
+| `RebarWrench.registerWrenchable(Class<? extends RebarBlock>, Wrenchable)` | 为指定的 RebarBlock 类注册扳手交互行为 |
+| `RebarWrench.getWrenchable(Class<? extends RebarBlock>)` | 获取指定类已注册的 `Wrenchable` 实例（未注册则返回 `null`） |
+
 ## 📝 最佳实践
 
-- 属性键尽量简短且表意清晰，例如 `color`、`mode`、`speed`
-- 使用 `Entry` 为属性值提供友好的显示名称，提升用户体验
-- `possibleValues` 优先使用枚举或常量，避免魔法数字
-- 对于不应被快速破坏的方块（如核心机器），设置 `.rejectFastBreaking(true)`
-- 所有状态变更都应在 `onValueChange` 中处理，保证方块状态一致
-- 避免在 `onValueChange` 中执行耗时操作，因为它运行在主线程上
+- 在 `interactFunction` 中使用 switch 表达式处理所有三种 `WrenchAction`，确保每种情况都有明确的返回值
+- 对于不应被快速拆解的核心机器方块，在 `FAST_BREAK` 分支中返回 `WrenchResult.FAILED`
+- 使用 `player.sendActionBar()` 向玩家反馈操作结果，提供良好的用户体验
+- 所有状态修改应在回调中直接完成，保持逻辑集中
+- 避免在 `interactFunction` 中执行耗时操作，因为它运行在主线程上
+- 如果某个操作在当前状态下无意义，返回 `WrenchResult.FAILED` 会向玩家显示提示信息
