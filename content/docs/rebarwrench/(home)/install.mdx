@@ -15,18 +15,30 @@ import { Callout } from 'fumadocs-ui/components/callout';
 | :--- | :--- | :--- |
 | **Java** | Java 25+ | 运行时环境 |
 | **Minecraft 服务端** | Paper 26.1+ 或其分支 | RebarWrench 依赖 Rebar，而 Rebar 要求 Paper |
-| **Rebar** | 最新版本 | 从 [Rebar GitHub](https://github.com/pylonmc/rebar/releases/latest) 下载 |
-| **Pylon** | 最新版本 | 从 [Pylon GitHub](https://github.com/pylonmc/pylon/releases/latest) 下载 |
+| **Rebar** | 0.40.0+ | 从 [Rebar GitHub](https://github.com/pylonmc/rebar/releases/latest) 下载 |
+| **Pylon** | 0.38.0+ | 从 [Pylon GitHub](https://github.com/pylonmc/pylon/releases/latest) 下载 |
 
 ## 📦 方法一：从 Release 下载（推荐）
 
 1. 前往 [RebarWrench Releases 页面](https://github.com/lijinhong11/RebarWrench/releases/latest)
-2. 下载最新的 `RebarWrench-*.jar` 文件
+2. 下载最新的 `RebarWrench-*.jar` 文件（当前版本：**1.0.2**）
 3. 将 `.jar` 文件放入服务器的 `plugins` 文件夹
 4. **重启服务器**（不要使用 `/reload`）
 5. 完成！
 
-## 🔧 方法二：从源码构建
+## 📦 方法二：Maven Central 引入（开发者）
+
+RebarWrench 已发布至 [Maven Central](https://central.sonatype.com/artifact/io.github.lijinhong11/RebarWrench)，可在 `build.gradle.kts` 中直接引入：
+
+```kotlin
+dependencies {
+    compileOnly("io.github.lijinhong11:RebarWrench:1.0.2")
+}
+```
+
+![Maven Central Version](https://img.shields.io/maven-central/v/io.github.lijinhong11/RebarWrench)
+
+## 🔧 方法三：从源码构建
 
 如果你需要自定义修改或想获取最新开发版本：
 
@@ -59,15 +71,19 @@ gradlew.bat build
 [RebarWrench] RebarWrench is enabled!
 ```
 
-如果看到这条消息，说明插件已成功加载。
+如果看到这条消息，说明插件已成功加载。扳手物品会自动出现在 Pylon 指南的工具分类中。
 
-## ⚙️ 安装后说明
+## ⚙️ 合成配方
 
-RebarWrench 目前使用默认配置即可正常工作。扳手物品会自动出现在 Pylon 指南的工具分类中。
+首次运行后，玩家可以通过以下配方合成扳手：
 
-### 配置选项
+> **2 铁锭 + 2 锡锭 → 扳手**
 
-首次运行后，会在 `plugins/RebarWrench/settings/wrench.yml` 生成配置文件：
+合成后的扳手为刷子材质物品。
+
+## ⚙️ 配置选项
+
+配置文件位于 `plugins/RebarWrench/settings/wrench.yml`：
 
 ```yaml
 enableFastBreaking: true
@@ -75,6 +91,14 @@ enableFastBreaking: true
 
 | 配置项 | 类型 | 默认值 | 说明 |
 | :--- | :--- | :--- | :--- |
-| `enableFastBreaking` | boolean | `true` | 是否启用左键快速破坏方块功能 |
+| `enableFastBreaking` | boolean | `true` | 是否启用 Shift + 左键快速拆解方块功能 |
+
+### 玩家操作说明
+
+| 操作 | 触发动作 | 说明 |
+| :--- | :--- | :--- |
+| 右键点击方块 | CONFIGURE | 配置模式（由开发者定义行为） |
+| Shift + 右键点击方块 | ROTATE | 旋转模式（由开发者定义行为） |
+| Shift + 左键点击方块 | FAST_BREAK | 快速拆解方块（需启用配置） |
 
 如果你希望调整行为，可以修改此配置文件。关于如何将 RebarWrench 集成到你自己的附属中，请查看[开发者指南](developer)。
