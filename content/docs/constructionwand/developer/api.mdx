@@ -1,0 +1,265 @@
+---
+title: 插件 API
+description: 了解 ConstructionWand 的 API 以及如何将它集成到你的 Rebar 附属中
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+<Callout type="info">
+  ConstructionWand 提供了灵活的 **ItemProvider（物品提供者）** 系统，允许开发者自定义魔杖获取和消耗物品的来源。这意味着玩家**不限于背包中的物品**——你可以让魔杖从潜影盒、筒仓、或其他任何自定义容器中取出方块来建造。
+</Callout>
+
+## 🧑‍💻 快速开始
+
+### 添加依赖
+
+将 ConstructionWand 添加到你的 `build.gradle.kts` 中：
+
+```kotlin
+dependencies {
+    compileOnly("com.balugaq:ConstructionWand:0.8.0")
+}
+```
+
+## 🔌 ItemProvider 系统（核心功能）
+
+这是 ConstructionWand 最具扩展性的功能。当玩家使用建筑魔杖或填充魔杖放置方块时，魔杖需要从某个地方获取对应的方块物品。**ItemProvider 就是定义"从哪里拿东西"的接口。**
+
+### 工作原理
+
+```
+玩家使用建筑魔杖放置方块
+        ↓
+遍历所有已注册的 ItemProvider
+        ↓
+PlayerInventoryItemProvider → 从背包中查找
+ShulkerBoxItemProvider      → 从潜影盒中查找
+你的自定义 Provider          → 从你的自定义容器中查找
+        ↓
+汇总数量 → 足够则执行放置，不足则提示
+```
+
+### IItemProvider 接口
+
+```java title="IItemProvider.java"
+public interface IItemProvider {
+    // 注册一个全局的 ItemProvider
+    static void registerProvider(IItemProvider provider);
+
+    // 统计玩家拥有的目标物品总量（遍历所有 Provider）
+    static int getItemAmount(Player player, ItemStack target, int requireAmount);
+
+    // 消耗物品（遍历所有 Provider，调用后需 updateInventory）
+    static int consumeItems(Player player, ItemStack target, int amount);
+
+    // 该 Provider 来自哪个插件
+    Plugin getPlugin();
+
+    // 统计此 Provider 能提供的物品数量
+    int getAmount(Player player, ItemStack target, int requireAmount);
+
+    // 从此 Provider 中消耗指定数量的物品
+    int consumeItem(Player player, ItemStack target, int amount);
+}
+```
+
+| 方法 | 返回值 | 说明 |
+| :--- | :--- | :--- |
+| `getPlugin()` | `Plugin` | 返回该 Provider 所属的插件实例 |
+| `getAmount(Player, ItemStack, int)` | `int` | 统计该 Provider 可为目标物品提供的最大数量 |
+| `consumeItem(Player, ItemStack, int)` | `int` | 从该 Provider 中消耗指定数量的物品，返回实际消耗量 |
+
+> **注意：** 创造模式下，`getItemAmount` 和 `consumeItems` 会直接返回/消耗配置的上限值，不会实际调用各个 Provider。
+
+### 内置 Provider
+
+#### PlayerInventoryItemProvider
+
+从玩家背包中直接获取和消耗物品。这是最基础的 Provider，始终可用。
+
+```java
+// 实现逻辑：遍历背包所有格子，统计与 target 相似的物品总数
+// 消耗时：逐格扣除物品数量
+```
+
+#### ShulkerBoxItemProvider
+
+从玩家背包中**潜影盒内部**获取和消耗物品。
+
+```java
+// 实现逻辑：
+// 1. 遍历背包，找到所有潜影盒
+// 2. 读取每个潜影盒的 Container 数据组件（DataComponentTypes.CONTAINER）
+// 3. 在潜影盒内容物中查找与 target 相似的物品
+// 4. 消耗时修改潜影盒内容并写回 Container 数据
+```
+
+这就是作者提到的核心特性——**类似从潜影盒里拿东西出来，不用一定在背包里的物品也能放方块**。
+
+#### SiloItemProvider（Pylon 集成）
+
+当服务器安装了 Pylon 时自动启用，从 Pylon **筒仓（Silo）** 中获取和消耗物品。
+
+```java
+// 实现逻辑：
+// 1. 遍历背包，识别 RebarItem 中的 Silo.Item
+// 2. 检查筒仓中存储的物品类型是否匹配
+// 3. 通过 silo.getSiloAmount() 获取存储数量
+// 4. 消耗时通过 silo.setSiloAmount() 扣减
+```
+
+### 自定义 ItemProvider 示例
+
+假设你开发了一个附属，有一个"量子背包"方块可以远程存储物品。你可以让它支持 ConstructionWand：
+
+```java title="QuantumBackpackItemProvider.java"
+import com.balugaq.constructionwand.api.providers.IItemProvider;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
+
+public class QuantumBackpackItemProvider implements IItemProvider {
+
+    @Override
+    public Plugin getPlugin() {
+        return MyAddon.getInstance(); // 你的附属实例
+    }
+
+    @Override
+    public int getAmount(Player player, ItemStack target, int requireAmount) {
+        if (player.getGameMode() == GameMode.CREATIVE) {
+            return MODIFICATION_BLOCK_LIMIT;
+        }
+
+        // 从你的量子背包数据中查询物品数量
+        QuantumStorage storage = getQuantumStorage(player);
+        int available = storage.count(target);
+        return Math.min(available, requireAmount);
+    }
+
+    @Override
+    public int consumeItem(Player player, ItemStack target, int amount) {
+        if (player.getGameMode() == GameMode.CREATIVE) {
+            return amount;
+        }
+
+        // 从量子背包中扣除物品
+        QuantumStorage storage = getQuantumStorage(player);
+        int consumed = storage.remove(target, amount);
+        return consumed;
+    }
+}
+```
+
+注册你的 Provider：
+
+```java
+// 在你的附属 onEnable 中注册
+@Override
+public void onEnable() {
+    IItemProvider.registerProvider(new QuantumBackpackItemProvider());
+}
+```
+
+<Callout type="warning">
+  注册顺序很重要！`getItemAmount` 和 `consumeItems` 会**按注册顺序**依次遍历 Provider。先注册的 Provider 会被优先使用。通常建议将"更小的容器"（如背包）放在前面，"更大的容器"（如仓库）放在后面。
+</Callout>
+
+## 🔧 IWand 接口
+
+所有魔杖的通用接口，定义了魔杖的核心属性和行为：
+
+```java title="IWand.java"
+public interface IWand extends Keyed {
+    boolean isBlockStrict();           // 是否限制为单一方块类型
+    boolean isOpOnly();               // 是否仅限 OP 使用
+    boolean isDisabled();              // 是否被禁用
+    int getLimitBlocks();              // 最大操作方块数
+    boolean isAllowHandleRebarBlock(); // 是否允许操作 Rebar 方块
+    int getDurability();              // 耐久值（-1 为无限）
+    ItemStack getStack();             // 魔杖物品栈
+    int getCooldownTicks();           // 冷却时间（tick）
+    Sound getSound();                 // 操作音效
+    int getHandleableBlocks();        // 实际可处理方块数（取耐久和上限的较小值）
+
+    default void handleInteract(Player player, int blocks); // 处理交互后的耐久/冷却
+}
+```
+
+| 属性 | 类型 | 说明 |
+| :--- | :--- | :--- |
+| `limitBlocks` | `int` | 该魔杖单次可操作的最大方块数 |
+| `blockStrict` | `boolean` | 建筑魔杖是否限制为单一方块类型 |
+| `opOnly` | `boolean` | 是否仅允许管理员使用 |
+| `allowHandleRebarBlock` | `boolean` | 是否允许对 Rebar/Pylon 方块生效 |
+| `durability` | `int` | 耐久值，每次操作消耗对应数量的耐久 |
+| `cooldownTicks` | `int` | 使用后的冷却时间 |
+
+## 📡 事件系统
+
+ConstructionWand 提供了完整的事件系统，允许其他插件监听和干预魔杖的操作。
+
+### PrepareBuildingEvent
+
+在建筑魔杖计算完放置区域但**尚未执行放置**时触发。你可以修改预览位置集合。
+
+```java
+@EventHandler
+public void onPrepareBuilding(PrepareBuildingEvent event) {
+    Player player = event.getPlayer();
+    BuildingWand wand = event.getBuildingWand();
+    Block lookingAt = event.getLookingAtBlock();
+    Set<Location> locations = event.getDisplayLocations();
+
+    // 你可以添加或移除预览位置
+    event.addDisplayLocation(someLocation);
+
+    // 或者完全替换
+    event.getDisplayLocations().clear();
+    event.addDisplayLocations(yourCustomLocations);
+}
+```
+
+| 方法 | 返回值 | 说明 |
+| :--- | :--- | :--- |
+| `getPlayer()` | `Player` | 触发事件的玩家 |
+| `getBuildingWand()` | `BuildingWand` | 使用的建筑魔杖 |
+| `getLookingAtBlock()` | `Block` | 玩家瞄准的方块 |
+| `getDisplayLocations()` | `Set<Location>` | 即将放置的方块位置（可修改） |
+| `addDisplayLocation(Location)` | `void` | 添加一个预览位置 |
+| `addDisplayLocations(Collection)` | `void` | 批量添加预览位置 |
+
+### PrepareBreakingEvent
+
+与 `PrepareBuildingEvent` 类似，但在拆除魔杖触发时调用。API 结构相同，使用 `BreakingWand` 替代 `BuildingWand`。
+
+### FakeBlockPlaceEvent / FakeBlockBreakEvent
+
+继承自原版的 `BlockPlaceEvent` / `BlockBreakEvent`，同时实现 `IFakeEvent` 标记接口。当魔杖实际放置或拆除每个方块时触发。
+
+```java
+@EventHandler
+public void onFakePlace(FakeBlockPlaceEvent event) {
+    // 这是一个"假"的放置事件
+    // 可以用它来记录日志、触发连锁反应等
+    Block placedBlock = event.getBlock();
+    Player player = event.getPlayer();
+}
+
+@EventHandler
+public void onFakeBreak(FakeBlockBreakEvent event) {
+    Block brokenBlock = event.getBlock();
+    Player player = event.getPlayer();
+}
+```
+
+> 这些事件继承自原版 Bukkit 事件，所以普通的方块放置/拆除监听器也会被触发。实现 `IFakeEvent` 接口是为了方便你区分这是魔杖触发的还是玩家手动操作的。
+
+## 📝 最佳实践
+
+- 自定义 `ItemProvider` 时，确保 `getAmount` 和 `consumeItem` 的逻辑一致——能查到的物品一定能扣掉
+- `consumeItem` 执行后记得处理持久化数据的保存
+- 如果你的容器跨玩家共享（如公共仓库），需要注意并发安全
+- 使用 `PrepareBuildingEvent` / `PrepareBreakingEvent` 可以实现区域限制（如领地保护）
+- 大范围魔杖可能影响服务器性能，建议合理设置 `limit-blocks`
+- 作弊模式（cheat）魔杖建议仅通过权限控制给管理员使用

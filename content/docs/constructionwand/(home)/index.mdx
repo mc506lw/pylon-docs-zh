@@ -1,0 +1,100 @@
+---
+title: 什么是 ConstructionWand?
+description: 了解 ConstructionWand 是什么，以及它如何为玩家提供强大的建筑与拆除工具
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+ConstructionWand 是一个基于 Paper 的 Minecraft 插件，它为 **Rebar 附属** 提供了三种强大的**魔杖工具**，让玩家可以一次性放置、拆除或填充大量方块，大幅提升建筑和挖掘效率。
+
+[🐙 在 GitHub 上找到我们 →](https://github.com/balugaq/construction-wand)
+[📦 安装 ConstructionWand →](install)
+
+继续往下看。
+
+---
+
+## ✨ 功能特性
+
+| 状态 | 功能 | 说明 |
+| :----- | :------ | :------ |
+| ✅ | **建筑魔杖** | 一次放置多个方块，支持普通模式（任意方块）和方块限制模式（单一类型） |
+| ✅ | **拆除魔杖** | 一次拆除多个同类型方块 |
+| ✅ | **填充魔杖** | 通过选点定义区域，批量填充指定方块 |
+| ✅ | **预览显示** | 使用半透明玻璃效果显示即将放置/拆除的方块预览 |
+| ✅ | **轴控制** | 按 F 键切换轴向限制（X / Y / Z / 无限制） |
+| ✅ | **ItemProvider 系统** | 支持从背包、潜影盒、Pylon 筒仓等多种来源获取物品 |
+| ✅ | **多品质等级** | 普通 / 稀有 / 史诗 / 作弊模式，不同品质有不同的范围上限 |
+| ✅ | **耐久度系统** | 魔杖可设置耐久值，使用时逐渐消耗 |
+| ✅ | **事件 API** | 完整的事件系统，支持监听和干预建筑/拆除操作 |
+| ✅ | **多语言支持** | 内置英语、简体中文、繁体中文、繁体香港语、韩语 |
+| ✅ | **Rebar 附属** | 作为标准 Rebar 附属集成，依赖 Rebar 和 Pylon |
+
+## 🎮 工作原理
+
+### 建筑魔杖
+
+当玩家手持建筑魔杖右键点击一个方块时：
+
+1. 魔杖根据点击的面和相邻的同类型方块自动计算放置区域
+2. 显示半透明预览让玩家确认
+3. 通过 **ItemProvider** 系统从玩家的物品来源中消耗对应数量的方块
+4. 执行放置操作
+
+### 拆除魔杖
+
+当玩家手持拆除魔杖右键点击一个方块时：
+
+1. 自动计算以目标方块为中心的同类方块区域
+2. 显示预览
+3. 执行拆除操作（生存模式下掉落物品到背包或 ItemProvider）
+
+### 填充魔杖
+
+填充魔杖采用三点式操作：
+
+1. **左键点击方块** → 设置起始点
+2. **右键点击方块** → 设置结束点
+3. **Shift + 右键点击方块** → 选择填充材料
+4. **右键点击空气** → 执行填充
+
+## 🏗️ 核心架构
+
+| 组件 | 文件 | 说明 |
+| :--- | :--- | :--- |
+| **主插件** | [ConstructionWandPlugin.java](https://github.com/balugaq/construction-wand/blob/master/src/main/java/com/balugaq/constructionwand/implementation/ConstructionWandPlugin.java) | 入口点、Rebar 附属注册、管理器初始化 |
+| **建筑魔杖** | [BuildingWand.java](https://github.com/balugaq/construction-wand/blob/master/src/main/java/com/balugaq/constructionwand/api/items/BuildingWand.java) | 建筑魔杖实现，处理方块放置逻辑 |
+| **拆除魔杖** | [BreakingWand.java](https://github.com/balugaq/construction-wand/blob/master/src/main/java/com/balugaq/constructionwand/api/items/BreakingWand.java) | 拆除魔杖实现，处理方块破坏逻辑 |
+| **填充魔杖** | [FillWand.java](https://github.com/balugaq/construction-wand/blob/master/src/main/java/com/balugaq/constructionwand/api/items/FillWand.java) | 填充魔杖实现，区域选择与批量填充 |
+| **IWand 接口** | [IWand.java](https://github.com/balugaq/construction-wand/blob/master/src/main/java/com/balugaq/constructionwand/api/items/IWand.java) | 所有魔杖的通用接口，定义属性和行为规范 |
+| **ItemProvider API** | [IItemProvider.java](https://github.com/balugaq/construction-wand/blob/master/src/main/java/com/balugaq/constructionwand/api/providers/IItemProvider.java) | 物品提供者接口，支持自定义物品来源 |
+| **潜影盒 Provider** | [ShulkerBoxItemProvider.java](https://github.com/balugaq/construction-wand/blob/master/src/main/java/com/balugaq/constructionwand/api/providers/ShulkerBoxItemProvider.java) | 从潜影盒中获取/消耗物品 |
+| **Pylon 筒仓 Provider** | [SiloItemProvider.java](https://github.com/balugaq/construction-wand/blob/master/src/main/java/com/balugaq/constructionwand/core/integrations/pylon/SiloItemProvider.java) | 从 Pylon 筒仓中获取/消耗物品 |
+| **事件系统** | [events/](https://github.com/balugaq/construction-wand/tree/master/src/main/java/com/balugaq/constructionwand/api/events) | PrepareBuildingEvent、PrepareBreakingEvent 等 |
+| ** WandSetup** | [WandSetup.java](https://github.com/balugaq/construction-wand/blob/master/src/main/java/com/balugaq/constructionwand/core/managers/WandSetup.java) | 注册所有魔杖及其配置 |
+
+## 📋 技术规格
+
+| 项目 | 规格 |
+| :----- | :------ |
+| **编程语言** | Java 21+ |
+| **目标平台** | Paper 1.21+ / Pylon / Rebar |
+| **当前版本** | 0.8.0 |
+| **依赖要求** | Rebar 0.40.0+ / Pylon 0.38.0+ |
+| **魔杖材质** | 烈焰棒（Blaze Rod） |
+| **许可证** | GPL 3.0 License |
+
+## 👥 致谢
+
+ConstructionWand 由 [balugaq](https://github.com/balugaq) 开发和维护。
+
+特别感谢：
+- **[Rebar / Pylon 团队](https://github.com/pylonmc)** - 提供了优秀的 Rebar 框架和附属系统
+
+如果这个项目对你的服务器有帮助，欢迎在 GitHub 上给我们一个 ⭐！
+
+---
+
+## 📖 快速开始
+
+准备好尝试了吗？查看我们的[安装指南](install)开始使用 ConstructionWand！
