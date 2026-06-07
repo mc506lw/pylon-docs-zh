@@ -1,0 +1,135 @@
+---
+title: 安装 ConstructionWand
+description: 安装 ConstructionWand 并开始使用建筑魔杖
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+<Callout type="info">
+  ConstructionWand 是一个 **Rebar 附属**。在添加 ConstructionWand 之前，你必须已经在服务器上正确安装并运行了 **Rebar** 和 **Pylon**。
+</Callout>
+
+## 📋 前置要求
+
+| 组件 | 版本要求 | 说明 |
+| :--- | :--- | :--- |
+| **Java** | Java 21+ | 运行时环境 |
+| **Minecraft 服务端** | Paper 1.21+ 或其分支 | ConstructionWand 依赖 Rebar，而 Rebar 要求 Paper |
+| **Rebar** | 0.40.0+ | 从 [Rebar GitHub](https://github.com/pylonmc/rebar/releases/latest) 下载 |
+| **Pylon** | 0.38.0+ | 从 [Pylon GitHub](https://github.com/pylonmc/pylon/releases/latest) 下载 |
+
+## 📦 方法一：从 Release 下载（推荐）
+
+1. 前往 [ConstructionWand Releases 页面](https://github.com/balugaq/construction-wand/releases/latest)
+2. 下载最新的 `ConstructionWand-*.jar` 文件
+3. 将 `.jar` 文件放入服务器的 `plugins` 文件夹
+4. **重启服务器**（不要使用 `/reload`）
+5. 完成！
+
+## 🔧 方法二：从源码构建
+
+如果你需要自定义修改或想获取最新开发版本：
+
+### 克隆项目
+
+```bash
+git clone https://github.com/balugaq/construction-wand.git
+cd construction-wand
+```
+
+### 构建项目
+
+```bash
+# 使用 Gradle wrapper（推荐）
+./gradlew build
+
+# 或者在 Windows 上
+gradlew.bat build
+```
+
+### 部署到服务器
+
+构建完成后，将 `build/libs/` 目录下生成的 JAR 复制到服务器的 `plugins` 文件夹，然后重启服务器。
+
+## ✅ 安装验证
+
+安装完成后，检查服务器控制台日志，应该能看到类似以下信息：
+
+```
+[ConstructionWand] ConstructionWand Done!
+```
+
+如果看到这条消息，说明插件已成功加载。魔杖物品会自动出现在 Pylon 指南中。
+
+## ⚙️ 合成配方
+
+首次运行后，玩家可以通过工作台合成各种魔杖：
+
+### 建筑魔杖
+
+| 品质 | 配方 | 说明 |
+| :--- | :--- | :--- |
+| **普通** | 铁锭 + 木棍 ×4 | 范围较小，任意方块模式 |
+| **稀有** | 普通品质 + 铁锭 + 木棍 | 中等范围 |
+| **史诗** | 稀有品质 + 金锭 + 木棍 | 大范围 |
+| **作弊** | 下界合金剑材质 | 仅限管理员，超大范围 |
+
+### 方块限制版建筑魔杖
+
+与普通版相同配方排列方式不同，仅允许放置**单一类型**的方块。
+
+### 拆除魔杖
+
+| 品质 | 配方 | 说明 |
+| :--- | :--- | :--- |
+| **普通** | 黑曜石 + 铁锭 + 木棍 ×3 | 范围较小 |
+| **稀有** | 普通品质 + 黑曜石 + 木棍 | 中等范围 |
+| **史诗** | 稀有品质 + 黑曜石 ×2 + 木棍 | 大范围 |
+| **作弊** | 下界合金剑材质 | 仅限管理员 |
+
+### 填充魔杖
+
+| 品质 | 配方 | 说明 |
+| :--- | :--- | :--- |
+| **普通** | 钻石 + 烈焰棒 ×2 | 范围较小 |
+| **稀有** | 普通品质 + 烈焰棒 | 中等范围 |
+| **史诗** | 稀有品质 + 烈焰棒 | 大范围 |
+| **作弊** | 下界合金剑材质 | 仅限管理员 |
+
+## ⚙️ 配置选项
+
+每种魔杖都有独立的配置文件，位于 `plugins/ConstructionWand/settings/` 目录下。以建筑魔杖为例：
+
+```yaml
+limit-blocks: 9           # 最大可操作的方块数量
+block-strict: false        # 是否限制为单一方块类型
+op-only: false            # 是否仅限 OP 使用
+allow-handle-pylon-block: false  # 是否允许操作 Rebar/Pylon 方块
+durability: 349           # 耐久值（-1 表示无耐久限制）
+cooldown-ticks: 0         # 使用冷却时间（tick）
+sound:                    # 操作音效
+  name: minecraft:block.creaking_heart.fall
+  source: block
+  volume: 1.0
+  pitch: 1.0
+```
+
+### 玩家操作说明
+
+#### 建筑魔杖 / 拆除魔杖
+
+| 操作 | 触发动作 | 说明 |
+| :--- | :--- | :--- |
+| 右键点击方块 | 放置 / 拆除 | 对目标区域执行操作 |
+| F 键（切换副手） | 切换轴向 | X / Y / Z 轴限制或无限制 |
+
+#### 填充魔杖
+
+| 操作 | 触发动作 | 说明 |
+| :--- | :--- | :--- |
+| 左键点击方块 | 设置起始点 | 定义填充区域的起点 |
+| 右键点击方块 | 设置结束点 | 定义填充区域的终点 |
+| Shift + 右键点击方块 | 选择填充材料 | 选取要填充的方块类型 |
+| 右键点击空气 | 执行填充 | 在起终点区域内批量填充 |
+
+关于如何将 ConstructionWand 集成到你自己的附属中（如自定义 ItemProvider），请查看[开发者指南](developer)。

@@ -25,6 +25,11 @@ export default function Layout({ children }: LayoutProps<'/docs'>) {
           title: 'RebarWrench',
           url: '/docs/rebarwrench',
           description: '扳手前置库',
+        },
+        {
+          title: 'ConstructionWand',
+          url: '/docs/constructionwand',
+          description: '建筑魔杖',
         }
       ],
     }}  >
