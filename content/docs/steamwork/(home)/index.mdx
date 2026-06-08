@@ -65,7 +65,7 @@ consumeReserved()  →  预扣原料（预留）
        ↓
 startRecipe()      →  开始配方，消耗蒸汽
        ↓
-progressRecipe()   → 每tick推进进度，持续消耗蒸汽
+progressRecipe()   →  每tick推进进度，持续消耗蒸汽
        ↓
 output             →  完成产出
 ```
@@ -112,7 +112,7 @@ Steamwork 提供了一套类似 CargoDuct 风格的**汽动物流网络**：
 - **管道（PneumaticDuct）**：使用 ItemDisplay 渲染的视觉管道，最多 3 个连接面，支持 Z-fighting 防止
 - **BFS 寻路**：`findReachableEndpoints()` 从起点广度优先搜索所有可达端点
 - **双向连接验证**：管道之间需要互相确认连接关系（reciprocal connection）
-- **Facade 支持**：可覆盖外观方块隐藏管道
+- ** facade 支持**：可覆盖外观方块隐藏管道
 
 ### 产线系统
 
