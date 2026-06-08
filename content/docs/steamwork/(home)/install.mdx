@@ -1,0 +1,192 @@
+---
+title: 安装 Steamwork
+description: 安装 Steamwork 并开始搭建你的蒸汽工厂
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+<Callout type="info">
+  Steamwork 是一个 **Rebar/Pylon 附属**。在添加 Steamwork 之前，你必须已经在服务器上正确安装并运行了 **Rebar** 和 **Pylon**。
+</Callout>
+
+<Callout type="warning">
+  Steamwork 目前处于**开发阶段**，版本间可能不兼容。建议仅在测试服上使用。
+</Callout>
+
+## 📋 前置要求
+
+| 组件 | 版本要求 | 说明 |
+| :--- | :--- | :--- |
+| **Java** | Java 21+ | 运行时环境 |
+| **Minecraft 服务端** | Paper 26.1+ 或其分支 | Steamwork 依赖 Rebar，而 Rebar 要求 Paper |
+| **Rebar** | 0.40.0+ | 从 [Rebar GitHub](https://github.com/pylonmc/rebar/releases/latest) 下载 |
+| **Pylon** | 0.38.0+ | 从 [Pylon GitHub](https://github.com/pylonmc/pylon/releases/latest) 下载 |
+
+## 📦 方法一：从 Release 下载（推荐）
+
+1. 前往 [Steamwork Releases 页面](https://github.com/KevinWoodWL/steamwork/releases/latest)
+2. 下载最新的 `Steamwork-*.jar` 文件
+3. 将 `.jar` 文件放入服务器的 `plugins` 文件夹
+4. **重启服务器**（不要使用 `/reload`）
+5. 完成！
+
+## 🔧 方法二：从源码构建
+
+如果你需要自定义修改或想获取最新开发版本：
+
+### 克隆项目
+
+```bash
+git clone https://github.com/KevinWoodWL/steamwork.git
+cd steamwork
+```
+
+### 构建项目
+
+```bash
+# 使用 Gradle wrapper（推荐）
+./gradlew build
+
+# 或者在 Windows 上
+gradlew.bat build
+```
+
+### 部署到服务器
+
+构建完成后，将 `build/libs/` 目录下生成的 JAR 复制到服务器的 `plugins` 文件夹，然后重启服务器。
+
+## ✅ 安装验证
+
+安装完成后，检查服务器控制台日志，应该能看到类似以下信息：
+
+```
+[Steamwork] Steamwork Enabled!
+[Steamwork] 注册流体/物品/方块/研究/配方...
+```
+
+如果看到这些消息，说明插件已成功加载。Steamwork 的物品会自动出现在 Pylon 指南中。
+
+## ⚙️ 锅炉链概览
+
+Steamwork 的核心是四级锅炉链，每级锅炉需要对应等级的材料合成：
+
+| 锅炉 | 产出蒸汽 | 所需材料 | 特点 |
+| :--- | :--- | :--- | :--- |
+| **青铜锅炉 (BronzeBoiler)** | 蒸汽 (Steam) | 青铜合金 | 入门级锅炉，产汽量最低 |
+| **因瓦锅炉 (InvarBoiler)** | 超热蒸汽 (Superheated Steam) | 因瓦合金 | 中级锅炉，效率显著提升 |
+| **锰钢锅炉 (ManganeseSteelBoiler)** | 高压蒸汽 (High-Pressure Steam) | 锰钢合金 | 高级锅炉，产汽量大 |
+| **钨锅炉 (TungstenBoiler)** | 高压蒸汽 (High-Pressure Steam) | 钨金属 | 顶级锅炉，最高效率 |
+
+### 锅炉运行机制
+
+每个锅炉都需要以下条件才能正常工作：
+
+1. **水源**：从锅炉底部输入水（桶/流体管道）
+2. **热源**：在锅炉正下方放置热源（营火 / 熔岩 / 岩浆块）
+3. **蒸汽输出**：在锅炉顶部或侧面连接容器接收蒸汽
+4. **压力管理**：注意 WAILA 显示的压力状态，避免过载
+
+<Callout type="tip">
+  新放置的锅炉有**启动惩罚（Startup Penalty）**，需要额外的加热时间才能开始产汽。这是模拟真实锅炉冷启动的设计。
+</Callout>
+
+## ⚙️ 核心机器一览
+
+### 基础加工机器
+
+| 机器 | 功能 | 所需蒸汽类型 |
+| :--- | :--- | :--- |
+| **灭菌器 (SteamSterilizer)** | 物品灭菌处理 | 蒸汽 |
+| **浸煮桶 (SteamSteepingVat)** | 浸煮/浸泡处理 | 蒸汽 |
+| **洗涤槽 (SteamWashingTrough)** | 清洗/洗涤物品 | 蒸汽 |
+| **研磨机 (SteamGrinder)** | 研磨/粉碎材料 | 蒸汽 |
+| **压机 (SteamPress)** | 压制/成型 | 蒸汽 |
+| **振荡器 (SteamOscillator)** | 振荡混合 | 蒸汽 |
+| **涡流管 (SteamVortexTube)** | 气流分离 | 蒸汽 |
+| **压缩机 (SteamCompressor)** | 压缩气体 | 蒸汽 |
+| **排序器 (SteamSorter)** | 物品分拣 | 蒸汽 |
+| **加热室 (SteamHeatingChamber)** | 加热处理 | 蒸汽 |
+| **充能室 (SteamChargingChamber)** | 为蒸汽罐充能 | 蒸汽 |
+| **科学接口 (SteamScienceInterface)** | 科学研究交互 | 蒸汽 |
+| **压力炉 (SteamPressurizedFurnace)** | 高温冶炼 | 超热蒸汽及以上 |
+| **精密磨坊 (SteamPrecisionMill)** | 精密研磨 | 超热蒸汽及以上 |
+| **蒸汽臂 (SteamArm)** | 自动化机械臂 | 蒸汽 |
+| **蒸汽弹射器 (SteamCatapult)** | 物品弹射输送 | 汽动网络驱动 |
+
+### 精密多方块机器
+
+| 机器 | 功能 | 所需蒸汽类型 |
+| :--- | :--- | :--- |
+| **精密铸造炉 (PrecisionFoundry)** | 高精度铸造 | 高压蒸汽 |
+| **精密催化反应器 (PrecisionCatalyticReactor)** | 催化化学反应 | 高压蒸汽 |
+| **精密结晶塔 (PrecisionCrystallizer)** | 结晶提纯 | 高压蒸汽 |
+| **精密离心机 (PrecisionCentrifuge)** | 离心分离 | 高压蒸汽 |
+| **重型破碎机 (HeavyImpactCrusher)** | 重型粉碎破碎 | 高压蒸汽 |
+| **液压锻造机 (HydraulicForge)** | 液压锻造 | 高压蒸汽 |
+| **蒸馏塔 (SteamDistillationTower)** | 多级蒸馏分离 | 高压蒸汽 |
+
+### 涡轮
+
+| 涡轮 | 功能 | 消耗 |
+| :--- | :--- | :--- |
+| **基础蒸汽涡轮 (SimpleSteamTurbine)** | 为附近机器提供加速 boost | 蒸汽 |
+| **精密加工涡轮 (PrecisionProcessingTurbine)** | 高效加速 | 超热蒸汽 |
+| **精密蒸汽涡轮 (PrecisionSteamTurbine)** | 高效加速 | 超热蒸汽 |
+| **通用 Pylon 涡轮 (PylonUniversalTurbine)** | 兼容 Pylon 网络 | 蒸汽 |
+| **基础加工涡轮 (BasicProcessingTurbine)** | 通用加速 | 蒸汽 |
+| **液压涡轮 (HydraulicTurbine)** | 强力加速 | 高压蒸汽 |
+| **柴油涡轮 (DieselTurbine)** | 最强加速 | 高压蒸汽/特殊燃料 |
+
+## ⚙️ 汽动网络组件
+
+| 组件 | 说明 |
+| :--- | :--- |
+| **输出口 (PneumaticOutput)** | 从机器/容器中抽取物品进入汽动网络 |
+| **输入口 (PneumaticInput)** | 将物品从汽动网络注入机器/容器 |
+| **管道 (PneumaticDuct)** | 连接各组件的可视化管道，最多 3 个连接面 |
+| **分配器 (PneumaticDistributor)** | 分流/路由物品到多个方向 |
+| **阀门 (PneumaticGateValve)** | 控制通断，可红石控制 |
+| **货物枢纽 (PneumaticCargoHub)** | 大容量中转存储节点 |
+| **缓冲箱 (ProductionLineBufferChest)** | 产线专用缓冲容器 |
+| **压力变送器 (SteamPressureTransducer)** | 检测并输出压力信号 |
+
+## ⚙️ 升级模组一览
+
+所有支持升级的机器都可以在 GUI 中插入升级模组来增强功能：
+
+| 模组 | 类型 | 效果 | 适用对象 |
+| :--- | :--- | :--- | :--- |
+| **节能模块** | `ENERGY_SAVE` | 每个模块减少 20% 蒸汽消耗 | 加工机 / 涡轮 |
+| **自动输入** | `AUTO_INPUT` | 自动从上方容器吸入原料 | 加工机 |
+| **自动输出** | `AUTO_OUTPUT` | 自动向下/侧方输出产物 | 加工机 |
+| **批量模块** | `BULK` | 增加每次处理的数量 | 加工机 |
+| **范围模块** | `RANGE` | 每个模块 +1 扫描半径 | 涡轮 |
+| **Boost 模块** | `BOOST` | 每个模块 +1 boost tick | 涡轮 |
+| **Pylon 兼容** | `PYLON_COMPAT` | 可执行 Pylon 配方 | 加工机 |
+| **自动生产** | `AUTO_PRODUCTION` | 自动触发手动操作机器 | 产线入口 |
+
+<Callout type="tip">
+  升级模组之间存在**互斥规则**——某些升级不能同时安装在同一个插槽中。具体限制由 `UpgradeModule` 和 `MachineCalibrator` 定义。
+</Callout>
+
+## ⚙️ 蒸汽装备
+
+Steamwork 提供了消耗蒸汽的装备系统：
+
+| 装备 | 说明 |
+| :--- | :--- |
+| **蒸汽工具 (SteamToolItem)** | 消耗蒸汽提供挖掘速度/攻击力加成的工具 |
+| **蒸汽盔甲 (SteamArmorItem)** | 消耗蒸汽提供防御加成的盔甲套装 |
+| **便携蒸汽罐 (SteamCanister)** | 三级容量罐体，可装入装备作为能源，可通过充能室充能 |
+| **蒸汽装备改装台 (SteamCanisterBench)** | 用于将蒸汽罐安装到装备上 |
+| **蒸汽组装台 (SteamAssemblyBench)** | 组装蒸汽装备的工作台 |
+
+**装备三态机制：**
+
+| 状态 | 属性表现 |
+| :--- | :--- |
+| **未装罐** | 半成品，属性显著降低，无蒸汽能力 |
+| **装罐·有汽** | 满血状态，基础属性 + 蒸汽增益 |
+| **装罐·耗尽** | 明显降级，失去全部蒸汽增益 |
+
+关于如何将 Steamwork 集成到你自己的附属中（如自定义机器、配方、升级模组），请查看[开发者文档](developer)。
