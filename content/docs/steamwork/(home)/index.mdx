@@ -1,0 +1,178 @@
+---
+title: 什么是 Steamwork?
+description: 了解 Steamwork 是什么，以及它如何为 Pylon 生态带来完整的蒸汽科技体系
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Steamwork 是一个基于 **Pylon 与 Rebar** 的蒸汽与压力科技附属。它在 Pylon 已有的金属、流体、研究和指南体系之上，扩展出**锅炉产能、蒸汽流体输送和蒸汽驱动机器**的完整闭环。附属新增汽动物流网络、产线自动化、升级模组和精密加工，让蒸汽科技成为 Pylon 生态中的重要一环。
+
+[🐙 在 GitHub 上找到我们 →](https://github.com/KevinWoodWL/steamwork)
+[📦 安装 Steamwork →](install)
+
+继续往下看。
+
+---
+
+## ✨ 功能特性
+
+| 状态 | 功能 | 说明 |
+| :----- | :------ | :------ |
+| ✅ | **四级锅炉链** | 青铜锅炉 → 因瓦锅炉 → 锰钢锅炉 → 钨锅炉，逐级提升蒸汽产量与品质 |
+| ✅ | **三档蒸汽体系** | 蒸汽（Steam）、超热蒸汽（Superheated Steam）、高压蒸汽（High-Pressure Steam） |
+| ✅ | **十余种加工机器** | 灭菌器、浸煮桶、洗涤槽、研磨机、压机、精密磨坊、压力炉、铸造炉、催化反应釜、重型破碎机、液压锻造机、结晶塔、离心机、蒸馏塔、振荡器、涡流管等 |
+| ✅ | **三级涡轮** | 基础蒸汽涡轮、精密蒸汽涡轮、柴油/液压涡轮，为附近机器提供加速 boost |
+| ✅ | **汽动输送网络** | 输入口（PneumaticInput）、输出口（PneumaticOutput）、管道（PneumaticDuct）、分配器（PneumaticDistributor）、阀门（PneumaticGateValve）、货物枢纽（PneumaticCargoHub），实现自动化物品分拣与运输 |
+| ✅ | **产线系统** | 使用蓝图道具将多台机器串联成直线流水线，支持 Pylon 机器和原版熔炉/工作台接入 |
+| ✅ | **升级模组系统** | 节能（ENERGY_SAVE）、自动输入（AUTO_INPUT）、自动输出（AUTO_OUTPUT）、批量（BULK）、范围增强（RANGE）、Boost 增强（BOOST）、Pylon 兼容（PYLON_COMPAT）、自动生产（AUTO_PRODUCTION） |
+| ✅ | **蒸汽装备** | 蒸汽工具、蒸汽盔甲、便携式蒸汽罐，消耗蒸汽提供属性增益 |
+| ✅ | **精密多方块机器** | 精密离心机、精密铸造炉、精密催化反应器、精密结晶塔等高阶多方块结构 |
+| ✅ | **中英双语支持** | 完整的简体中文与英文支持 |
+
+## 🎮 工作原理
+
+### 锅炉链与蒸汽产出
+
+Steamwork 的核心是**四级锅炉链**，每级锅炉产出不同品质的蒸汽：
+
+```
+青铜锅炉 (BronzeBoiler)     → 蒸汽 (Steam)
+    ↓ 升级
+因瓦锅炉 (InvarBoiler)       → 超热蒸汽 (Superheated Steam)
+    ↓ 升级
+锰钢锅炉 (ManganeseSteelBoiler) → 高压蒸汽 (High-Pressure Steam)
+    ↓ 升级
+钨锅炉 (TungstenBoiler)      → 高压蒸汽（最高效率）
+```
+
+所有锅炉继承自 `AbstractSteamBoiler`，共享以下核心机制：
+
+- **水输入 → 蒸汽输出**：从下方输入水，向上方/侧面输出蒸汽
+- **热源检测**：自动识别营火、熔岩、岩浆块等热源
+- **启动惩罚**：冷启动时需要额外加热时间才能开始产汽
+- **压力回退（Pressure Backoff）**：当缓冲区填充超过 50% 时，产汽速度逐渐降低，防止过载
+- **泄漏机制**：超压时可能产生蒸汽泄漏
+- **WAILA 显示**：实时显示压力状态（低 / 中 / 高 / 排放中）
+
+### 蒸汽驱动的加工机器
+
+所有加工机器继承自 `AbstractSteamProcessor`（约 1468 行的核心基类），实现了完整的配方生命周期：
+
+```
+findIngredients()  →  检查原料是否齐全
+       ↓
+consumeReserved()  →  预扣原料（预留）
+       ↓
+startRecipe()      →  开始配方，消耗蒸汽
+       ↓
+progressRecipe()   →  每tick推进进度，持续消耗蒸汽
+       ↓
+output             →  完成产出
+```
+
+机器状态枚举 `StopReason`：
+| 状态 | 含义 |
+| :--- | :--- |
+| `NO_STRUCTURE` | 多方块结构不完整 |
+| `READY` | 就绪，等待原料或蒸汽 |
+| `NO_INGREDIENTS` | 缺少原料 |
+| `NO_STEAM` | 缺少蒸汽供应 |
+| `OUTPUT_FULL` | 输出槽已满 |
+| `MIXED_OUTPUT` | 输出类型冲突 |
+| `PROCESSING` | 正在处理中 |
+
+### 涡轮加速机制
+
+涡轮（`AbstractSteamBooster` 子类）可以为其半径内的机器提供**加速 Boost**：
+
+- **基础蒸汽涡轮（SimpleSteamTurbine）**：消耗蒸汽，加速附近的 Steamwork 机器
+- **精密蒸汽涡轮（PrecisionProcessingTurbine / PrecisionSteamTurbine）**：更高效率的加速
+- **液压/柴油涡轮（HydraulicTurbine / DieselTurbine）**：使用高级流体的强力涡轮
+
+**Boost 规则：**
+- 全局上限 `MAX_BOOST_STACKS = 3`，每个方块每 tick 最多叠加 3 次 boost
+- 支持的目标类型：`VANILLA_FURNACE`（原版熔炉）、`STEAMWORK_BOOSTABLE`（Steamwork 可加速机器）、`REBAR_PROCESSOR`（Rebar 处理器）、`REBAR_RECIPE_PROCESSOR`（Rebar 配方处理器）
+- 扫描半径可通过 **RANGE 升级模组**扩展
+- 支持**协同乘数**——受影响的机器越多，整体效率越高
+
+### 汽动输送网络
+
+Steamwork 提供了一套类似 CargoDuct 风格的**汽动物流网络**：
+
+```
+输出口 (PneumaticOutput)  ←── 管道网络 (PneumaticDuct) ──→  输入口 (PneumaticInput)
+                              ↕
+                         阀门 (PneumaticGateValve)
+                              ↕
+                       分配器 (PneumaticDistributor)
+                              ↕
+                     货物枢纽 (PneumaticCargoHub)
+```
+
+- **管道（PneumaticDuct）**：使用 ItemDisplay 渲染的视觉管道，最多 3 个连接面，支持 Z-fighting 防止
+- **BFS 寻路**：`findReachableEndpoints()` 从起点广度优先搜索所有可达端点
+- **双向连接验证**：管道之间需要互相确认连接关系（reciprocal connection）
+- ** facade 支持**：可覆盖外观方块隐藏管道
+
+### 产线系统
+
+通过**蓝图道具（ProductionLineBlueprint）** 将多台机器串联成直线流水线：
+
+```
+产线入口 (Inlet) → 机器1 → 机器2 → ... → 机器N → 产线出口 (Outlet)
+```
+
+**关键特性：**
+- 支持接入 **Steamwork 加工机器**、**Pylon 机器**、**原版熔炉/工作台**
+- 物品通过 `deliverToNextMember()` 自动向下游推送
+- 产线信息通过 **PDC（PersistentDataContainer）** 持久化存储，服务器重载后可恢复
+- 支持多方块机器的附属方块跳过（最大间隔 `DISBAND_MAX_GAP = 3` 格）
+- 入口可安装 **AUTO_PRODUCTION 升级模组** 自动触发需手动操作的机器
+
+## 🏗️ 核心架构
+
+| 组件 | 文件 | 说明 |
+| :--- | :--- | :--- |
+| **主插件** | [Steamwork.java](https://github.com/KevinWoodWL/steamwork/blob/main/src/main/java/io/github/steamwork/Steamwork.java) | 入口点 v0.4.3，注册流体/物品/方块/研究/配方/页面/监听器 |
+| **锅炉基类** | [AbstractSteamBoiler.java](https://github.com/KevinWoodWL/steamwork/blob/main/src/main/java/io/github/steamwork/content/machines/AbstractSteamBoiler.java) | 所有锅炉的基类，水→蒸汽转换，热源检测，压力管理 |
+| **加工机基类** | [AbstractSteamProcessor.java](https://github.com/KevinWoodWL/steamwork/blob/main/src/main/java/io/github/steamwork/content/machines/AbstractSteamProcessor.java) | ~1468行核心基类，配方生命周期，升级系统，产线集成 |
+| **涡轮基类** | [AbstractSteamBooster.java](https://github.com/KevinWoodWL/steamwork/blob/main/src/main/java/io/github/steamwork/content/machines/AbstractSteamBooster.java) | 涡轮基类，扫描加速目标，升级支持 |
+| **汽动管道** | [PneumaticDuct.java](https://github.com/KevinWoodWL/steamwork/blob/main/src/main/java/io/github/steamwork/content/machines/PneumaticDuct.java) | ItemDisplay 渲染管道，BFS 网络，双向连接 |
+| **产线成员接口** | [ProductionLineMember.java](https://github.com/KevinWoodWL/steamwork/blob/main/src/main/java/io/github/steamwork/content/line/ProductionLineMember.java) | 产线成员接口，物品推送协议，解散扫描 |
+| **升级模组** | [upgrade/](https://github.com/KevinWoodWL/steamwork/tree/main/src/main/java/io/github/steamwork/content/machines/upgrade) | 9种升级模组类型及实现 |
+| **蒸汽装备** | [equipment/](https://github.com/KevinWoodWL/steamwork/tree/main/src/main/java/io/github/steamwork/content/equipment) | 蒸汽工具/盔甲/罐体系统 |
+| **配方系统** | [recipes/](https://github.com/KevinWoodWL/steamwork/tree/main/src/main/java/io/github/steamwork/content/recipes) | 16+ 种配方类型 |
+
+## 📋 技术规格
+
+| 项目 | 规格 |
+| :----- | :------ |
+| **编程语言** | Java 21+ |
+| **目标平台** | Paper 26.1+ / Rebar 0.40.0+ / Pylon 0.38.0+ |
+| **当前版本** | 0.4.3 |
+| **构建工具** | Gradle |
+| **许可证** | 开源 |
+
+## 🔮 开发路线图
+
+| 阶段 | 内容 | 状态 |
+| :--- | :--- | :--- |
+| **Phase 0** | 基础蒸汽体系（锅炉、基础机器、流体） | ✅ 已完成 |
+| **Phase 1** | 精密升级与 Pylon 联动（升级模组、Pylon 兼容、产线系统） | ✅ 已完成 |
+| **Phase 2** | 汽动逻辑层（物流网络、逻辑门、传感器） | 🔄 进行中 |
+| **Phase 3** | 终末多方块（大型多方块结构） | 📋 计划中 |
+
+## 👥 致谢
+
+Steamwork 由 [KevinWoodWL](https://github.com/KevinWoodWL) 开发和维护。
+
+特别感谢：
+- **[Rebar / Pylon 团队](https://github.com/pylonmc)** — 提供了优秀的 Rebar 框架和附属系统
+
+如果这个项目对你的服务器有帮助，欢迎在 GitHub 上给我们一个 ⭐！
+
+---
+
+## 📖 快速开始
+
+准备好尝试了吗？查看我们的[安装指南](install)开始使用 Steamwork！

@@ -30,6 +30,11 @@ export default function Layout({ children }: LayoutProps<'/docs'>) {
           title: 'ConstructionWand',
           url: '/docs/constructionwand',
           description: '建筑魔杖',
+        },
+        {
+          title: 'Steamwork',
+          url: '/docs/steamwork',
+          description: '蒸汽工坊',
         }
       ],
     }}  >
