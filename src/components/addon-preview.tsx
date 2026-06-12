@@ -1,11 +1,99 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { AddonCard } from "./addon-card";
 import { cn } from "@/lib/cn";
 import type { AddonData } from "./addon.types";
 
 const addons: AddonData[] = [
+    {
+        id: "monolithlib",
+        name: "MonolithLib",
+        author: "mc506lw",
+        icon: "🏗️",
+        description: "添加巨型多方块机器和精密展示实体的支持库。",
+        statusTags: ["开源", "已发布"],
+        downloadUrl: "https://github.com/mc506lw/monolithlib/releases",
+        features: [
+            "巨型多方块结构",
+            "精密展示实体",
+            "高级构建API",
+            "性能优化"
+        ],
+        tags: ["库", "基础依赖"],
+        hasDocs: true,
+        docsUrl: "/docs/monolithlib"
+    },
+    {
+        id: "jade2rebar",
+        name: "Jade2Rebar",
+        author: "mc506lw",
+        icon: "🔗",
+        description: "桥接 Rebar 的 WAILA 与 Jade MOD。",
+        statusTags: ["开源", "已发布"],
+        downloadUrl: "https://github.com/mc506lw/Jade2Rebar/releases",
+        features: [
+            "客户端握手",
+            "WAILA 集成",
+            "数据同步"
+        ],
+        tags: ["连接", "适配"],
+        hasDocs: true,
+        docsUrl: "/docs/jade2rebar"
+    },
+    {
+        id: "rebar-wrench",
+        name: "RebarWrench",
+        author: "lijinhong11",
+        icon: "🔩",
+        description: "为 Rebar 附属提供的扳手工具，用于配置和修改方块属性。",
+        statusTags: ["开源", "开发中"],
+        downloadUrl: "https://github.com/lijinhong11/RebarWrench",
+        features: [
+            "属性配置",
+            "开发者API",
+            "值切换功能"
+        ],
+        tags: ["工具", "开发", "API"],
+        hasDocs: true,
+        docsUrl: "/docs/rebarwrench"
+    },
+    {
+        id: "construction-wand",
+        name: "ConstructionWand",
+        author: "balugaq",
+        icon: "🪄",
+        description: "添加建筑之杖，方便玩家快速建造和挖掘。",
+        statusTags: ["开源", "已发布"],
+        downloadUrl: "https://github.com/balugaq/construction-wand/releases",
+        features: [
+            "快速建造",
+            "批量放置",
+            "挖掘加速"
+        ],
+        tags: ["工具", "建筑"],
+        hasDocs: true,
+        docsUrl: "/docs/constructionwand"
+    },
+    {
+        id: "steamworks",
+        name: "Steamwork",
+        author: "KevinWoodWL",
+        icon: "🔥",
+        description: "扩展锅炉、压力控制、蒸汽输送和蒸汽驱动机器。",
+        statusTags: ["开源", "已发布"],
+        downloadUrl: "https://github.com/KevinWoodWL/steamwork/releases",
+        features: [
+            "锅炉系统",
+            "压力控制",
+            "蒸汽驱动"
+        ],
+        tags: ["工业"],
+        hasDocs: true,
+        docsUrl: "/docs/steamwork"
+    },
     {
         id: "pylon",
         name: "Pylon",
@@ -23,37 +111,6 @@ const addons: AddonData[] = [
             "国际化支持"
         ],
         tags: ["核心", "Kotlin", "必备"]
-    },
-    {
-        id: "jade2rebar",
-        name: "Jade2Rebar",
-        author: "mc506lw",
-        icon: "🔗",
-        description: "桥接 Rebar 的 WAILA 与 Jade MOD。",
-        statusTags: ["开源", "已发布"],
-        downloadUrl: "https://github.com/mc506lw/Jade2Rebar/releases",
-        features: [
-            "客户端握手",
-            "WAILA 集成",
-            "数据同步"
-        ],
-        tags: ["连接", "适配"]
-    },
-    {
-        id: "monolithlib",
-        name: "MonolithLib",
-        author: "mc506lw",
-        icon: "🏗️",
-        description: "添加巨型多方块机器和精密展示实体的支持库。",
-        statusTags: ["开源", "已发布"],
-        downloadUrl: "https://github.com/mc506lw/monolithlib/releases",
-        features: [
-            "巨型多方块结构",
-            "精密展示实体",
-            "高级构建API",
-            "性能优化"
-        ],
-        tags: ["库", "基础依赖"]
     },
     {
         id: "iron-furnaces",
@@ -88,21 +145,6 @@ const addons: AddonData[] = [
         tags: ["工业", "主题", "Modpack"]
     },
     {
-        id: "steamworks",
-        name: "Steamwork",
-        author: "KevinWoodWL",
-        icon: "🔥",
-        description: "扩展锅炉、 压力控制、蒸汽输送和蒸汽驱动机器。",
-        statusTags: ["开源", "已发布"],
-        downloadUrl: "https://github.com/KevinWoodWL/steamwork/releases",
-        features: [
-            "锅炉系统",
-            "压力控制",
-            "蒸汽驱动"
-        ],
-        tags: ["工业"]
-    },
-    {
         id: "pylon-delight",
         name: "Pylon-Delight",
         author: "mmmjjkx",
@@ -131,21 +173,6 @@ const addons: AddonData[] = [
             "物品化"
         ],
         tags: ["生物", "玩法"]
-    },
-    {
-        id: "construction-wand",
-        name: "ConstructionWand",
-        author: "balugaq",
-        icon: "🪄",
-        description: "添加建筑之杖，方便玩家快速建造和挖掘。",
-        statusTags: ["开源", "已发布"],
-        downloadUrl: "https://github.com/balugaq/construction-wand/releases",
-        features: [
-            "快速建造",
-            "批量放置",
-            "挖掘加速"
-        ],
-        tags: ["工具", "建筑"]
     },
     {
         id: "pylondroid",
@@ -276,21 +303,6 @@ const addons: AddonData[] = [
             "不可破坏符文"
         ],
         tags: ["工业", "工具", "机器"]
-    },
-    {
-        id: "rebar-wrench",
-        name: "RebarWrench",
-        author: "lijinhong11",
-        icon: "🔩",
-        description: "为 Rebar 附属提供的扳手工具，用于配置和修改方块属性。",
-        statusTags: ["开源", "开发中"],
-        downloadUrl: "https://github.com/lijinhong11/RebarWrench",
-        features: [
-            "属性配置",
-            "开发者API",
-            "值切换功能"
-        ],
-        tags: ["工具", "开发", "API"]
     }
 ];
 
@@ -363,6 +375,10 @@ export function AddonPreview() {
             return matchSearch && matchFilter;
         });
 
+        // 有文档的排前面，然后按已发布优先，最后随机排序
+        const withDocs = matched.filter((a) => a.hasDocs);
+        const withoutDocs = matched.filter((a) => !a.hasDocs);
+
         const shuffle = <T,>(arr: T[]): T[] => {
             const a = [...arr];
             for (let i = a.length - 1; i > 0; i--) {
@@ -372,10 +388,13 @@ export function AddonPreview() {
             return a;
         };
 
-        const published = shuffle(matched.filter((a) => a.statusTags.includes("已发布")));
-        const others = shuffle(matched.filter((a) => !a.statusTags.includes("已发布")));
+        const sortByStatus = (arr: AddonData[]): AddonData[] => {
+            const published = arr.filter((a) => a.statusTags.includes("已发布"));
+            const others = arr.filter((a) => !a.statusTags.includes("已发布"));
+            return [...shuffle(published), ...shuffle(others)];
+        };
 
-        return [...published, ...others];
+        return [...sortByStatus(withDocs), ...sortByStatus(withoutDocs)];
     }, [search, filter]);
 
     useEffect(() => {
@@ -457,7 +476,7 @@ export function AddonPreview() {
             {viewMode === "grid" ? (
                 <div className="grid gap-5 grid-cols-1 md:grid-cols-2">
                     {displayAddons.map((addon) => (
-                        <AddonCard key={addon.id} addon={addon} />
+                        <AddonCard key={addon.id} addon={addon} href={addon.docsUrl} />
                     ))}
                 </div>
             ) : (

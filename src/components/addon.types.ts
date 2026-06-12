@@ -14,4 +14,8 @@ export interface AddonData {
   metric?: string;
   provider?: string;
   latency?: string;
+  /** 是否有独立文档 */
+  hasDocs?: boolean;
+  /** 文档路径 */
+  docsUrl?: string;
 }
