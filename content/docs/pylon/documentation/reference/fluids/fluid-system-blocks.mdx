@@ -1,0 +1,214 @@
+---
+title: 流体系统方块
+description: 了解 FluidRebarBlock、FluidBufferRebarBlock 和 FluidTankRebarBlock 三种接口的用法
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+要让你的方块与流体系统交互，必须实现以下接口之一：
+
+- [FluidRebarBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidRebarBlock.html)
+- [FluidBufferRebarBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidBufferRebarBlock.html)
+- [FluidTankRebarBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidTankRebarBlock.html)
+
+其中最基础的是 FluidRebarBlock，它提供最大的灵活性。FluidBufferRebarBlock 和 FluidTankRebarBlock 都继承自 FluidRebarBlock。通常情况下你只需要使用 FluidBufferRebarBlock 和 FluidTankRebarBlock，因为它们已经覆盖了绝大多数使用场景。
+
+下面会对这三种接口分别进行详细说明。
+
+---
+
+## 创建流体连接点
+
+实现了上述任意一个接口后，你需要为方块添加流体连接点（fluid point）。可以在放置构造方法中调用 `createFluidPoint` 来完成：
+
+```java
+public class ExampleBlock extends RebarBlock implements FluidRebarBlock {
+    @SuppressWarnings("unused")
+    public HydraulicPipeBender(@NotNull Block block, @NotNull BlockCreateContext context) {
+        createFluidPoint(FluidPointType.INPUT, BlockFace.NORTH, context, false);
+        createFluidPoint(FluidPointType.OUTPUT, BlockFace.SOUTH, context, false);
+    }
+    // ...
+}
+```
+
+你需要传入以下参数：
+
+- 流体连接点类型（INPUT 或 OUTPUT）
+- 流体连接点方向（任意主方向 BlockFace）
+- 放置上下文（用于根据玩家放置方块的方向来确定流体连接点的朝向）
+- 一个布尔值，表示朝向是否可以垂直（默认情况下只能水平朝向）
+
+<Callout type="info" title="「朝向可以垂直」是什么意思？">
+  假设你将表示是否可以垂直朝向的布尔值设为 `false`，然后向下看并放置方块。流体连接点会根据你注视的方向最接近哪个方向来确定为 NORTH、SOUTH、EAST 或 WEST。但如果你将其设为 `true`，朝向就会被设置为 DOWN（因为你正在向下看），流体连接点也会相应放置。
+</Callout>
+
+还有其他重载版本可用。例如，你可以额外传入一个 float 值来指定创建流体连接点的距离：
+
+```java
+createFluidPoint(FluidPointType.OUTPUT, BlockFace.SOUTH, context, false, 0.6F);
+```
+
+完整的可用重载列表参见 [FluidRebarBlock 文档](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidRebarBlock.html)。
+
+<Callout type="info">
+  一个方块只能有一个输入和一个输出。如果你的机器需要多个输入/输出，可以考虑将机器做成多方块结构并使用[流体舱口](fluid-hatches)。
+</Callout>
+
+---
+
+## FluidTankRebarBlock
+
+FluidTankRebarBlock 同一时间只存储一种流体，非常易用。只需实现该接口，在放置构造方法中调用 `setCapacity` 设置容量，再实现 `isAllowedFluid` 方法来指定罐子能容纳哪些流体即可。
+
+你可以通过以下方法查询和更新流体罐：
+
+- [FluidTankRebarBlock#getFluidType](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidTankRebarBlock.html#getFluidType())
+- [FluidTankRebarBlock#getFluidAmount](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidTankRebarBlock.html#getFluidAmount())
+- [FluidTankRebarBlock#getFluidCapacity](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidTankRebarBlock.html#getFluidCapacity())
+- [FluidTankRebarBlock#getFluidSpaceRemaining](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidTankRebarBlock.html#getFluidSpaceRemaining())
+- [FluidTankRebarBlock#addFluid](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidTankRebarBlock.html#addFluid(java.lang.Double))
+- ……以及更多（参见 [FluidTankRebarBlock 的 JavaDocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidTankRebarBlock.html)）
+
+<Callout type="example">
+  ```java
+  public class ExampleBlock extends RebarBlock implements FluidTankRebarBlock {
+      @SuppressWarnings("unused")
+      public ExampleBlock(@NotNull Block block, @NotNull BlockCreateContext context) {
+          super(block, context);
+          createFluidPoint(FluidPointType.INPUT, BlockFace.NORTH, context, false);
+          createFluidPoint(FluidPointType.OUTPUT, BlockFace.SOUTH, context, false);
+          setCapacity(2000.0);
+      }
+
+      // ...
+
+      @Override
+      public boolean isAllowedFluid(@NotNull RebarFluid fluid) {
+          return fluid.equals(PylonFluids.PLANT_OIL);
+      }
+      @Override
+      public @Nullable WailaDisplay getWaila(@NotNull Player player) {
+          return WailaDisplay.of(this, player)
+                  .add(ProgressBar.fluidContents(getFluidType(), getFluidCapacity(), getFluidAmount()));
+      }
+  }
+  ```
+</Callout>
+
+---
+
+## FluidBufferRebarBlock
+
+很多时候你会希望在方块中存储多种不同的流体。一个常见的模式是：以一种流体作为输入，输出另一种流体。这种情况下就无法使用 FluidTankRebarBlock 了。
+
+FluidBufferRebarBlock 允许你在构造方法中通过调用 [FluidBufferRebarBlock#createFluidBuffer](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidBufferRebarBlock.html#createFluidBuffer(io.github.pylonmc.rebar.fluid.RebarFluid,java.lang.Double,java.lang.Boolean,java.lang.Boolean)) 创建任意数量的流体缓冲区。每种流体只能对应一个缓冲区。缓冲区可以被标记为输入（输入连接点可以向此缓冲区添加流体）、输出（输出连接点可以从此缓冲区取出流体）、两者皆可或两者皆非。
+
+你可以通过以下方法查询和更新流体缓冲区：
+
+- [FluidBufferRebarBlock#hasFluid](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidBufferRebarBlock.html#hasFluid(io.github.pylonmc.rebar.fluid.RebarFluid))
+- [FluidBufferRebarBlock#fluidAmount](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidBufferRebarBlock.html#fluidAmount(io.github.pylonmc.rebar.fluid.RebarFluid))
+- [FluidBufferRebarBlock#fluidCapacity](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidBufferRebarBlock.html#fluidCapacity(io.github.pylonmc.rebar.fluid.RebarFluid))
+- [FluidBufferRebarBlock#fluidSpaceRemaining](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidBufferRebarBlock.html#fluidSpaceRemaining(io.github.pylonmc.rebar.fluid.RebarFluid))
+- [FluidBufferRebarBlock#addFluid](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidBufferRebarBlock.html#addFluid(io.github.pylonmc.rebar.fluid.RebarFluid,java.lang.Double))
+- ……以及更多（参见 [FluidBufferRebarBlock 的 JavaDocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidBufferRebarBlock.html)）
+
+### 示例
+
+<Callout type="example">
+  ```java
+  public class ExampleBlock extends RebarBlock implements FluidBufferRebarBlock {
+
+      @SuppressWarnings("unused")
+      public ExampleBlock(@NotNull Block block, @NotNull BlockCreateContext context) {
+          super(block, context);
+          createFluidPoint(FluidPointType.INPUT, BlockFace.NORTH, context, false);
+          createFluidPoint(FluidPointType.OUTPUT, BlockFace.SOUTH, context, false);
+
+          // 流体, 容量, 是否为输入, 是否为输出
+          createFluidBuffer(PylonFluids.HYDRAULIC_FLUID, 1000.0, true, false);
+          createFluidBuffer(PylonFluids.DIRTY_HYDRAULIC_FLUID, 500.0, false, true);
+      }
+
+      // ...
+
+      @Override
+      public @Nullable WailaDisplay getWaila(@NotNull Player player) {
+          return WailaDisplay.of(this, player)
+                  .add(ProgressBar.fluidContents(
+                          PylonFluids.HYDRAULIC_FLUID,
+                          fluidCapacity(PylonFluids.HYDRAULIC_FLUID),
+                          fluidAmount(PylonFluids.HYDRAULIC_FLUID)
+                  ))
+                  .add(ProgressBar.fluidContents(
+                          PylonFluids.DIRTY_HYDRAULIC_FLUID,
+                          fluidCapacity(PylonFluids.DIRTY_HYDRAULIC_FLUID),
+                          fluidAmount(PylonFluids.DIRTY_HYDRAULIC_FLUID)
+                  ));
+      }
+  }
+  ```
+</Callout>
+
+---
+
+## FluidRebarBlock
+
+这是所有流体接口中最灵活的一个，但需要你自己实现所有的流体处理逻辑。除非必要，否则应优先使用 FluidBufferRebarBlock 或 FluidTankRebarBlock。
+
+### 输入
+
+如果方块有输入连接点，你需要覆写 [FluidRebarBlock#fluidAmountRequested](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidRebarBlock.html#fluidAmountRequested(io.github.pylonmc.rebar.fluid.RebarFluid)) 和 [FluidRebarBlock#onFluidAdded](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidRebarBlock.html#onFluidAdded(io.github.pylonmc.rebar.fluid.RebarFluid,java.lang.Double))。
+
+`fluidAmountRequested` 决定在下一个流体 tick 时你想接收多少某种类型的流体。例如，如果你的机器每秒消耗 5 单位水，当提供的流体是水时应该请求 `5.0 * RebarConfig.fluidTickInterval / 20.0`，对其他流体则返回 0。
+
+`onFluidAdded` 决定当有流体被加入时应做什么。例如，如果你的机器内部有一个用变量表示的植物油缓冲区，当被移除的流体是植物油时，你应该把传入的 `amount` 加到该变量上。`fluid` 参数始终是你的 `fluidAmountRequested` 函数返回大于 0 的流体之一，且 amount 永远不会大于 `fluidAmountRequested(fluid)`。
+
+### 输出
+
+如果方块有输出连接点，你需要覆写 [FluidRebarBlock#getSuppliedFluids](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidRebarBlock.html#getSuppliedFluids()) 和 [FluidRebarBlock#onFluidRemoved](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidRebarBlock.html#onFluidRemoved(io.github.pylonmc.rebar.fluid.RebarFluid,java.lang.Double))。
+
+`getSuppliedFluids` 决定在下一个流体 tick 时方块可以提供哪些流体（及其对应的数量）。例如，如果你的机器每秒最多产出 5 单位水，返回的 Map 中应该有一个条目：水对应 `5.0 * RebarConfig.FLUID_TICK_INTERVAL / 20.0`。
+
+`onFluidRemoved` 决定当有流体被移除时应做什么。例如，如果你的机器内部有一个用变量表示的植物油缓冲区，你应该从变量中减去传入的 `amount` 参数。`fluid` 参数始终是 `getSuppliedFluids` 函数提供的流体之一，且 amount 永远不会大于 `getSuppliedFluids` 中指定的数量。
+
+### 示例
+
+<Callout type="example">
+  下面是水泵（略微精简）的源代码，用于演示如何使用 FluidRebarBlock。
+  
+  ```java
+  public class WaterPump extends RebarBlock implements FluidRebarBlock {
+
+      // ...
+
+      public WaterPump(@NotNull Block block, @NotNull BlockCreateContext context) {
+          super(block, context);
+          createFluidPoint(FluidPointType.OUTPUT, BlockFace.UP);
+      }
+
+      // ...
+
+      @Override
+      public @NotNull List<Pair<RebarFluid, Double>> getSuppliedFluids() {
+          Block below = getBlock().getRelative(BlockFace.DOWN);
+          FluidData data = below.getWorld().getFluidData(below.getLocation());
+          if (data.getFluidType() == Fluid.WATER && data.isSource()) {
+              return List.of(new Pair<>(
+                  PylonFluids.WATER, 
+                  waterPerSecond * RebarConfig.FLUID_TICK_INTERVAL / 20.0
+              ));
+          }
+
+          return List.of();
+      }
+
+      @Override
+      public void onFluidRemoved(@NotNull RebarFluid fluid, double amount) {
+          // `fluid` 将始终是 `PylonFluids.WATER`
+          // `amount` 将始终小于等于 `waterPerSecond * RebarConfig.FLUID_TICK_INTERVAL / 20.0`
+          // 水泵在此函数中无需做任何操作
+      }
+  }
+  ```
+</Callout>

@@ -1,0 +1,132 @@
+---
+title: 方块接口速查表
+description: 按类别浏览所有 Rebar 方块接口及其文档链接
+---
+
+<div class="grid cards" markdown>
+
+- **交互接口**
+
+  玩家与方块交互时会触发的接口
+
+  | 接口 | 文档 |
+  | :-------: | :------- |
+  | GuiRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/GuiRebarBlock.html) |
+  | InteractRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/InteractRebarBlockHandler.html) |
+  | JumpRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/JumpRebarBlockHandler.html) |
+  | SneakRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/SneakRebarBlockHandler.html) |
+
+- **杂项接口**
+
+  不属于任何特定类别的接口
+
+  | 接口 | 文档 |
+  | :-------: | :------- |
+  | BlockBreakRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/BlockBreakRebarBlockHandler.html) |
+  | DirectionalRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/DirectionalRebarBlock.html) |
+  | FacadeRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FacadeRebarBlock.html) |
+  | FallingRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FallingRebarBlockHandler.html) |
+  | TickingRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/TickingRebarBlock.html) |
+  | UnloadRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/UnloadRebarBlockHandler.html) |
+  | VirtualInventoryRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/VirtualInventoryRebarBlock.html) |
+  | NoVanillaInventoryRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/NoVanillaInventoryRebarBlock.html) |
+  | VanillaInventoryRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/VanillaInventoryRebarBlockHandler.html) |
+
+- **物流接口**
+
+  允许你的方块与物流系统（包括货运）交互的接口
+
+  如果你想让机器兼容货物插入器/提取器，需要实现 [LogisticRebarBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/LogisticRebarBlock.html)。
+
+  | 接口 | 文档 |
+  | :-------: | :------- |
+  | CargoRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/CargoRebarBlock.html) |
+  | LogisticRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/LogisticRebarBlock.html) |
+
+- **流体接口**
+
+  允许你的方块与流体系统交互的接口
+
+  除非必要，应优先使用 [FluidBufferRebarBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidBufferRebarBlock.html) 和 [FluidTankRebarBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidTankRebarBlock.html) 而非 [FluidRebarBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidRebarBlock.html)。[FluidRebarBlock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidRebarBlock.html) 接口相当抽象，设计上尽可能灵活，需要机器自行实现流体存储逻辑。
+
+  | 接口 | 文档 |
+  | :-------: | :------- |
+  | FluidRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidRebarBlock.html) |
+  | FluidBufferRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidBufferRebarBlock.html) |
+  | FluidTankRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FluidTankRebarBlock.html) |
+
+- **处理器接口**
+
+  用于追踪进程的接口，例如燃料量或配方进度
+
+  | 接口 | 文档 |
+  | :-------: | :------- |
+  | ProcessorRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/ProcessorRebarBlock.html) |
+  | RecipeProcessorRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/RecipeProcessorRebarBlock.html) |
+
+- **多方块接口**
+
+  将你的方块变为多方块结构的接口
+
+  你创建的大多数多方块可以使用 [SimpleRebarMultiblock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/SimpleRebarMultiblock.html)。对于更复杂的多方块，可以使用 [RebarMultiblock](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/RebarMultiblock.html)，但该类设计上尽可能灵活，因此非常基础——不包含幻影方块、不考虑旋转等。
+
+  | 接口 | 文档 |
+  | :-------: | :------- |
+  | RebarMultiblock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/RebarMultiblock.html) |
+  | SimpleRebarMultiblock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/SimpleRebarMultiblock.html) |
+
+- **实体接口**
+
+  以某种方式与实体交互的接口
+
+  | 接口 | 文档 |
+  | :-------: | :------- |
+  | EntityChangeRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/EntityChangeRebarBlockHandler.html) |
+  | EntityHolderRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/EntityHolderRebarBlock.html) |
+
+- **剔除接口**
+
+  允许你的方块与 Rebar 剔除系统交互的接口
+
+  | 接口 | 文档 |
+  | :-------: | :------- |
+  | CulledRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/CulledRebarBlock.html) |
+  | GroupCulledRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/GroupCulledRebarBlock.html) |
+  | EntityCulledRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/EntityCulledRebarBlock.html) |
+  | EntityGroupCulledRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/EntityGroupCulledRebarBlock.html) |
+
+- **原版接口**
+
+  暴露原版方块功能的接口。例如，如果你添加了一个信标方块并想在信标被停用时运行一些代码，可以使用 [BeaconRebarBlockHandler](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/BeaconRebarBlockHandler.html)。
+
+  | 接口 | 文档 |
+  | :-------: | :------- |
+  | BeaconRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/BeaconRebarBlockHandler.html) |
+  | BellRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/BellRebarBlockHandler.html) |
+  | BrewingStandRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/BrewingStandRebarBlockHandler.html) |
+  | CampfireRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/CampfireRebarBlockHandler.html) |
+  | CauldronRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/CauldronRebarBlockHandler.html) |
+  | ComposterRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/ComposterRebarBlockHandler.html) |
+  | CopperRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/CopperRebarBlockHandler.html) |
+  | CrafterRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/CrafterRebarBlockHandler.html) |
+  | DispenserRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/DispenserRebarBlockHandler.html) |
+  | EnchantingTableRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/EnchantingTableRebarBlockHandler.html) |
+  | FlowerPotRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FlowerPotRebarBlockHandler.html) |
+  | FurnaceRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/FurnaceRebarBlockHandler.html) |
+  | GrowRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/GrowRebarBlockHandler.html) |
+  | HopperRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/HopperRebarBlockHandler.html) |
+  | JobRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/JobRebarBlockHandler.html) |
+  | LeafRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/LeafRebarBlockHandler.html) |
+  | LecternRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/LecternRebarBlockHandler.html) |
+  | NoJobRebarBlock | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/NoJobRebarBlock.html) |
+  | NoteRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/NoteRebarBlockHandler.html) |
+  | PistonRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/PistonRebarBlockHandler.html) |
+  | RedstoneRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/RedstoneRebarBlockHandler.html) |
+  | ShearRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/ShearRebarBlockHandler.html) |
+  | SignRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/SignRebarBlockHandler.html) |
+  | SpongeRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/SpongeRebarBlockHandler.html) |
+  | TargetRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/TargetRebarBlockHandler.html) |
+  | TNTRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/TNTRebarBlockHandler.html) |
+  | VaultRebarBlockHandler | [Javadocs](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/block/interfaces/VaultRebarBlockHandler.html) |
+
+</div>

@@ -18,4 +18,6 @@ export interface AddonData {
   hasDocs?: boolean;
   /** 文档路径 */
   docsUrl?: string;
+  /** AI 使用率 */
+  aiUsage?: "极少" | "中等" | "较高" | "未披露";
 }

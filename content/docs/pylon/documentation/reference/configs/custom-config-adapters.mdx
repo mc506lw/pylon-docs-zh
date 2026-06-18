@@ -1,0 +1,45 @@
+---
+title: 自定义配置适配器
+description: 了解如何创建自己的 ConfigAdapter 来支持自定义类型
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+你可以为任何类型创建自己的 [ConfigAdapter](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/config/adapter/ConfigAdapter.html)，只要你能写出反序列化的逻辑即可。
+
+ConfigAdapter 需要实现 `getType` 方法，它返回配置适配器要转换到的目标类型的 Class，以及 `convert` 方法。convert 方法接收一个对象并尝试将其转换为配置适配器的类型。
+
+由于我们使用 Bukkit 的反序列化逻辑，传入的对象可以是 [ConfigurationSection#get](https://jd.papermc.io/paper/26.1.2/org/bukkit/configuration/ConfigurationSection.html#get(java.lang.String)) 能返回的任何类型。
+
+如果你对如何编写新的适配器感到困惑，建议[参考 Rebar 内置的一些配置适配器](https://github.com/pylonmc/rebar/tree/master/rebar/src/main/kotlin/io/github/pylonmc/rebar/config/adapter)来学习它们的工作方式。
+
+<Callout type="example" title="示例：UUID 配置适配器">
+  ```java
+  class UUIDConfigAdapter implements ConfigAdapter<UUID> {
+
+      @Override
+      public @NotNull Type getType() {
+          return UUID.class;
+      }
+
+      @Override
+      public UUID convert(@NotNull Object value) {
+          if (value instanceof String string) {
+              return java.util.UUID.fromString(string);
+          }
+
+          List<Long> longs = ConfigAdapter.LIST.from(ConfigAdapter.LONG).convert(value);
+          Preconditions.checkState(longs.size() == 2, "Expected a list of 2 longs for UUID, got " + longs.size());
+          return new UUID(longs.get(0), longs.get(1));
+      }
+  }
+  ```
+</Callout>
+
+<Callout type="tip">
+  用无效输入测试你的配置适配器，检查它给出的错误信息是否有用。
+</Callout>
+
+<Callout type="tip">
+  很多时候直接使用 `ConfigSection` 的方法比写一个新的 ConfigAdapter 更简单。
+</Callout>

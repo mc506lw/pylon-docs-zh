@@ -1,4 +1,5 @@
 import { RootProvider } from 'fumadocs-ui/provider/next';
+import { NoticeBanner } from '@/components/notice-banner';
 import './global.css';
 import { Inter } from 'next/font/google';
 import type { Metadata } from 'next';
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
 export default function Layout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="zh-CN" className={inter.className} suppressHydrationWarning>
-      <body className="flex flex-col min-h-screen">
+      <body className="flex flex-col min-h-screen pt-[38px]">
         <RootProvider
           i18n={{
             locale: 'zh',
@@ -39,6 +40,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
             },
           }}
         >
+        <NoticeBanner />
           {children}
         </RootProvider>
       </body>

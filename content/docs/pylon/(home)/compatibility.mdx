@@ -1,0 +1,31 @@
+---
+title: 兼容性
+description: 已知与 Rebar 兼容或存在问题的插件列表
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+<Callout type="info">
+  发现了与其他插件的兼容性问题？想帮忙修复不兼容的情况？请在我们的 [Discord 服务器](https://discord.gg/4tMAnBAacW) 告诉我们。
+</Callout>
+
+### 集成
+
+以下是 Rebar 与之集成以提供额外功能或解决特定插件问题的插件。
+
+| 插件 | 详情 |
+|------|------|
+| PlaceholderAPI | 查看 Rebar 占位符列表见[此处](placeholders) |
+
+### 已知兼容性问题
+
+以下是与 Rebar 存在已知问题的插件。
+
+| 插件 | 状态 | 详情 |
+|------|------|------|
+| WorldEdit | <span class="compatibility-status-minor-incompatibilities">轻微不兼容</span> | 正常使用即可，但不要尝试用 WorldEdit 操作 Rebar 方块 |
+| Axiom | <span class="compatibility-status-minor-incompatibilities">轻微不兼容</span> | 正常使用即可，但不要尝试用 Axiom 编辑 Rebar 方块 |
+| InteractiveChat | <span class="compatibility-status-minor-incompatibilities">轻微不兼容</span> | 正常使用即可，但 Rebar 在 InteractiveChat 中显示的消息有时无法正确翻译 |
+| CMI | <span class="compatibility-status-minor-incompatibilities">轻微不兼容</span> | 正常使用即可，但聊天中用 `[item]` 显示的物品无法正确翻译 |
+| CraftEngine | <span class="compatibility-status-moderate-incompatibilities">中度不兼容</span>（有缓解方案） | 会破坏 Rebar 的部分配方。如需修复，可运行 `/rb exposerecipes` 并编辑受影响的配方文件 |
+| RoseStacker | <span class="compatibility-status-do-not-use">请勿使用</span> | 与 Rebar 物品存在复制 bug |

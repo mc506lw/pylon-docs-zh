@@ -40,7 +40,7 @@ export default function Layout({ children }: LayoutProps<'/docs'>) {
         description: 'Pylon官方文档',
       },
       {
-        title: '📦 附属文档',
+        title: '附属文档',
         url: '/docs/addons',
         description: '查看所有附属模块文档',
       }

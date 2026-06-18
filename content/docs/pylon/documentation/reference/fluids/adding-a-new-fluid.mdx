@@ -1,0 +1,34 @@
+---
+title: 添加新流体
+description: 了解如何创建和注册新的 Rebar 流体
+---
+
+添加新流体非常简单，只需要实例化一个 RebarFluid 然后注册即可。
+
+```java
+public static final RebarFluid PLANT_OIL = new RebarFluid(
+        pylonKey("plant_oil"),
+        TextColor.fromHexString("#c4b352"),
+        Material.YELLOW_CONCRETE_POWDER).addTag(FluidTemperature.NORMAL);
+static {
+    PLANT_OIL.register();
+}
+```
+
+你应该为每个注册的流体添加一个温度。上面通过 `addTag` 给植物油分配了 `FluidTemperature.NORMAL` 温度。使用 `addTag` 的原因是流体温度本质上是一个流体标签。这一点在[流体标签文档](fluid-tags)中有更详细的说明。
+
+## 在指南中隐藏流体
+
+你可以阻止流体在指南中显示：
+
+```java
+RebarGuide.hideFluid(MY_FLUID.getKey());
+```
+
+## 基础原料流体
+
+你可能希望将某个流体标记为"基础原料"，意味着在配方计算中，该流体不会被进一步拆解。可以这样做：
+
+```java
+IngredientCalculator.addBaseIngredient(PLANT_OIL);
+```

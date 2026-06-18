@@ -1,0 +1,24 @@
+---
+title: 流体标签
+description: 了解如何为流体创建和使用 RebarFluidTag
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+流体可以关联 [RebarFluidTag](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/fluid/RebarFluidTag.html)，用于存储任意数据。例如：
+
+- 流体的温度（Rebar 默认自带此标签）
+- 流体的能量密度（例如柴油可能比植物油的能量密度更高）
+- 该液体是否可用作冷却剂
+
+### 创建新标签
+
+要创建一个新标签，只需新建一个类来表示你的标签，并实现 RebarFluidTag 接口。该接口只有一个方法：`getDisplayText`，用于在流体的 lore 中显示你的标签信息。
+
+然后你可以使用 [RebarFluid#addTag](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/fluid/RebarFluid.html#addTag(io.github.pylonmc.rebar.fluid.RebarFluidTag)) 将标签添加到流体上。
+
+你可以使用 [RebarFluid#hasTag](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/fluid/RebarFluid.html#hasTag(java.lang.Class)) 检查某个流体是否拥有特定标签，以及 [RebarFluid#getTag](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/fluid/RebarFluid.html#getTag(java.lang.Class)) 从流体中获取指定标签。
+
+<Callout type="warning">
+  一个常见的误区是：流体标签关联的是单个**流体类型**。你不能用标签系统来（比如说）给流体分配一个数值温度从而让水在锅炉中升温——因为标签是分配给流体类型的，而不是分配给世界中存在的具体流体实例的。这主要是因为这样做会大幅增加复杂度并降低流体路由的性能。
+</Callout>

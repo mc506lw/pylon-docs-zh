@@ -1,0 +1,93 @@
+---
+title: ConfigSection
+description: 了解如何使用 ConfigSection 读取和管理配置文件
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+你可能已经知道，在 Minecraft 插件中，配置通常以 YAML 格式存储。在 Bukkit/Paper 中，一般使用 [YamlConfiguration](https://jd.papermc.io/paper/26.1.2/org/bukkit/configuration/file/YamlConfiguration.html) 和 [ConfigurationSection](https://jd.papermc.io/paper/26.1.2/org/bukkit/configuration/ConfigurationSection.html) 来读取配置文件。`YamlConfiguration` 和 `ConfigurationSection` 有很多怪癖，缺少大量实用功能，而且不够灵活。因此我们做了每个开发者遇到问题都会做的事：创建一个新的抽象层。抱歉。
+
+具体来说，我们创建了 [ConfigSection](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/config/ConfigSection.html)。这是对 ConfigurationSection 的现代化封装，让读取配置更简单、错误信息更好、增加了缓存层以提升性能，还有许多其他改进。
+
+## 创建 ConfigSection
+
+你可以通过 ConfigSection 的静态构造方法将配置读入 ConfigSection：
+
+| 操作 | 方法 |
+|------|------|
+| 将 YamlConfiguration 直接转为 ConfigSection | `from(String name, ConfigurationSection configSection)` |
+| 从文件读取配置 | `from(File file)`<br/>`from(Path path)`<br/>`fromOrThrow(File file)`<br/>`fromOrThrow(Path path)` |
+| 从插件在 `plugins` 下的文件夹读取配置 | `fromDataFolder(Plugin plugin, String path)`<br/>`from(Plugin plugin, String path)` |
+| 读取嵌入在插件中的资源（位于你的 `resources` 文件夹下） | `fromResource(Plugin plugin, String path)`<br/>`fromResourceOrThrow(Plugin plugin, String path)` |
+| 读取某个键的设置文件 | `fromSettings(NamespacedKey key)` |
+
+## 读取配置
+
+要从 ConfigSection 中读取数据，可以使用 `get` 或 `getOrThrow` 方法。这两个方法需要你提供一个 [ConfigAdapter](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/config/adapter/ConfigAdapter.html)。ConfigAdapter 就是一个类，用于说明如何将配置中的某部分转换为 Java/Kotlin 值。例如，`ConfigAdapter.INT` 配置适配器允许从配置中读取整数。
+
+如果键不存在，`getOrThrow` 会抛出异常。你应该在配置键是必需的地方使用它，因为当键未找到时它能提供有用的错误信息。你也可以使用 `get`，它在键未找到时只返回 null。
+
+<Callout type="example">
+  ```yaml title="pylon/some_config.yml"
+  some-value: 5
+  some-other-value: "hello"
+  ```
+  ```java
+  int x = section.getOrThrow("some-value", ConfigAdapter.INTEGER);
+  // x = 5
+  ```
+</Callout>
+
+<Callout type="info">
+  有哪些可用的配置适配器？参见[内置配置适配器页面](builtin-config-adapters)。
+</Callout>
+
+<Callout type="info">
+  如何创建自己的配置适配器？参见[自定义配置适配器文档](custom-config-adapters)。
+</Callout>
+
+## 复制与合并资源
+
+插件有一个 `resources` 文件夹，存放与插件相关的文件。当你的插件被编译为 .jar 时，.jar 文件会包含这个 resources 文件夹。因此你可以在运行时访问其中的任何资源。
+
+你经常需要把一个配置复制到插件的数据文件夹（即 `plugins` 下插件的文件夹）中。例如，如果你在资源文件夹中添加了一个默认的 config.yml，而数据文件夹中还没有 config.yml，你就需要把它复制过去。可以使用 [copyResource](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/config/ConfigSection.html#copyResource(org.bukkit.plugin.Plugin,java.lang.String)) 方法来完成。
+
+调用此方法时，如果数据文件夹中已经存在该文件，资源文件夹中的文件将会合并到已有文件之上。这意味着数据文件夹文件中不存在但资源文件夹文件中存在的任何键，都会从资源文件夹复制到数据文件夹文件中。**如果感到困惑，请看下面的示例。**
+
+这样就可以在不破坏用户对现有配置值所做的修改的前提下，向已有的配置文件添加新的配置值。
+
+<Callout type="example">
+  如果 `plugins/ExampleAddon/some_config.yml` 内容如下：
+
+  ```yaml title="plugins/ExampleAddon/some_config.yml"
+  some-key: 5
+  some-section:
+      some-other-key: 8
+  ```
+
+  ……且 `resources/some_config.yml` 内容如下：
+
+  ```yaml title="resources/some_config.yml"
+  some-key: 5
+  some-section:
+      some-other-key: 3
+      some-other-other-key: true
+  some-other-section:
+      oh-no: true
+  ```
+
+  ……然后调用了 `ConfigSection.copyResource(ExampleAddon.getInstance(), "some_config")`，那么最终 `plugins/ExampleAddon/some_config.yml` 会变成：
+
+  ```yaml title="plugins/ExampleAddon/some_config.yml"
+  some-key: 5
+  some-section:
+      some-other-key: 8
+      some-other-other-key: true
+  some-other-section:
+      oh-no: true
+  ```
+</Callout>
+
+## 缓存
+
+为了减少大量重复读取时的性能开销（这在设置中很常见），从 ConfigSection 读取的任何值都会被缓存。任何对 `set` 的调用都会使对应的缓存条目失效。你一般不需要担心缓存的问题；它会自动工作。

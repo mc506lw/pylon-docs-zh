@@ -24,7 +24,8 @@ const addons: AddonData[] = [
         ],
         tags: ["库", "基础依赖"],
         hasDocs: true,
-        docsUrl: "/docs/monolithlib"
+        docsUrl: "/docs/monolithlib",
+        aiUsage: "较高"
     },
     {
         id: "jade2rebar",
@@ -41,7 +42,8 @@ const addons: AddonData[] = [
         ],
         tags: ["连接", "适配"],
         hasDocs: true,
-        docsUrl: "/docs/jade2rebar"
+        docsUrl: "/docs/jade2rebar",
+        aiUsage: "较高"
     },
     {
         id: "rebar-wrench",
@@ -58,7 +60,8 @@ const addons: AddonData[] = [
         ],
         tags: ["工具", "开发", "API"],
         hasDocs: true,
-        docsUrl: "/docs/rebarwrench"
+        docsUrl: "/docs/rebarwrench",
+        aiUsage: "未披露"
     },
     {
         id: "construction-wand",
@@ -75,7 +78,8 @@ const addons: AddonData[] = [
         ],
         tags: ["工具", "建筑"],
         hasDocs: true,
-        docsUrl: "/docs/constructionwand"
+        docsUrl: "/docs/constructionwand",
+        aiUsage: "未披露"
     },
     {
         id: "steamworks",
@@ -92,15 +96,16 @@ const addons: AddonData[] = [
         ],
         tags: ["工业"],
         hasDocs: true,
-        docsUrl: "/docs/steamwork"
+        docsUrl: "/docs/steamwork",
+        aiUsage: "中等"
     },
     {
         id: "pylon",
         name: "Pylon",
-        author: "Pylon 团队",
+        author: "PylonMC",
         icon: "⚡",
-        description: "添加所有基础的 Pylon 内容。大多数附属组件运行所必需的核心模块。",
-        statusTags: ["开源", "已发布"],
+        description: "添加所有基础 Pylon 内容，大多数附属组件运行所必需的核心模块。",
+        statusTags: ["开源", "开发中"],
         downloadUrl: "https://github.com/pylonmc/pylon/releases",
         features: [
             "电力系统",
@@ -110,7 +115,8 @@ const addons: AddonData[] = [
             "研究系统",
             "国际化支持"
         ],
-        tags: ["核心", "Kotlin", "必备"]
+        tags: ["核心", "必备"],
+        aiUsage: "极少"
     },
     {
         id: "iron-furnaces",
@@ -126,7 +132,8 @@ const addons: AddonData[] = [
             "特殊熔炉",
             "智能界面"
         ],
-        tags: ["工业", "工具"]
+        tags: ["工业", "工具"],
+        aiUsage: "较高"
     },
     {
         id: "endfield-industry",
@@ -142,7 +149,8 @@ const addons: AddonData[] = [
             "资源处理",
             "视觉主题"
         ],
-        tags: ["工业", "主题", "Modpack"]
+        tags: ["工业", "主题", "Modpack"],
+        aiUsage: "较高"
     },
     {
         id: "pylon-delight",
@@ -157,7 +165,8 @@ const addons: AddonData[] = [
             "新食物作物",
             "烹饪配方"
         ],
-        tags: ["食物", "生活"]
+        tags: ["食物", "生活"],
+        aiUsage: "未披露"
     },
     {
         id: "barmobs",
@@ -172,7 +181,8 @@ const addons: AddonData[] = [
             "伙伴系统",
             "物品化"
         ],
-        tags: ["生物", "玩法"]
+        tags: ["生物", "玩法"],
+        aiUsage: "未披露"
     },
     {
         id: "pylondroid",
@@ -187,7 +197,8 @@ const addons: AddonData[] = [
             "PISA 指令集",
             "自动化任务"
         ],
-        tags: ["编程", "自动化", "机器人"]
+        tags: ["编程", "自动化", "机器人"],
+        aiUsage: "未披露"
     },
     {
         id: "occult-operations",
@@ -201,21 +212,23 @@ const addons: AddonData[] = [
             "仪式献祭",
             "恶魔召唤"
         ],
-        tags: ["魔法", "RPG", "黑暗"]
+        tags: ["魔法", "RPG", "黑暗"],
+        aiUsage: "未披露"
     },
     {
         id: "rebar-rank",
         name: "RebarRank",
         author: "Idra",
         icon: "📊",
-        description: "添加基于 Pylon 物品的升级系统。",
-        statusTags: ["未发布"],
+        description: "添加简单的升级系统，当玩家获得特定 Rebar 物品时自动提升等级。",
+        statusTags: ["开发中"],
         features: [
             "等级系统",
             "物品升级",
             "进度追踪"
         ],
-        tags: ["RPG", "进度"]
+        tags: ["RPG", "进度"],
+        aiUsage: "极少"
     },
     {
         id: "rebar-blockstats",
@@ -229,21 +242,23 @@ const addons: AddonData[] = [
             "方块追踪",
             "可视化报表"
         ],
-        tags: ["统计", "管理"]
+        tags: ["统计", "管理"],
+        aiUsage: "未披露"
     },
     {
         id: "gantry",
         name: "Gantry",
         author: "glomdom",
         icon: "🔧",
-        description: "添加与 Pylon 并行的进度体系，专注于复杂配方链。",
-        statusTags: ["未发布"],
+        description: "大型改版附属，提供与 Pylon 并行的进度路线，专注于复杂的配方链。",
+        statusTags: ["开发中"],
         features: [
             "并行进度",
             "复杂配方",
             "技术树扩展"
         ],
-        tags: ["进度", "技术"]
+        tags: ["进度", "技术"],
+        aiUsage: "极少"
     },
     {
         id: "galactipylon",
@@ -257,7 +272,8 @@ const addons: AddonData[] = [
             "行星探索",
             "天文研究"
         ],
-        tags: ["太空", "探索", "科幻"]
+        tags: ["太空", "探索", "科幻"],
+        aiUsage: "未披露"
     },
     {
         id: "cartographic",
@@ -271,7 +287,8 @@ const addons: AddonData[] = [
             "三维视图",
             "路径点系统"
         ],
-        tags: ["地图", "探索", "导航"]
+        tags: ["地图", "探索", "导航"],
+        aiUsage: "未披露"
     },
     {
         id: "rebar-transcendence",
@@ -286,7 +303,8 @@ const addons: AddonData[] = [
             "稳定化机制",
             "终局内容"
         ],
-        tags: ["终局", "魔法", "粒子"]
+        tags: ["终局", "魔法", "粒子"],
+        aiUsage: "未披露"
     },
     {
         id: "dora-machines",
@@ -302,7 +320,8 @@ const addons: AddonData[] = [
             "粉尘滤网",
             "不可破坏符文"
         ],
-        tags: ["工业", "工具", "机器"]
+        tags: ["工业", "工具", "机器"],
+        aiUsage: "未披露"
     }
 ];
 
@@ -331,6 +350,11 @@ function AddonListItem({ addon }: { addon: AddonData }) {
                             {tag}
                         </span>
                     ))}
+                    {addon.aiUsage && (
+                        <span className="shrink-0 text-[9px] text-violet-500 dark:text-violet-400">
+                            AI: {addon.aiUsage}
+                        </span>
+                    )}
                 </div>
                 <p className="text-[11px] text-fd-muted-foreground/80 truncate leading-snug -mt-px">{addon.description}</p>
             </div>

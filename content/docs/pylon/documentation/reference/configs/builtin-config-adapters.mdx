@@ -1,0 +1,553 @@
+---
+title: 内置配置适配器
+description: Rebar 自带的所有 ConfigAdapter 的示例和说明
+---
+
+本页包含 Rebar 捆绑的每个 ConfigAdapter 的示例（以及需要的额外文档）。
+
+## 原始类型适配器
+
+<details>
+<summary><code>ConfigAdapter.BYTE</code></summary>
+
+范围：-128 到 127
+
+```yaml
+example: 5
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.SHORT</code></summary>
+
+范围：-32768 到 32767
+
+```yaml
+example: 5
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.INTEGER</code></summary>
+
+范围：-2147483648 至 2147483647
+
+```yaml
+example: 5
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.LONG</code></summary>
+
+范围：-9223372036854775808 至 9223372036854775807
+
+```yaml
+example: 5
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.FLOAT</code></summary>
+
+```yaml
+example-1: 5
+example-2: 5.2
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.DOUBLE</code></summary>
+
+```yaml
+example-1: 5
+example-2: 5.2
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.INT_RANGE</code></summary>
+
+```yaml
+example-1: [3, 8]
+example-2:
+    min: 3
+    max: 8
+example-3: 5 # 5 <= x <= 5
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.BOOLEAN</code></summary>
+
+```yaml
+example: true
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.CHAR</code></summary>
+
+```yaml
+example-1: 'h'
+example-2: "h"
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.STRING</code></summary>
+
+```yaml
+example: "watermelon"
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.ANY</code></summary>
+
+一种特殊的配置适配器，返回 [ConfigurationSection#get](https://jd.papermc.io/paper/26.1.2/org/bukkit/configuration/ConfigurationSection.html#get(java.lang.String)) 返回的原始类型。
+
+你基本上不需要用到这个。
+</details>
+
+---
+
+## 杂项适配器
+
+<details>
+<summary><code>ConfigAdapter.CONFIG_SECTION</code></summary>
+
+```yaml
+example:
+  some-key: 5
+  some-other-key: 10
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.UUID</code></summary>
+
+```yaml
+example-1: "b48e7ff7-4c0f-4234-869b-69b6db1d4c57"
+exmaple-2: [-8747281617155961769, -5436267000079891916]
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.NAMESPACED_KEY</code></summary>
+
+```yaml
+example: minecraft:melon
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.MATERIAL</code></summary>
+
+```yaml
+example-1: red_wool
+example-2: Red_wOoL
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.BLOCK_DATA</code></summary>
+
+```yaml
+example: minecraft:chest[waterlogged=true]
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.TEXT_COLOR</code></summary>
+
+可以是以下任意形式：
+
+- 十六进制颜色码
+- 颜色名称（参见 [NamedTextColor](https://jd.advntr.dev/api/4.26.1/net/kyori/adventure/text/format/NamedTextColor.html) 获取可用颜色列表）
+- RGB 颜色（r、g、b 均为 0-255）
+- HSV 颜色（h、s、v 均为 0.0-1.0）
+
+```yaml
+example-1: "#5a45f3"
+example-2: gold
+example-3: liGHt_pURPLe
+example-4:
+  r: 200
+  g: 155
+  b: 30
+example-5:
+  h: 0.83
+  s: 0.76
+  v: 0.28
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.ITEM_TAG</code></summary>
+
+可用的物品标签列表见 [Minecraft wiki](https://minecraft.wiki/w/Item_tag_(Java_Edition))。
+
+```yaml
+example: "#glazed_terracotta"
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.SOUND</code></summary>
+
+```yaml
+example:
+  sound: minecraft:block.anvil.use
+  source: player
+  volume: 0.5
+  pitch: 1.0
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.RANDOMIZED_SOUND</code></summary>
+
+参见 [RandomizedSound](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/util/RandomizedSound.html)。
+
+```yaml
+example:
+  hammer-sound:
+    sounds:
+    - minecraft:block.anvil.use
+    - minecraft:block.anvil.land
+    source: player
+    volume:
+      min: 0.3
+      max: 0.7
+    pitch:
+    - 0.8
+    - 1.2
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.WAILA_DISPLAY</code></summary>
+
+```yaml
+example:
+  text: ""
+  color: white
+  overlay: progress
+  progress: 1.0
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.CULLING_PRESET</code></summary>
+
+```yaml
+example:
+  index: 1
+  id: "low"
+  material: "minecraft:green_concrete"
+  update-interval: 1
+  hidden-interval: 1
+  visible-interval: 10
+  always-show-radius: 48
+  cull-radius: 128
+  max-occluding-count: 5
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.CONTRIBUTOR</code></summary>
+
+```yaml
+example:
+  display-name: "Watermelon"
+  description: "<white><!i>Hey girl, are you a kettle? Because I'm 90% water."
+  minecraft-uuid: "bb685dd0-8a71-4506-bc20-24d374fb28b4"
+  github: "WatermelonMC"
+```
+</details>
+
+---
+
+## 集合适配器
+
+<details>
+<summary><code>ConfigAdapter.LIST</code></summary>
+
+```yaml
+# 所有示例均使用 ConfigAdapter.LIST.from(ConfigAdapter.INTEGER) 读取
+
+example-1:
+    - 5
+    - 7
+
+example-2: [5, 7]
+
+example-3: []
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.SET</code></summary>
+
+格式与 `ConfigAdapter.LIST` 相同。重复值不会报错，在结果中只会出现一次。
+
+```yaml
+# 所有示例均使用 ConfigAdapter.SET.from(ConfigAdapter.INTEGER) 读取
+
+example-1:
+    - 5
+    - 7
+
+example-2: [5, 7]
+
+example-3: []
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.MAP</code></summary>
+
+如果存在重复键，会抛出错误。
+
+```yaml
+# 使用 ConfigAdapter.MAP.from(ConfigAdapter.INTEGER, ConfigAdapter.STRING) 读取
+example-1:
+  5: "wat"
+  9: "erm"
+  66: "elon"
+
+# 使用以下方式读取：
+# ConfigAdapter.MAP.from(
+#         ConfigAdapter.LIST.from(ConfigAdapter.INTEGER),
+#         ConfigAdapter.STRING)
+# );
+example-2:
+  - key: [2, 6]
+    value: "wat"
+  - key: [7, 9, 3]
+    value: "erm"
+  - key: []
+    value: "elon"
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.WEIGHTED_SET</code></summary>
+
+更多信息参见 [WeightedSet](https://pylonmc.github.io/rebar/docs/javadoc/io/github/pylonmc/rebar/util/WeightedSet.html)。
+
+```yaml
+example:
+  - value: "watermelon"
+    weight: 5
+  - value: "cantaloupe"
+    weight: 3
+  - value: "honeydew melon"
+    weight: 8
+```
+</details>
+
+---
+
+## 向量适配器
+
+<details>
+<summary><code>ConfigAdapter.VECTOR_2I</code></summary>
+
+```yaml
+example: [0, 6]
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.VECTOR_2F</code></summary>
+
+```yaml
+example-1: [2.6, 1.3]
+example-2: [1.0, 6]
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.VECTOR_2D</code></summary>
+
+```yaml
+example-1: [2.6, 1.3]
+example-2: [1.0, 6]
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.VECTOR_3I</code></summary>
+
+```yaml
+example: [0, 6, 3]
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.VECTOR_3F</code></summary>
+
+```yaml
+example-1: [2.6, 1.3, 6.4]
+example-2: [1.0, 6, 6.4]
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.VECTOR_3D</code></summary>
+
+```yaml
+example-1: [2.6, 1.3, 6.4]
+example-2: [1.0, 6, 6.4]
+```
+</details>
+
+---
+
+## 泛型适配器
+
+<details>
+<summary><code>ConfigAdapter.ENUM</code></summary>
+
+表示枚举类型的 ConfigAdapter。你可以通过调用 `ConfigAdapter.ENUM.from(<enum class>)` 来指定使用哪个枚举类。不区分大小写。
+
+```yaml
+# 使用 ConfigAdapter.ENUM.from(Material.class) 读取
+example-1: diamond_pickaxe
+
+# 使用 ConfigAdapter.ENUM.from(MiningLevel.class) 读取
+example-2: gold
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.KEYED</code></summary>
+
+从任何与键关联的事物集合中读取值的 ConfigAdapter，例如材料、Rebar 物品等。
+
+通常通过 `ConfigAdapter.KEYED.fromRegistry` 从 Rebar 注册表创建，也可以通过传入自定义函数用 `ConfigAdapter.KEYED.fromGetter` 将键转换为值来创建。
+
+```yaml
+# 使用 ConfigAdapter.KEYED.fromRegistry(RebarItemSchema.class, RebarRegistry.ITEMS) 读取
+example: pylon:fluid_pipe_copper
+```
+</details>
+
+---
+
+## 流体 / 物品适配器
+
+<details>
+<summary><code>ConfigAdapter.ITEM_STACK</code></summary>
+
+```yaml
+example-1: stick
+example-2: minecraft:stick
+example-3:
+  stick: 5
+example-4: potion[potion_contents={potion:"healing"}]
+example-5:
+  'potion[potion_contents={potion:"healing"}]': 7
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.ITEM_TYPE_WRAPPER</code></summary>
+
+```yaml
+example-1: pylon:fluid_pipe_copper
+example-2: minecraft:apple
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.ITEM_CHOICE</code></summary>
+
+未指定时默认数量为 1。
+
+如果设置了 `exact`，配方选择会要求所有组件均为默认值。例如，如果设置了 exact 且物品被重命名，它将不再匹配该配方选择。你可以使用 `ignore` 来指定在此检查中忽略的组件。
+
+```yaml
+example-1: "#minecraft:acacia_logs"
+example-2: 'minecraft:potion[potion_contents={potion:"healing"}]'
+example-3: minecraft:apple
+example-4: pylon:copper_dust
+example-5:
+  '#minecraft:acacia_logs': 5
+
+example-6:
+  choices:
+  - pylon:bronze_pickaxe
+  - "#minecraft:pickaxes"
+
+example-7:
+  amount: 5
+  choices:
+  - item: pylon:bronze_pickaxe
+    exact: true
+    ignore:
+      - damage
+  - item: pylon:bronze_ingot
+  - item: minecraft:stone_pickaxe
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.REBAR_FLUID</code></summary>
+
+```yaml
+example: pylon:plant_oil
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.FLUID_TEMPERATURE</code></summary>
+
+```yaml
+example: hot
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.FLUID_CHOICE</code></summary>
+
+```yaml
+example-1:
+  pylon:water: 100
+example-2:
+  pylon:water: 333.333333333
+example-3:
+  fluids: [pylon:water, pylon:lava]
+  amount: 300
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.FLUID_OR_ITEM</code></summary>
+
+接受 `ConfigAdapter.ITEM_STACK` 或 `ConfigAdapter.FLUID_WITH_AMOUNT` 能接受的任何值。
+
+```yaml
+example-1: potion[potion_contents={potion:"healing"}]
+example-2:
+  pylon:copper_dust: 5
+example-3: minecraft:apple
+example-4:
+  pylon:water: 100
+example-5:
+  pylon:water: 333.333333333
+```
+</details>
+
+<details>
+<summary><code>ConfigAdapter.FLUID_WITH_AMOUNT</code></summary>
+
+```yaml
+example-1:
+  pylon:water: 100
+example-2:
+  pylon:water: 333.333333333
+```
+</details>

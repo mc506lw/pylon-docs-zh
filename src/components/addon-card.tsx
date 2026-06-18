@@ -79,6 +79,11 @@ export function AddonCard({ addon, href }: AddonCardProps) {
       {/* 底部状态栏 */}
       <div className="px-5 py-2 border-t border-fd-border/20 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-1.5">
+          {addon.aiUsage && (
+            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-none bg-violet-500/10 text-violet-600 dark:text-violet-400">
+              AI使用率: {addon.aiUsage}
+            </span>
+          )}
           {addon.statusTags.map((tag) => (
             <span
               key={tag}

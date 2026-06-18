@@ -15,9 +15,13 @@ description: 查看 Pylon 提供的命令和权限管理功能
 | `/rb confetti <数量> [速度] [存活时间]`               | `rebar.command.confetti`                  | 生成彩色纸屑粒子 |
 | `/rb debug`                                          | `rebar.command.debug`                     | 给予你调试物品，可用于查看 Rebar 方块/实体数据并强制移除 Rebar 方块/实体 |
 | `/rb exposerecipeconfig <附加> <配方类型>`            | `rebar.command.exposerecipeconfig`        | 允许编辑特定类型的配方。这样做会阻止该类型配方自动更新，请谨慎使用！ |
+| `/rb fill <x1> <y1> <z1> <x2> <y2> <z2> <方块>`      | `rebar.command.setblock`                  | 在指定坐标范围内放置 Rebar 方块 |
+| `/rb fillmultiblock`                                 | `rebar.command.fillmultiblock`           | 尝试完成你正在注视的多方块结构 |
 | `/rb give <玩家> <物品> [数量]`                       | `rebar.command.give`                      | 给予玩家一个 Rebar 物品 |
 | `/rb key`                                            | `rebar.command.key`                       | 显示你手持 Rebar 物品的键名 |
+| `/rb reloadlang`                                     | `rebar.command.research.reloadlang`      | 从 `plugins/Rebar/lang` 目录重新加载所有语言文件 |
 | `/rb research add <玩家> <研究>`                      | `rebar.command.research.add`              | 为玩家添加指定研究 |
+| `/rb research list <玩家> <研究>`                     | `rebar.command.research.list`            | 列出玩家拥有的研究 |
 | `/rb research addall <玩家>`                          | `rebar.command.research.addall`           | 为玩家添加全部研究 |
 | `/rb research remove <玩家> <研究>`                   | `rebar.command.research.remove`           | 从玩家移除指定研究 |
 | `/rb research points add <玩家> <数量>`               | `rebar.command.research.points.add`       | 为玩家添加研究点数 |
@@ -25,6 +29,8 @@ description: 查看 Pylon 提供的命令和权限管理功能
 | `/rb research points set <玩家> <数量>`               | `rebar.command.research.points.set`       | 设置玩家的研究点数 |
 | `/rb research points subtract <玩家> <数量>`          | `rebar.command.research.points.subtract`  | 从玩家扣除研究点数 |
 | `/rb setblock <x> <y> <z> <方块>`                     | `rebar.command.setblock`                  | 在指定坐标放置 Rebar 方块 |
+| `/rb setphantom <x> <y> <z>`                          | `rebar.command.setphantom`               | 将方块转换为幻影方块 |
+| `/rb versions`                                        | `rebar.command.versions`                 | 显示服务器软件、Rebar 及所有附属组件的版本信息 |
 | `/py fillfluid`                                      | `pylon.command.fillfluid`                 | 填满手持的便携流体储罐 |
 | `/py resetloupedata`                                 | `pylon.command.resetloupedata`            | 重置玩家使用放大镜时记录的物品/方块数据 |
 
