@@ -3,39 +3,20 @@ title: Pylon 附属列表
 description: 查看所有可用的 Pylon 附属组件
 ---
 
-import Link from 'next/link';
+import { AddonPreview } from "@/components/addon-preview";
+import { Callout } from 'fumadocs-ui/components/callout';
 
 # Pylon 附属列表
 
+<Callout type="info" title="关于「AI 使用率」">
+  **AI 并非洪水猛兽——优秀的开发者善用 AI 来大幅提升开发效率，同时写出更扎实、更可靠的代码。**  
+  每张卡片上的「AI 使用率」仅作为信息透明度参考，**不代表质量高低**。无论是否使用 AI 辅助，一个优秀的附属组件最终都要经过人工打磨、测试和迭代。AI 是工具，用好它的人才是关键。
+</Callout>
+
 Pylon 拥有丰富的附属生态系统，包含 **18 个** 已知附属模块，涵盖工业、工具、魔法、生物等多个领域。
 
-## 查看完整附属库
+<AddonPreview />
 
-我们已将所有附属信息整合到独立的 **[附属文档库](/docs/addons)** 页面，提供更好的浏览体验：
+## 开发者资源
 
-- 📋 完整的附属列表（18 个）
-- 🔍 搜索和筛选功能
-- 📖 有文档的附属优先展示，带明确标识
-- 🎨 网格/列表视图切换
-
-<Link
-  href="/docs/addons"
-  className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-fd-primary text-fd-primary-foreground font-medium hover:bg-fd-primary/90 transition-colors mt-4"
->
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-  </svg>
-  进入附属文档库
-</Link>
-
-## 有独立文档的附属
-
-以下附属拥有详细的独立文档，点击可查看：
-
-| 附属 | 说明 | 状态 |
-|------|------|------|
-| [MonolithLib](/docs/monolithlib) | 多方块巨构支持库 | 已发布 |
-| [Jade2Rebar](/docs/jade2rebar) | Jade 信息显示适配 | 已发布 |
-| [RebarWrench](/docs/rebarwrench) | 扳手配置工具 | 开发中 |
-| [ConstructionWand](/docs/constructionwand) | 建筑魔杖 | 已发布 |
-| [Steamwork](/docs/steamwork) | 蒸汽工坊 | 已发布 |
+如果你是开发者，可以查看 [Pylon 开发文档](/docs/pylon/create-addons) 了解如何为 Pylon 创建新的附属模块。

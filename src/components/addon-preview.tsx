@@ -328,9 +328,23 @@ const addons: AddonData[] = [
 type ViewMode = "grid" | "list";
 type FilterType = "全部" | "已发布" | "开发中" | "开源";
 
-function AddonListItem({ addon }: { addon: AddonData }) {
+function AddonListItem({ addon, href }: { addon: AddonData; href?: string }) {
+    const router = useRouter();
+
+    const handleClick = () => {
+        if (href) {
+            router.push(href);
+        }
+    };
+
     return (
-        <div className="group flex items-center gap-2.5 rounded-lg border border-fd-border/60 bg-fd-card/50 px-3 py-1.5 transition-all hover:border-fd-primary hover:bg-fd-accent/40">
+        <div
+            className={cn(
+                "group flex items-center gap-2.5 rounded-lg border border-fd-border/60 bg-fd-card/50 px-3 py-1.5 transition-all",
+                href && "hover:border-fd-primary hover:bg-fd-accent/40 cursor-pointer"
+            )}
+            onClick={handleClick}
+        >
             <span className="text-base shrink-0 leading-none">{addon.icon}</span>
 
             <div className="min-w-0 flex-1">
@@ -359,12 +373,21 @@ function AddonListItem({ addon }: { addon: AddonData }) {
                 <p className="text-[11px] text-fd-muted-foreground/80 truncate leading-snug -mt-px">{addon.description}</p>
             </div>
 
-            <div className="shrink-0">
+            <div className="shrink-0 flex items-center gap-1">
+                {addon.hasDocs && href && (
+                    <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 mr-1">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                        文档
+                    </span>
+                )}
                 {addon.downloadUrl ? (
                     <a
                         href={addon.downloadUrl}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                         className="inline-flex items-center justify-center w-6 h-6 rounded text-fd-muted-foreground/70 transition-colors hover:text-fd-primary hover:bg-fd-accent"
                     >
                         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
@@ -506,7 +529,7 @@ export function AddonPreview() {
             ) : (
                 <div className="space-y-1">
                     {displayAddons.map((addon) => (
-                        <AddonListItem key={addon.id} addon={addon} />
+                        <AddonListItem key={addon.id} addon={addon} href={addon.docsUrl} />
                     ))}
                 </div>
             )}

@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 export default function Layout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="zh-CN" className={inter.className} suppressHydrationWarning>
-      <body className="flex flex-col min-h-screen pt-[38px]">
+      <body className="flex flex-col min-h-screen">
         <RootProvider
           i18n={{
             locale: 'zh',

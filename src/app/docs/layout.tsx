@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { source } from '@/lib/source';
 import { DocsLayout } from 'fumadocs-ui/layouts/docs';
 import { baseOptions } from '@/lib/layout.shared';
-import { ArrowLeft, Package } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 export default function Layout({ children }: LayoutProps<'/docs'>) {
   const pathname = usePathname();
@@ -39,11 +39,6 @@ export default function Layout({ children }: LayoutProps<'/docs'>) {
         url: '/docs/pylon',
         description: 'Pylon官方文档',
       },
-      {
-        title: '附属文档',
-        url: '/docs/addons',
-        description: '查看所有附属模块文档',
-      }
     ],
   };
 

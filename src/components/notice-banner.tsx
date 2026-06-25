@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { cn } from "@/lib/cn";
 
 const messages = [
   { text: '本站为非官方 Pylon 文档站，大量内容均为 AI 生成', link: '前往官方文档站', url: 'https://pylonmc.github.io/' },
@@ -10,14 +11,33 @@ const messages = [
 
 export function NoticeBanner() {
   const [visible, setVisible] = useState(true);
+  const [closing, setClosing] = useState(false);
 
   if (!visible) return null;
 
+  const handleClose = () => {
+    setClosing(true);
+    setTimeout(() => setVisible(false), 300);
+  };
+
   return (
-    <div className="fixed top-0 left-0 right-0 z-[9999] overflow-hidden bg-gradient-to-r from-amber-500/90 via-orange-500/90 to-red-500/90 text-white text-sm shadow-md">
+    <>
+      {/* Spacer to push content below the fixed banner */}
+      <div
+        className={cn(
+          "transition-all duration-300 ease-in-out print:hidden",
+          closing ? "h-0" : "h-[38px]"
+        )}
+      />
+      <div
+        className={cn(
+          "fixed top-0 left-0 right-0 z-[9999] overflow-hidden bg-gradient-to-r from-amber-500/90 via-orange-500/90 to-red-500/90 text-white text-sm shadow-md transition-all duration-300 ease-in-out print:hidden",
+          closing && "-translate-y-full opacity-0"
+        )}
+      >
       {/* Close button */}
       <button
-        onClick={() => setVisible(false)}
+        onClick={handleClose}
         className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-sm transition-all"
         aria-label="关闭提示"
       >
@@ -55,5 +75,6 @@ export function NoticeBanner() {
       <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-inherit to-transparent pointer-events-none z-[1]" />
       <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-inherit to-transparent pointer-events-none z-[1]" />
     </div>
+    </>
   );
 }
