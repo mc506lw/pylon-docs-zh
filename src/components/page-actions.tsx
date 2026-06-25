@@ -8,7 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "fumadocs-ui/components/ui/popover";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { usePathname } from "fumadocs-core/framework";
 import {
   Check,
@@ -83,7 +83,12 @@ export function ViewOptionsPopover({
   const pathname = usePathname();
   const [copied, setCopied] = useState(false);
 
-  const items = useMemo(() => {
+  type Item =
+    | { type: "separator" }
+    | { title: string; href: string; icon: ReactNode }
+    | { title: string; onClick: () => void; icon: ReactNode };
+
+  const items = useMemo<Item[]>(() => {
     const q = `阅读 ${typeof window === "undefined" ? pathname : new URL(pathname, window.location.origin)}，我对此页内容有不明白的问题要问`;
 
     return [
@@ -141,7 +146,7 @@ export function ViewOptionsPopover({
         onClick: () => window.print(),
         icon: <Printer className="size-4" />,
       },
-    ].filter(Boolean);
+    ].filter(Boolean) as Item[];
   }, [githubUrl, markdownUrl, pathname, copied]);
 
   return (
@@ -174,7 +179,7 @@ export function ViewOptionsPopover({
               </button>
             );
           }
-          const linkItem = item as { title: string; href: string; icon: React.ReactNode };
+          const linkItem = item as { title: string; href: string; icon: ReactNode };
           return (
             <a
               key={linkItem.href}

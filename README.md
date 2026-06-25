@@ -1,45 +1,56 @@
-# pylon-docs-zh
+# Pylon 中文文档
 
-This is a Next.js application generated with
-[Create Fumadocs](https://github.com/fuma-nama/fumadocs).
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16.2-black?logo=next.js" alt="Next.js 16.2">
+  <img src="https://img.shields.io/badge/Fumadocs-16.8-blue?logo=readthedocs" alt="Fumadocs 16.8">
+  <img src="https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript" alt="TypeScript 6">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss" alt="Tailwind CSS 4">
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
+</p>
 
-Run development server:
+> **Pylon** 是一个基于 Rebar 框架的 Minecraft 技术模组。本站为其**非官方中文文档站**。
+
+---
+
+## 原项目
+
+| 项目 | 链接 |
+|------|------|
+| Pylon 模组（原版文档） | https://pylonmc.github.io/ |
+| Pylon GitHub | https://github.com/pylonmc |
+| 本仓库 | https://github.com/mc506lw/pylon-docs-zh |
+
+---
+
+## 快速开始
 
 ```bash
-npm run dev
-# or
+# 安装依赖
+pnpm install
+
+# 启动开发服务器
 pnpm dev
-# or
-yarn dev
+
+# 构建生产版本
+pnpm build
 ```
 
-Open http://localhost:3000 with your browser to see the result.
+## 目录结构
 
-## Explore
+```
+content/docs/       # 文档源码 (MDX)
+  ├── pylon/        # Pylon 主文档
+  ├── monolithlib/  # 附属文档
+  ├── jade2rebar/
+  ├── constructionwand/
+  ├── steamwork/
+  └── rebarwrench/
+```
 
-In the project, you can see:
+## 技术栈
 
-- `lib/source.ts`: Code for content source adapter, [`loader()`](https://fumadocs.dev/docs/headless/source-api) provides the interface to access your content.
-- `lib/layout.shared.tsx`: Shared options for layouts, optional but preferred to keep.
+Next.js 16 + Fumadocs 16 + TypeScript 6 + Tailwind CSS 4 + pnpm
 
-| Route                     | Description                                            |
-| ------------------------- | ------------------------------------------------------ |
-| `app/(home)`              | The route group for your landing page and other pages. |
-| `app/docs`                | The documentation layout and pages.                    |
-| `app/api/search/route.ts` | The Route Handler for search.                          |
+## 许可
 
-### Fumadocs MDX
-
-A `source.config.ts` config file has been included, you can customise different options like frontmatter schema.
-
-Read the [Introduction](https://fumadocs.dev/docs/mdx) for further details.
-
-## Learn More
-
-To learn more about Next.js and Fumadocs, take a look at the following
-resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js
-  features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [Fumadocs](https://fumadocs.dev) - learn about Fumadocs
+社区文档项目，仅供参考。

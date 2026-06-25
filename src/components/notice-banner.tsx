@@ -31,7 +31,7 @@ export function NoticeBanner() {
       />
       <div
         className={cn(
-          "fixed top-0 left-0 right-0 z-[9999] overflow-hidden bg-gradient-to-r from-amber-500/90 via-orange-500/90 to-red-500/90 text-white text-sm shadow-md transition-all duration-300 ease-in-out print:hidden",
+          "fixed top-0 left-0 right-0 z-9999 overflow-hidden bg-linear-to-r from-amber-500/90 via-orange-500/90 to-red-500/90 text-white text-sm shadow-md transition-all duration-300 ease-in-out print:hidden",
           closing && "-translate-y-full opacity-0"
         )}
       >
@@ -72,8 +72,8 @@ export function NoticeBanner() {
       </div>
 
       {/* Gradient fade edges */}
-      <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-inherit to-transparent pointer-events-none z-[1]" />
-      <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-inherit to-transparent pointer-events-none z-[1]" />
+      <div className="absolute left-0 top-0 bottom-0 w-16 bg-linear-to-r from-inherit to-transparent pointer-events-none z-1" />
+      <div className="absolute right-0 top-0 bottom-0 w-16 bg-linear-to-l from-inherit to-transparent pointer-events-none z-1" />
     </div>
     </>
   );
