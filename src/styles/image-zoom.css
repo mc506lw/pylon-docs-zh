@@ -1,13 +1,17 @@
 [data-rmiz] {
-  display: block;
   position: relative;
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
   cursor: pointer;
 }
 
-[data-rmiz]:hover {
-  box-shadow: 0 0 0 2px var(--color-fd-primary, #3b82f6);
-  transform: scale(1.005);
+[data-rmiz-content] img {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  border-radius: 1px;
+  transition: outline-color 0.15s ease;
+}
+
+[data-rmiz-content] img:hover {
+  outline-color: var(--color-fd-primary, #3b82f6);
 }
 
 [data-rmiz-ghost] {
